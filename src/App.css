@@ -1,0 +1,98 @@
+html,body{
+  height:100%;
+  min-height:100%;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+.main-container, .main-row, .graph-container {
+  height: 100%;
+  /*overflow-y: hidden; !* don't show content that exceeds my height *!*/
+}
+
+.react-flow__handle {
+  position: relative;
+}
+
+.highlight-node {
+  border: 3px solid dodgerblue;
+}
+
+/* Button edge */
+.edgebutton {
+  width: 20px;
+  height: 20px;
+  background: #504d4d;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.edgebutton:hover {
+  box-shadow: 0 0 6px 2px rgba(0, 0, 0, 0.08);
+}
+
+.customNodeBody {
+  width: 75px;
+  height: 75px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover
+}
+
+/*.customNode {*/
+/*  display: flex;*/
+/*  flex-direction: column;*/
+/*}*/
+
+.node-label {
+  position: absolute;
+  font-size: 20px;
+  /*top: 130%; !* Positions the element halfway down the container *!*/
+  left: 50%; /* Positions the element halfway across the container */
+  transform: translate(-50%, -15%);
+  text-wrap: nowrap;
+}
+
+/*.customNode:before {*/
+/*  content: '';*/
+/*  position: absolute;*/
+/*  top: -10px;*/
+/*  left: 50%;*/
+/*  height: 20px;*/
+/*  width: 40px;*/
+/*  transform: translate(-50%, 0);*/
+/*  background: #d6d5e6;*/
+/*  z-index: 1000;*/
+/*  line-height: 1;*/
+/*  border-radius: 4px;*/
+/*  color: #fff;*/
+/*  font-size: 9px;*/
+/*  border: 2px solid #222138;*/
+/*}*/
+
+div.customHandle {
+  width: 100%;
+  height: 100%;
+  background: blue;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 0;
+  transform: none;
+  border: none;
+  opacity: 0;
+}
