@@ -16,7 +16,7 @@ function NodeList({nodeList, resetNodeSelection}: NodeListProps) {
                     (node) => {
 
                         return (
-                                    <ListGroup.Item key={node} className={'bg-light text-center'}>
+                                    <ListGroup.Item key={node} className='bg-light text-center my-3'>
                                             <Node
                                                 title={node}
                                                 resetNodeSelection={ () => resetNodeSelection()}
