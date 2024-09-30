@@ -94,11 +94,11 @@ export default function GraphWithReactFlow(
 
             let type = ''
 
-            if (node.icon.includes('router') )
+            if (node.data.icon.includes('router') )
                 type = 'router'
-            if (node.icon.includes('switch') )
+            if (node.data.icon.includes('switch') )
                 type = 'switch'
-            if (node.icon.includes('server') )
+            if (node.data.icon.includes('server') )
                 type = 'host'
 
             const neighbours = edges.filter(edge => {
