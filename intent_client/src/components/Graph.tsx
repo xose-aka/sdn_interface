@@ -144,38 +144,40 @@ export default function Graph(
 
         let topologyNodes = []
 
-        nodes.forEach(node => {
+        console.log(nodes);
 
-            let type = ''
+        // nodes.forEach(node => {
+        //
+        //     let type = ''
+        //
+        //     if (node.icon.includes('router') )
+        //         type = 'router'
+        //     if (node.icon.includes('switch') )
+        //         type = 'switch'
+        //     if (node.icon.includes('server') )
+        //         type = 'host'
+        //
+        //     const neighbours = edges.filter(edge => {
+        //         return edge.source === node.id || edge.target === node.id;
+        //
+        //     })
+        //         .map(edge => {
+        //         if (edge.source === node.id)
+        //             return edge.target
+        //
+        //         if (edge.target === node.id)
+        //             return edge.source
+        //     })
+        //
+        //     const newTopologyNode = {
+        //         type: type,
+        //         id: node.id,
+        //         neighbors: neighbours
+        //     }
+        //
+        //     topologyNodes.push(newTopologyNode)
 
-            if (node.icon.includes('router') )
-                type = 'router'
-            if (node.icon.includes('switch') )
-                type = 'switch'
-            if (node.icon.includes('server') )
-                type = 'host'
-
-            const neighbours = edges.filter(edge => {
-                return edge.source === node.id || edge.target === node.id;
-
-            })
-                .map(edge => {
-                if (edge.source === node.id)
-                    return edge.target
-
-                if (edge.target === node.id)
-                    return edge.source
-            })
-
-            const newTopologyNode = {
-                type: type,
-                id: node.id,
-                neighbors: neighbours
-            }
-
-            topologyNodes.push(newTopologyNode)
-
-        })
+        // })
 
         console.log(topologyNodes)
 
