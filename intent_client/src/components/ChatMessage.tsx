@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {IntentMessage} from "../types.ts";
+import React from 'react';
+import '../styles/chat-message.scss'
 
 type ChatMessageProps = {
     dateTimeStamp: string
     message: string
-    isSameOrigin: string
+    isSameOrigin: boolean
 }
 
 function ChatMessage({

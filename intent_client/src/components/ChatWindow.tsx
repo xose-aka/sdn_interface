@@ -2,13 +2,13 @@ import React, {useEffect, useRef, useState} from 'react';
 import {IntentMessage} from "../types.ts";
 import ChatMessage from "./ChatMessage.tsx";
 import {createFocusTrap, FocusTrap} from "focus-trap";
+import '../styles/chat-window.scss'
 
 type ChatWindowProps = {
     isOpen: boolean,
     messages: IntentMessage[]
     onClose: () => void,
     onMessageSent: ( message : string) => void,
-    position: 'top-right' | 'top-left   ' | 'bottom-right' | 'bottom-left';
     title: string
 }
 
@@ -17,7 +17,6 @@ function ChatWindow({
                         messages,
                         onClose,
                         onMessageSent,
-                        position,
                         title
 }: ChatWindowProps) {
 
@@ -29,9 +28,64 @@ function ChatWindow({
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
     const [ipAddress, setIpAddress] = useState(null);
 
+    // const [position, setPosition] = useState({ x: 0, y: 0 });
+    // const [size, setSize] = useState({ width: 500, height: 300 });
+    // const [isDragging, setIsDragging] = useState(false);
+    // const [isResizing, setIsResizing] = useState(false);
+    // const [resizeDir, setResizeDir] = useState<{ widthDir: number, heightDir: number } | null>(null);
+
+
     const handleChange = ( e: React.ChangeEvent<HTMLInputElement>) => {
         setValue(e.target.value);
     };
+
+    // const handleMouseDown = (e: React.MouseEvent) => {
+    //     if (chatWindow.current && !isResizing) {
+    //         setIsDragging(true);
+    //     }
+    // };
+    //
+    // // Handle mouse down for resizing
+    // const handleMouseDownResize = (e: React.MouseEvent, widthDir: number, heightDir: number) => {
+    //     e.stopPropagation(); // Prevent dragging while resizing
+    //     setIsResizing(true);
+    //     setResizeDir({ widthDir, heightDir });
+    // };
+    //
+    // // Handle mouse movement for both dragging and resizing
+    // const handleMouseMove = (e: MouseEvent) => {
+    //     if (isDragging) {
+    //         setPosition((prevPosition) => ({
+    //             x: prevPosition.x + e.movementX,
+    //             y: prevPosition.y + e.movementY,
+    //         }));
+    //     }
+    //
+    //     if (isResizing && resizeDir) {
+    //         setSize((prevSize) => ({
+    //             width: Math.max(100, prevSize.width + e.movementX * resizeDir.widthDir),
+    //             height: Math.max(100, prevSize.height + e.movementY * resizeDir.heightDir),
+    //         }));
+    //     }
+    // };
+    //
+    // // Stop dragging or resizing
+    // const handleMouseUp = () => {
+    //     setIsDragging(false);
+    //     setIsResizing(false);
+    //     setResizeDir(null);
+    // };
+    //
+    // // Add global mouse event listeners for dragging and resizing
+    // React.useEffect(() => {
+    //     window.addEventListener('mousemove', handleMouseMove);
+    //     window.addEventListener('mouseup', handleMouseUp);
+    //
+    //     return () => {
+    //         window.removeEventListener('mousemove', handleMouseMove);
+    //         window.removeEventListener('mouseup', handleMouseUp);
+    //     };
+    // }, [isDragging, isResizing, resizeDir]);
 
     const handleSubmit = () => {
         onMessageSent( message );
@@ -83,7 +137,18 @@ function ChatWindow({
     return (
         <div
             ref={chatWindow}
-            className={`chat-window ${isOpen ? 'is-open' : ''} ${ position ? `chat-window--${position}` : ''}`}
+            className={`chat-window ${isOpen ? 'is-open' : ''} chat-window--bottom-right`}
+            // style={{
+            //     left: position.x,
+            //     top: position.y,
+            //     width: size.width,
+            //     height: size.height,
+            //     position: 'absolute',
+            //     backgroundColor: '#f0f0f0',
+            //     border: '2px solid #333',
+            //     cursor: isDragging ? 'grabbing' : 'grab',
+            // }}
+            // onMouseDown={handleMouseDown}
         >
             <div className="chat-window__header">
                 <div className="chat-window__title">{title}</div>
@@ -138,14 +203,5 @@ function ChatWindow({
         </div>
     );
 }
-
-ChatWindow.defaultProps = {
-    isOpen: false,
-    messages: [],
-    onClose() {},
-    onMessageSent() {},
-    position: "bottom-right",
-    title: "Chat"
-};
 
 export default ChatWindow;

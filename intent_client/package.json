@@ -18,7 +18,8 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
-    "reagraph": "^4.19.2"
+    "reagraph": "^4.19.2",
+    "sass": "^1.80.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

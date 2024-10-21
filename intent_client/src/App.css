@@ -1,16 +1,14 @@
-html,body{
-  height:100%;
-  min-height:100%;
+html,body, #root{
+  height: 100%;
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  box-sizing: border-box;
 }
 
-#root {
-  width: 100%;
+.main-container {
   height: 100%;
-}
-
-.main-container, .main-row, .graph-container {
-  height: 100%;
-  /*overflow-y: hidden; !* don't show content that exceeds my height *!*/
+  overflow-y: hidden; /* don't show content that exceeds my height */
+  display: flex;
 }
 
 .react-flow__handle {

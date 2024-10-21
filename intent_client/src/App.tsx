@@ -26,32 +26,34 @@ function App() {
 
     return (
           <DndProvider backend={HTML5Backend}>
-              <Container fluid={true} className={'main-container'}>
-                <Row className={'main-row'}>
-                    <Col xs={2} className={'border-end bg-light'}
-                         onClick={ () => resetNodeSelection() }>
-                        <NodeListHeader/>
-                        <NodeList
-                            nodeList={nodeList}
-                            resetNodeSelection={() => resetNodeSelection()}
-                        />
-                    </Col>
-                    <Col xs={10}>
-                        <ReactFlowProvider>
-                            <GraphWithReactFlow
-                                nodeList={nodeList}
-                                setSelectedNode={setSelectedNode}
-                                setSelections={setSelections}
-                                selectedNode={selectedNode}
-                                selections={selections}
-                                selectedEdge={selectedEdge}
-                                setSelectedEdge={setSelectedEdge}
-                                resetNodeSelection={resetNodeSelection}
-                            />
-                        </ReactFlowProvider>
-                    </Col>
-                </Row>
-            </Container>
+              <div className={'main-container'}>
+                  <Container fluid={true} >
+                      <Row className={'h-100'}>
+                          <Col xs={2} className={'border-end bg-light'}
+                               onClick={ () => resetNodeSelection() }>
+                              <NodeListHeader/>
+                              <NodeList
+                                  nodeList={nodeList}
+                                  resetNodeSelection={() => resetNodeSelection()}
+                              />
+                          </Col>
+                          <Col xs={10}>
+                              <ReactFlowProvider>
+                                  <GraphWithReactFlow
+                                      nodeList={nodeList}
+                                      setSelectedNode={setSelectedNode}
+                                      setSelections={setSelections}
+                                      selectedNode={selectedNode}
+                                      selections={selections}
+                                      selectedEdge={selectedEdge}
+                                      setSelectedEdge={setSelectedEdge}
+                                      resetNodeSelection={resetNodeSelection}
+                                  />
+                              </ReactFlowProvider>
+                          </Col>
+                      </Row>
+                  </Container>
+              </div>
           </DndProvider>
     )
 }
