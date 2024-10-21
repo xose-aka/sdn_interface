@@ -6,6 +6,8 @@ import {addEdge, Controls, ReactFlow, useEdgesState, useNodesState, useReactFlow
 import NetworkNode from './NetworkNode.tsx';
 import ButtonEdge from './ButtonEdge';
 
+import messageDate from "../messages.json";
+
 const nodeTypes = {
     selectorNode: NetworkNode,
 };
@@ -15,6 +17,7 @@ const connectionLineStyle = { stroke: "#0a0a0a" };
 const defaultViewport = { x: 0, y: 0, zoom: 1 };
 
 import CustomConnectionLine from './CustomConnectionLine';
+import ChatWindow from "./ChatWindow.tsx";
 
 const defaultEdgeOptions = {
     style: { strokeWidth: 3, stroke: 'black' },
@@ -57,6 +60,10 @@ export default function GraphWithReactFlow(
         ]
     )
 
+    const [messages, setMessages] = useState(messageDate);
+
+    const [isOpen, setIsOpen] = useState(false);
+
     const handleDeleteKeyPress = (event: KeyboardEvent) => {
         if (event.key === 'Delete') {
             console.log(selectedNode, edges)
@@ -86,7 +93,13 @@ export default function GraphWithReactFlow(
         };
     }, [selectedNode, selectedEdge]);
 
+    const handleClose = () => {
+        setIsOpen(false);
+    };
+
     const buildTopology = () => {
+
+        setIsOpen(!isOpen)
 
         let topologyNodes = []
 
@@ -201,8 +214,15 @@ export default function GraphWithReactFlow(
         setNodes(newNodes)
     }
 
+    const handleMessageSent = message => {
+        setMessages([
+            ...messages,
+            { ...message, dateTimeStamp: moment().format("LLLL") }
+        ]);
+    };
+
     return (
-        <div className={'graph-container'}
+        <div className={'graph-container h-100'}
              ref={drop}
              style={
                  {
@@ -218,7 +238,7 @@ export default function GraphWithReactFlow(
                         zIndex: 1000
                     }
                 }
-                variant="primary" onClick={() => buildTopology() }>Build</Button>
+                variant="primary" onClick={() => buildTopology(!isOpen) }>Build</Button>
 
 
                 <ReactFlow
@@ -239,6 +259,14 @@ export default function GraphWithReactFlow(
                 >
                     <Controls />
                 </ReactFlow>
+
+            <ChatWindow
+                isOpen={isOpen}
+                messages={messages}
+                onClose={handleClose}
+                onMessageSent={handleMessageSent}
+                title="My Messages"
+            />
         </div>
     );
 }
