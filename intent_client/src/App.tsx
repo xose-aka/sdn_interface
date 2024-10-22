@@ -4,7 +4,7 @@ import {Col, Container, Row} from "react-bootstrap";
 import NodeListHeader from "./components/NodeListHeader.tsx";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import GraphWithReactFlow from "./components/GraphWithReactFlow.tsx";
 import {ReactFlowProvider} from "@xyflow/react";
 import '@xyflow/react/dist/style.css';
@@ -23,6 +23,8 @@ function App() {
         setSelectedEdge('')
         setSelections([])
     }
+
+
 
     return (
           <DndProvider backend={HTML5Backend}>

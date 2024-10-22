@@ -1,54 +1,65 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from typing import List
+from datetime import datetime
+
+from fastapi import FastAPI, Depends, HTTPException, Header
+from uuid import uuid4
+from pydantic import BaseModel
+from typing import Optional, List
 
 app = FastAPI()
 
-# List to store active connections
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
+# In-memory store for demo purposes
+user_tokens = {}
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
+# Store chat messages with unique IDs
+chat_messages = {}
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-manager = ConnectionManager()
-
-@app.websocket("/ws/chat")
-async def chat_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            bot_response = generate_bot_response(data)
-            await manager.broadcast(f"User: {data}")
-            await manager.broadcast(f"Bot: {bot_response}")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-
-def generate_bot_response(user_message):
-    # Here you can integrate AI or any static response generation logic
-    if "hello" in user_message.lower():
-        return "Hello! How can I help you today?"
-    return "I'm not sure I understand that."
+# Pydantic models
+class TokenResponse(BaseModel):
+    token: str
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+class Message(BaseModel):
+    message: str
+    messageId: str
+    timestamp: datetime
 
-@app.post("/send-intent")
-async def send_intent():
-    return {"message": "Hello World"}
+class ChatResponse(BaseModel):
+    message: str
+    history: List[Message]
 
+# Endpoint to generate a unique token for a new user
+@app.get("/generate-token", response_model=TokenResponse)
+async def generate_token():
+    token = str(uuid4())  # Generate a unique token (UUID)
+    user_tokens[token] = []  # Initialize an empty chat history for this user
+    return {"token": token}
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+# Verify the token (simplified for demo)
+async def verify_token(x_token: str = Header(...)):
+    if not x_token:
+        raise HTTPException(status_code=400, detail="Missing token")
+    return x_token
+
+# Chat endpoint
+@app.post("/chat", response_model=ChatResponse)
+async def chat(message: Message, token: str = Depends(verify_token)):
+    # Store the user message in the sequence (in-memory store for demo)
+    chat_messages[message.messageId] = {
+        "sender": "user",
+        "message": message.message,
+        "timestamp": message.timestamp
+    }
+
+    # Process the message and generate a server response
+    server_message = {
+        "messageId": str(uuid4()),  # Generate unique ID for server message
+        "message": f"Server response to: {message.message}",
+        "timestamp": datetime.now()
+    }
+    chat_messages[server_message["messageId"]] = server_message
+
+    # Return the response to the client
+    return {
+        "message": server_message["message"],
+        "history": [msg for msg in chat_messages.values()]  # Returning the full history
+    }
