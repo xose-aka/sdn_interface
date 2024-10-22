@@ -1,8 +1,12 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {IntentMessage} from "../types.ts";
-import ChatMessage from "./ChatMessage.tsx";
+import ChatConversation from "./ChatConversation.tsx";
 import {createFocusTrap, FocusTrap} from "focus-trap";
 import '../styles/chat-window.scss'
+import axios from "axios";
+import {ChatMessage} from "../constants/types.ts";
+import { v4 as uuidv4 } from "uuid";
+
 
 type ChatWindowProps = {
     isOpen: boolean,
@@ -27,6 +31,10 @@ function ChatWindow({
     const [message, setValue] = useState("");
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
     const [ipAddress, setIpAddress] = useState(null);
+
+    const [token, setToken] = useState<string | null>(null);
+    const [chatResponse, setChatResponse] = useState<string>('');
+    const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
     // const [position, setPosition] = useState({ x: 0, y: 0 });
     // const [size, setSize] = useState({ width: 500, height: 300 });
@@ -134,6 +142,79 @@ function ChatWindow({
         autExpandInput();
     }, [message]);
 
+
+    // Function to request a token from the backend
+    const getToken = async () => {
+        try {
+            const response = await axios.get('http://localhost:8000/generate-token');
+            const newToken = response.data.token;
+            setToken(newToken);
+            localStorage.setItem('chat_token', newToken); // Save token in localStorage
+        } catch (error) {
+            console.error('Error generating token:', error);
+        }
+    };
+
+    // Function to send a chat message to the server
+    const sendMessage = async () => {
+        if (!token) {
+            console.error('No token found, generating one...');
+            return;
+        }
+
+        const messageId = uuidv4(); // Generate a unique ID (use UUID or similar)
+        const timestamp = new Date(); // Current timestamp
+        const messageObject: ChatMessage = {
+            id: messageId,
+            sender: 'user',
+            message: message,
+            timestamp: timestamp,
+            status: 'pending'  // Message is pending until server confirms
+        };
+
+        // Add the message to the local chat history
+        setChatHistory(prevHistory => [...prevHistory, messageObject]);
+
+        try {
+            // Send message to the server
+            const response = await axios.post(
+                'http://localhost:8000/chat',
+                { message: message, messageId: messageId, timestamp: timestamp },
+                { headers: { 'X-Token': token } }
+            );
+
+            // Update the message status to 'received'
+            setChatHistory(prevHistory =>
+                prevHistory.map(msg =>
+                    msg.id === messageId ? { ...msg, status: 'received' } : msg
+                )
+            );
+            // Add server's response to the chat history
+            const serverResponse: ChatMessage = {
+                id: uuidv4(),
+                sender: 'server',
+                message: response.data.response,
+                timestamp: new Date(), // New timestamp for server's response
+                status: 'received'
+            };
+            setChatHistory(prevHistory => [...prevHistory, serverResponse]);
+
+        } catch (error) {
+            console.error('Error sending message:', error);
+            // Handle error, e.g., retry mechanism
+        }
+    };
+
+    // Load token from localStorage or request a new one if not available
+    useEffect(() => {
+        const savedToken = localStorage.getItem('chat_token');
+        if (savedToken) {
+            setToken(savedToken);
+        } else {
+            getToken(); // Generate new token if not found
+        }
+    }, []);
+
     return (
         <div
             ref={chatWindow}
@@ -175,7 +256,7 @@ function ChatWindow({
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
                 {messages.map(({ originIpAddress, ...props }) => (
-                    <ChatMessage
+                    <ChatConversation
                         key={Math.random()}
                         isSameOrigin={originIpAddress === ipAddress}
                         {...props}

@@ -7,7 +7,7 @@ type ChatMessageProps = {
     isSameOrigin: boolean
 }
 
-function ChatMessage({
+function ChatConversation({
                          dateTimeStamp,
                          message,
                          isSameOrigin
@@ -27,4 +27,4 @@ function ChatMessage({
     );
 }
 
-export default ChatMessage;
+export default ChatConversation;
