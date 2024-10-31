@@ -3,9 +3,18 @@ from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException, Header
 from uuid import uuid4
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to specify allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Adjust this to specify allowed HTTP methods
+    allow_headers=["*"],  # Adjust this to specify allowed headers
+)
 
 # In-memory store for demo purposes
 user_tokens = {}
@@ -20,7 +29,7 @@ class TokenResponse(BaseModel):
 
 class Message(BaseModel):
     message: str
-    messageId: str
+    id: str
     timestamp: datetime
 
 class ChatResponse(BaseModel):
@@ -44,7 +53,7 @@ async def verify_token(x_token: str = Header(...)):
 @app.post("/chat", response_model=ChatResponse)
 async def chat(message: Message, token: str = Depends(verify_token)):
     # Store the user message in the sequence (in-memory store for demo)
-    chat_messages[message.messageId] = {
+    chat_messages[message.id] = {
         "sender": "user",
         "message": message.message,
         "timestamp": message.timestamp
@@ -52,11 +61,11 @@ async def chat(message: Message, token: str = Depends(verify_token)):
 
     # Process the message and generate a server response
     server_message = {
-        "messageId": str(uuid4()),  # Generate unique ID for server message
+        "id": str(uuid4()),  # Generate unique ID for server message
         "message": f"Server response to: {message.message}",
         "timestamp": datetime.now()
     }
-    chat_messages[server_message["messageId"]] = server_message
+    chat_messages[server_message["id"]] = server_message
 
     # Return the response to the client
     return {
