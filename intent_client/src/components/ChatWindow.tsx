@@ -1,26 +1,25 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {IntentMessage} from "../types.ts";
 import ChatConversation from "./ChatConversation.tsx";
 import {createFocusTrap, FocusTrap} from "focus-trap";
 import '../styles/chat-window.scss'
 import axios from "axios";
-import {ChatMessage} from "../constants/types.ts";
+import {IntentMessage} from "../constants/types.ts";
 import { v4 as uuidv4 } from "uuid";
+import messageDate from "../messages.json";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faComments} from "@fortawesome/free-solid-svg-icons";
+import moment from "moment";
 
 
 type ChatWindowProps = {
     isOpen: boolean,
-    messages: IntentMessage[]
     onClose: () => void,
-    onMessageSent: ( message : string) => void,
     title: string
 }
 
 function ChatWindow({
                         isOpen,
-                        messages,
                         onClose,
-                        onMessageSent,
                         title
 }: ChatWindowProps) {
 
@@ -35,6 +34,9 @@ function ChatWindow({
     const [token, setToken] = useState<string | null>(null);
     const [chatResponse, setChatResponse] = useState<string>('');
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
+
+    const [messages, setMessages] = useState<IntentMessage[]>(messageDate);
+
 
     // const [position, setPosition] = useState({ x: 0, y: 0 });
     // const [size, setSize] = useState({ width: 500, height: 300 });
@@ -95,10 +97,6 @@ function ChatWindow({
     //     };
     // }, [isDragging, isResizing, resizeDir]);
 
-    const handleSubmit = () => {
-        onMessageSent( message );
-        setValue("");
-    };
 
     const setChatWindowScrollPosition = () => {
         const _chatWindowBody = chatWindowBody.current;
@@ -164,13 +162,18 @@ function ChatWindow({
 
         const messageId = uuidv4(); // Generate a unique ID (use UUID or similar)
         const timestamp = new Date(); // Current timestamp
-        const messageObject: ChatMessage = {
+        const messageObject: IntentMessage = {
             id: messageId,
             sender: 'user',
             message: message,
             timestamp: timestamp,
             status: 'pending'  // Message is pending until server confirms
         };
+
+            setMessages([
+                ...messages,
+                { ...messageObject }
+            ]);
 
         // Add the message to the local chat history
         setChatHistory(prevHistory => [...prevHistory, messageObject]);
@@ -190,7 +193,7 @@ function ChatWindow({
                 )
             );
             // Add server's response to the chat history
-            const serverResponse: ChatMessage = {
+            const serverResponse: IntentMessage = {
                 id: uuidv4(),
                 sender: 'server',
                 message: response.data.response,
@@ -203,6 +206,11 @@ function ChatWindow({
             console.error('Error sending message:', error);
             // Handle error, e.g., retry mechanism
         }
+    };
+
+    const handleSubmit = () => {
+        sendMessage( );
+        setValue("");
     };
 
     // Load token from localStorage or request a new one if not available
@@ -232,6 +240,7 @@ function ChatWindow({
             // onMouseDown={handleMouseDown}
         >
             <div className="chat-window__header">
+                <FontAwesomeIcon icon={faComments} inverse />
                 <div className="chat-window__title">{title}</div>
                 <button className="chat-window__close-btn" onClick={() => onClose()}>
                     <svg
@@ -255,11 +264,10 @@ function ChatWindow({
                 </button>
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
-                {messages.map(({ originIpAddress, ...props }) => (
+                {messages.map(intentMessage => (
                     <ChatConversation
                         key={Math.random()}
-                        isSameOrigin={originIpAddress === ipAddress}
-                        {...props}
+                        message={intentMessage}
                     />
                 ))}
             </div>

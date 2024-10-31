@@ -7,7 +7,7 @@ export interface NodeType {
     size: bigint
 }
 
-export interface ChatMessage {
+export interface IntentMessage {
     id: string; // Unique message ID (UUID or incrementing integer)
     sender: 'user' | 'server'; // Who sent the message
     message: string; // The message content

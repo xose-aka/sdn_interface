@@ -5,6 +5,9 @@ import {Button} from "react-bootstrap";
 import {addEdge, Controls, ReactFlow, useEdgesState, useNodesState, useReactFlow} from "@xyflow/react";
 import NetworkNode from './NetworkNode.tsx';
 import ButtonEdge from './ButtonEdge';
+import moment from "moment";
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import messageDate from "../messages.json";
 
@@ -18,6 +21,7 @@ const defaultViewport = { x: 0, y: 0, zoom: 1 };
 
 import CustomConnectionLine from './CustomConnectionLine';
 import ChatWindow from "./ChatWindow.tsx";
+import {faComments} from "@fortawesome/free-solid-svg-icons";
 
 const defaultEdgeOptions = {
     style: { strokeWidth: 3, stroke: 'black' },
@@ -59,8 +63,6 @@ export default function GraphWithReactFlow(
             // }
         ]
     )
-
-    const [messages, setMessages] = useState(messageDate);
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -214,12 +216,12 @@ export default function GraphWithReactFlow(
         setNodes(newNodes)
     }
 
-    const handleMessageSent = message => {
-        setMessages([
-            ...messages,
-            { ...message, dateTimeStamp: moment().format("LLLL") }
-        ]);
-    };
+    // const handleMessageSent = message => {
+    //     setMessages([
+    //         ...messages,
+    //         { ...message, dateTimeStamp: moment().format("LLLL") }
+    //     ]);
+    // };
 
     return (
         <div className={'graph-container h-100'}
@@ -235,10 +237,15 @@ export default function GraphWithReactFlow(
                     {
                         position: "relative",
                         float: "right",
-                        zIndex: 1000
+                        zIndex: 1000,
+                        top: "20px"
+
                     }
                 }
-                variant="primary" onClick={() => buildTopology(!isOpen) }>Build</Button>
+                variant="primary" onClick={() => buildTopology(!isOpen) }>
+                <FontAwesomeIcon icon={faComments} />
+                <span className="m-1">Input Intent </span>
+            </Button>
 
 
                 <ReactFlow
@@ -262,10 +269,8 @@ export default function GraphWithReactFlow(
 
             <ChatWindow
                 isOpen={isOpen}
-                messages={messages}
                 onClose={handleClose}
-                onMessageSent={handleMessageSent}
-                title="My Messages"
+                title="Intents  Window  "
             />
         </div>
     );
