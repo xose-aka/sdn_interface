@@ -1,0 +1,3 @@
+interface ListNodeProps {
+    title: string,
+}

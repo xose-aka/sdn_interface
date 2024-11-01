@@ -1,26 +1,27 @@
 import React, { useCallback, useEffect, useState} from "react";
 import {useDrop} from "react-dnd";
-import {getNodeSvg, isObjectEmpty} from "../helper.ts";
+import {getNodeSvg} from "../../../../utils/node.ts";
+import {isObjectEmpty} from "../../../../utils/helper.ts";
 import {Button} from "react-bootstrap";
 import {addEdge, Controls, ReactFlow, useEdgesState, useNodesState, useReactFlow} from "@xyflow/react";
-import NetworkNode from './NetworkNode.tsx';
 import ButtonEdge from './ButtonEdge';
+import TopoNode from '../TopoNode/TopoNode.tsx';
 import moment from "moment";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import messageDate from "../messages.json";
+// import messageDate from "../messages.json";
 
 const nodeTypes = {
-    selectorNode: NetworkNode,
+    selectorNode: TopoNode,
 };
 
 const connectionLineStyle = { stroke: "#0a0a0a" };
 
 const defaultViewport = { x: 0, y: 0, zoom: 1 };
 
-import CustomConnectionLine from './CustomConnectionLine';
-import ChatWindow from "./ChatWindow.tsx";
+// import CustomConnectionLine from './CustomConnectionLine';
+// import ChatWindow from "./ChatWindow.tsx";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 
 const defaultEdgeOptions = {
@@ -38,7 +39,7 @@ interface GraphProps {
     selections: string[],
     resetNodeSelection: () => void
 }
-export default function GraphWithReactFlow(
+export default function TopoBuild(
     {
         nodeList,
         setSelections,
@@ -239,7 +240,6 @@ export default function GraphWithReactFlow(
                         float: "right",
                         zIndex: 1000,
                         top: "20px"
-
                     }
                 }
                 variant="primary" onClick={() => buildTopology(!isOpen) }>
