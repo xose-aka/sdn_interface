@@ -25,7 +25,7 @@ export default function NetworkNode({ id, data, isConnectable }) {
                      backgroundImage: 'url(' + data.icon + ')',
                      width: `${dimensions.width}px`,
                      height: `${dimensions.height}px`,
-                }}
+                 }}
             >
                 {/*<img src={ data.icon  } alt={data.icon}/>*/}
                 {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}
@@ -43,8 +43,8 @@ export default function NetworkNode({ id, data, isConnectable }) {
                 { (!connection.inProgress || isTarget) && (
                     <Handle
                         className="customHandle" position={Position.Left}
-                            type="target"
-                            isConnectableStart={false} />
+                        type="target"
+                        isConnectableStart={false} />
                 )}
             </div>
             <div className='node-label'>{ data.label }</div>
