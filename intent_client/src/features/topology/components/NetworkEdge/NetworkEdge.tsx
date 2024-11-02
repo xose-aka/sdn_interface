@@ -8,28 +8,16 @@ import {
     useInternalNode
 } from '@xyflow/react';
 
-import { getEdgeParams } from './../helper.ts';
+import { getEdgeParams } from '../../../../utils/edge.ts';
 
 export default function CustomEdge({
                                        id,
-                                       sourceX,
-                                       sourceY,
-                                       targetX,
-                                       targetY,
                                        source,
                                        target,
                                        style = {},
                                        markerEnd,
                                    }: EdgeProps) {
     const { setEdges } = useReactFlow();
-    // const [edgePath, labelX, labelY] = getStraightPath({
-    //     sourceX,
-    //     sourceY,
-    //     // sourcePosition,
-    //     targetX,
-    //     targetY,
-    //     // targetPosition,
-    // });
 
     const onEdgeClick = () => {
         setEdges((edges) => edges.filter((edge) => edge.id !== id));

@@ -1,18 +1,22 @@
 import React, {useEffect, useState} from 'react';
-import {Handle, Position, useConnection, useStore} from "@xyflow/react";
+import {Handle, Position, useConnection, NodeProps} from "@xyflow/react";
 
 
-export default function NetworkNode({ id, data, isConnectable }) {
+
+export default function NetworkNode({ id, data }: NodeProps) {
 
     const connection = useConnection();
 
     const isTarget = connection.inProgress && connection.fromNode.id !== id;
 
-    const [dimensions, setDimensions] = useState({ width: 'auto', height: 'auto' });
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+    let isThisNodeClicked = data.isThisNodeClicked as boolean
+    let label = data.label as string
 
     useEffect(() => {
-        const img = new Image();
-        img.src = data.icon;
+        const img: HTMLImageElement = new Image();
+        img.src = data.icon as string;
         img.onload = () => {
             setDimensions({ width: img.width, height: img.height });
         };
@@ -36,7 +40,7 @@ export default function NetworkNode({ id, data, isConnectable }) {
                         className="customHandle"
                         position={Position.Right}
                         type="source"
-                        isConnectable={data.isThisNodeClicked}
+                        isConnectable={isThisNodeClicked}
                     />
                 )}
                 {/* We want to disable the target handle, if the connection was started from this node */}
@@ -47,7 +51,7 @@ export default function NetworkNode({ id, data, isConnectable }) {
                         isConnectableStart={false} />
                 )}
             </div>
-            <div className='node-label'>{ data.label }</div>
+            <div className='node-label'>{ label }</div>
         </div>
     );
 }
