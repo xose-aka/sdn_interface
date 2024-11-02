@@ -1,23 +1,16 @@
-import React, {useEffect, useRef, useState} from 'react';
-import ChatConversation from "./ChatConversation.tsx";
+import React, { useEffect, useRef, useState} from 'react';
+import Message from "../Message";
 import {createFocusTrap, FocusTrap} from "focus-trap";
-import '../styles/chat-window.scss'
+import './index.scss'
 import axios from "axios";
-import {IntentMessage} from "../constants/types.ts";
+import {IntentMessage} from "../../types";
 import { v4 as uuidv4 } from "uuid";
-import messageDate from "../messages.json";
+import messageDate from "../../../../messages.json";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
-import moment from "moment";
 
 
-type ChatWindowProps = {
-    isOpen: boolean,
-    onClose: () => void,
-    title: string
-}
-
-function ChatWindow({
+function Index({
                         isOpen,
                         onClose,
                         title
@@ -25,7 +18,7 @@ function ChatWindow({
 
     const chatWindow = useRef<HTMLDivElement | null>(null);
     const chatWindowBody = useRef<HTMLDivElement | null>(null);
-    const userInput = useRef();
+    const userInput = useRef<HTMLTextAreaElement | null>(null);
 
     const [message, setValue] = useState("");
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
@@ -35,7 +28,7 @@ function ChatWindow({
     const [chatResponse, setChatResponse] = useState<string>('');
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
-    const [messages, setMessages] = useState<IntentMessage[]>(messageDate);
+    const [messages, setMessages] = useState<IntentMessage[]>([]);
 
 
     // const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -45,8 +38,8 @@ function ChatWindow({
     // const [resizeDir, setResizeDir] = useState<{ widthDir: number, heightDir: number } | null>(null);
 
 
-    const handleChange = ( e: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(e.target.value);
+    const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setValue(event.target.value);
     };
 
     // const handleMouseDown = (e: React.MouseEvent) => {
@@ -100,13 +93,17 @@ function ChatWindow({
 
     const setChatWindowScrollPosition = () => {
         const _chatWindowBody = chatWindowBody.current;
-        _chatWindowBody.scrollTop = _chatWindowBody.scrollHeight;
+        if (_chatWindowBody !== null)
+            _chatWindowBody.scrollTop = _chatWindowBody.scrollHeight;
     };
 
     const autExpandInput = () => {
         const _userInput = userInput.current;
-        _userInput.style.height = "auto";
-        _userInput.style.height = `${_userInput.scrollHeight}px`;
+
+        if (_userInput !== null) {
+            _userInput.style.height = "auto";
+            _userInput.style.height = `${_userInput.scrollHeight}px`;
+        }
     };
 
     useEffect(() => {
@@ -114,12 +111,14 @@ function ChatWindow({
             .then(res => res.json())
             .then(({ ip }) => setIpAddress(ip));
 
-        setFocusTrap(
-            createFocusTrap(chatWindow.current, {
-                clickOutsideDeactivates: true,
-                fallbackFocus: chatWindow.current
-            })
-        );
+        if (chatWindow.current) {
+            setFocusTrap(
+                createFocusTrap(chatWindow.current, {
+                    clickOutsideDeactivates: true,
+                    fallbackFocus: chatWindow.current
+                })
+            );
+        }
     }, []);
 
     useEffect(() => {
@@ -265,7 +264,7 @@ function ChatWindow({
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
                 {messages.map(intentMessage => (
-                    <ChatConversation
+                    <Message
                         key={Math.random()}
                         message={intentMessage}
                     />
@@ -275,8 +274,8 @@ function ChatWindow({
         <textarea
             ref={userInput}
             className="chat-window__input"
-            rows="1"
-            placeholder="Enter your message..."
+            rows={1}
+            placeholder="Enter your intet..."
             value={message}
             onChange={handleChange}
         />
@@ -293,4 +292,4 @@ function ChatWindow({
     );
 }
 
-export default ChatWindow;
+export default Index;

@@ -1,17 +1,9 @@
 import React from 'react';
-import '../styles/chat-message.scss'
-import {IntentMessage} from "../constants/types.ts";
+import './index.scss'
+import {MessageProps} from "./index.types.ts";
 
-type ChatMessageProps = {
-    message: IntentMessage
-}
-
-function ChatConversation({
-                         message,
-}: ChatMessageProps) {
-
-
-
+function Index({ message }: MessageProps)
+{
     return (
         <div
             className={`chat-message ${message.sender == 'user' ? 'is-same-origin' : ''}`}
@@ -24,4 +16,4 @@ function ChatConversation({
     );
 }
 
-export default ChatConversation;
+export default Index;

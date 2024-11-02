@@ -1,11 +1,3 @@
-
-export interface NodeType {
-    id: string,
-    label: string,
-    icon: string,
-    size: bigint
-}
-
 export interface IntentMessage {
     id: string; // Unique message ID (UUID or incrementing integer)
     sender: 'user' | 'server'; // Who sent the message
