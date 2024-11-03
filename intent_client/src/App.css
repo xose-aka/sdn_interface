@@ -94,3 +94,7 @@ div.customHandle {
   border: none;
   opacity: 0;
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
