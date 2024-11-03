@@ -22,18 +22,21 @@ user_tokens = {}
 # Store chat messages with unique IDs
 chat_messages = {}
 
+# Store chat messages history with unique IDs
+chat_response_history = []
+
 # Pydantic models
 class TokenResponse(BaseModel):
     token: str
 
 
 class Message(BaseModel):
-    message: str
+    text: str
     id: str
     timestamp: datetime
 
 class ChatResponse(BaseModel):
-    message: str
+    message: Message
     history: List[Message]
 
 # Endpoint to generate a unique token for a new user
@@ -50,25 +53,29 @@ async def verify_token(x_token: str = Header(...)):
     return x_token
 
 # Chat endpoint
+# @app.post("/chat", response_model=ChatResponse)
 @app.post("/chat", response_model=ChatResponse)
 async def chat(message: Message, token: str = Depends(verify_token)):
     # Store the user message in the sequence (in-memory store for demo)
     chat_messages[message.id] = {
         "sender": "user",
-        "message": message.message,
+        "text": message.text,
         "timestamp": message.timestamp
     }
 
     # Process the message and generate a server response
     server_message = {
         "id": str(uuid4()),  # Generate unique ID for server message
-        "message": f"Server response to: {message.message}",
+        "text": f"Server response to: {message.text}",
         "timestamp": datetime.now()
     }
     chat_messages[server_message["id"]] = server_message
+    chat_response_history.append(server_message)
+
+    print("Values ", server_message)
 
     # Return the response to the client
     return {
-        "message": server_message["message"],
-        "history": [msg for msg in chat_messages.values()]  # Returning the full history
+        "message": server_message,
+        "history": [msg for msg in chat_response_history]  # Returning the full history
     }

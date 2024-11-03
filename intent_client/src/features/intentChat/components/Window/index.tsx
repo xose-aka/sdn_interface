@@ -147,8 +147,10 @@ function Index({
             const newToken = response.data.token;
             setToken(newToken);
             localStorage.setItem('chat_token', newToken); // Save token in localStorage
+            return response.status
         } catch (error) {
             console.error('Error generating token:', error);
+            return error
         }
     };
 
@@ -164,7 +166,7 @@ function Index({
         const messageObject: IntentMessage = {
             id: messageId,
             sender: 'user',
-            message: message,
+            text: message,
             timestamp: timestamp,
             status: 'pending'  // Message is pending until server confirms
         };
@@ -181,9 +183,11 @@ function Index({
             // Send message to the server
             const response = await axios.post(
                 'http://localhost:8000/chat',
-                { message: message, messageId: messageId, timestamp: timestamp },
+                { text: message, id: messageId, timestamp: timestamp },
                 { headers: { 'X-Token': token } }
             );
+
+            console.log('Response ', response.data)
 
             // Update the message status to 'received'
             setChatHistory(prevHistory =>
@@ -193,13 +197,19 @@ function Index({
             );
             // Add server's response to the chat history
             const serverResponse: IntentMessage = {
-                id: uuidv4(),
+                id: response.data.message.id,
                 sender: 'server',
-                message: response.data.response,
+                text: response.data.message.text,
                 timestamp: new Date(), // New timestamp for server's response
                 status: 'received'
             };
+
+            console.log('server', serverResponse)
+            console.log('messages', messages)
             setChatHistory(prevHistory => [...prevHistory, serverResponse]);
+            setMessages(prevMessage => [...prevMessage, serverResponse]);
+
+            console.log(messages)
 
         } catch (error) {
             console.error('Error sending message:', error);
@@ -214,13 +224,21 @@ function Index({
 
     // Load token from localStorage or request a new one if not available
     useEffect(() => {
-        const savedToken = localStorage.getItem('chat_token');
-        if (savedToken) {
-            setToken(savedToken);
-        } else {
-            getToken(); // Generate new token if not found
+
+        if (isOpen) {
+            const savedToken = localStorage.getItem('chat_token');
+            if (savedToken) {
+                setToken(savedToken);
+            } else {
+                getToken()
+                    .then((returnMessage) => {
+                        console.log('gg');
+                        console.log(returnMessage)
+                    }); // Generate new token if not found
+            }
         }
-    }, []);
+
+    }, [isOpen]);
 
     return (
         <div
