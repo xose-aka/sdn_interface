@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import messageDate from "../../../../messages.json";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
+import IntentAdditionTooltip from "../IntentAdditionTooltip";
 
 
 function Index({
@@ -22,13 +23,15 @@ function Index({
 
     const [message, setValue] = useState("");
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
-    const [ipAddress, setIpAddress] = useState(null);
 
     const [token, setToken] = useState<string | null>(null);
     const [chatResponse, setChatResponse] = useState<string>('');
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
     const [messages, setMessages] = useState<IntentMessage[]>([]);
+    const [pendingMessage, setPendingMessage] = useState<IntentMessage | null>(null);
+
+    const [isIntentAdditionTooltipOpen, setIsIntentAdditionTooltipOpen] = useState<boolean>(false);
 
 
     // const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -107,9 +110,9 @@ function Index({
     };
 
     useEffect(() => {
-        fetch("https://ipinfo.io/json")
-            .then(res => res.json())
-            .then(({ ip }) => setIpAddress(ip));
+        // fetch("https://ipinfo.io/json")
+        //     .then(res => res.json())
+        //     .then(({ ip }) => setIpAddress(ip));
 
         if (chatWindow.current) {
             setFocusTrap(
@@ -154,13 +157,7 @@ function Index({
         }
     };
 
-    // Function to send a chat message to the server
-    const sendMessage = async () => {
-        if (!token) {
-            console.error('No token found, generating one...');
-            return;
-        }
-
+    const submitMessage = () => {
         const messageId = uuidv4(); // Generate a unique ID (use UUID or similar)
         const timestamp = new Date(); // Current timestamp
         const messageObject: IntentMessage = {
@@ -168,31 +165,42 @@ function Index({
             sender: 'user',
             text: message,
             timestamp: timestamp,
-            status: 'pending'  // Message is pending until server confirms
+            status: 'pending',  // Message is pending until server confirms
+            isConfirmed: null,
+            isConfirmationDone: false
         };
 
-            setMessages([
-                ...messages,
-                { ...messageObject }
-            ]);
+        setMessages([
+            ...messages,
+            { ...messageObject }
+        ]);
+
+        setPendingMessage(messageObject)
 
         // Add the message to the local chat history
         setChatHistory(prevHistory => [...prevHistory, messageObject]);
+    }
+
+    // Function to send a chat message to the server
+    const sendMessage = async () => {
+        if (!token) {
+            console.error('No token found, generating one...');
+            return;
+        }
 
         try {
             // Send message to the server
             const response = await axios.post(
                 'http://localhost:8000/chat',
-                { text: message, id: messageId, timestamp: timestamp },
+                { text: pendingMessage?.text, id: pendingMessage?.id, timestamp: pendingMessage?.timestamp },
                 { headers: { 'X-Token': token } }
             );
 
-            console.log('Response ', response.data)
 
             // Update the message status to 'received'
             setChatHistory(prevHistory =>
                 prevHistory.map(msg =>
-                    msg.id === messageId ? { ...msg, status: 'received' } : msg
+                    msg.id === pendingMessage?.id ? { ...msg, status: 'received' } : msg
                 )
             );
             // Add server's response to the chat history
@@ -204,12 +212,23 @@ function Index({
                 status: 'received'
             };
 
-            console.log('server', serverResponse)
-            console.log('messages', messages)
             setChatHistory(prevHistory => [...prevHistory, serverResponse]);
-            setMessages(prevMessage => [...prevMessage, serverResponse]);
+            // setMessages(prevMessage => [...prevMessage, serverResponse]);
 
-            console.log(messages)
+            const updatedMessages = messages.map(messageItem => {
+                if ( messageItem.id === pendingMessage?.id ) {
+                    messageItem.status = "sent"
+                    messageItem.isConfirmed = pendingMessage.isConfirmed
+                    messageItem.isConfirmationDone = pendingMessage.isConfirmationDone
+                }
+
+                return messageItem;
+            })
+
+            updatedMessages.push(serverResponse)
+
+            setMessages(updatedMessages)
+            setPendingMessage(null)
 
         } catch (error) {
             console.error('Error sending message:', error);
@@ -218,9 +237,46 @@ function Index({
     };
 
     const handleSubmit = () => {
-        sendMessage( );
+        submitMessage();
         setValue("");
     };
+
+    const submitConfirmMessage = (isConfirm: boolean) => {
+
+        if (pendingMessage !== null) {
+
+            const modifyPendingMessage: IntentMessage = {
+                id: pendingMessage.id,
+                sender: pendingMessage.sender,
+                text: pendingMessage.text,
+                timestamp: pendingMessage.timestamp,
+                status: pendingMessage.status,
+                isConfirmed: isConfirm,
+                isConfirmationDone: true
+            }
+
+            setPendingMessage(modifyPendingMessage)
+        }
+
+        if (!isConfirm)
+            setIsIntentAdditionTooltipOpen(true)
+    }
+
+    useEffect(() => {
+        if (isIntentAdditionTooltipOpen) {
+            const toRefIntentTooltip = setTimeout(() => {
+                setIsIntentAdditionTooltipOpen(false);
+                clearTimeout(toRefIntentTooltip);
+            }, 4000);
+        }
+
+    }, [isIntentAdditionTooltipOpen]);
+
+    useEffect(() => {
+        if (pendingMessage?.isConfirmationDone)
+            sendMessage()
+
+    }, [JSON.stringify(pendingMessage)]);
 
     // Load token from localStorage or request a new one if not available
     useEffect(() => {
@@ -285,26 +341,29 @@ function Index({
                     <Message
                         key={Math.random()}
                         message={intentMessage}
+                        pendingMessage={pendingMessage}
+                        submitConfirmMessage={submitConfirmMessage}
                     />
                 ))}
             </div>
             <div className="chat-window__footer">
-        <textarea
-            ref={userInput}
-            className="chat-window__input"
-            rows={1}
-            placeholder="Enter your intet..."
-            value={message}
-            onChange={handleChange}
-        />
-                <button
-                    className="chat-window__send-btn"
-                    type="button"
-                    onClick={() => handleSubmit()}
-                    disabled={!message}
-                >
-                    Send
-                </button>
+                <IntentAdditionTooltip message={'Enter additional intent'} isIntentAdditionTooltipOpen={isIntentAdditionTooltipOpen}/>
+                <textarea
+                    ref={userInput}
+                    className="chat-window__input"
+                    rows={1}
+                    placeholder="Enter your intent..."
+                    value={message}
+                    onChange={handleChange}
+                />
+                        <button
+                            className="chat-window__send-btn"
+                            type="button"
+                            onClick={() => handleSubmit()}
+                            disabled={!message}
+                        >
+                            Send
+                        </button>
             </div>
         </div>
     );
