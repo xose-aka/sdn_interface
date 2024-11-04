@@ -79,7 +79,6 @@ const TopologyPage: React.FC = () => {
         })
 
         console.log(topologyNodes)
-
     }
 
     const handleClose = () => {
