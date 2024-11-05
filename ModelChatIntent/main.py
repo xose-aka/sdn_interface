@@ -32,8 +32,12 @@ class TokenResponse(BaseModel):
 
 class Message(BaseModel):
     text: str
-    id: str
+    clientId: str
+    sender: str
     timestamp: datetime
+
+class MessagesList(BaseModel):
+    items: List[Message]
 
 class ChatResponse(BaseModel):
     message: Message
@@ -55,18 +59,34 @@ async def verify_token(x_token: str = Header(...)):
 # Chat endpoint
 # @app.post("/chat", response_model=ChatResponse)
 @app.post("/chat", response_model=ChatResponse)
-async def chat(message: Message, token: str = Depends(verify_token)):
+async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
     # Store the user message in the sequence (in-memory store for demo)
-    chat_messages[message.id] = {
-        "sender": "user",
-        "text": message.text,
-        "timestamp": message.timestamp
-    }
+
+    response_message = ""
+    server_message_client_id = ""
+
+    for message in messages_list.items:
+
+        if message.sender == "user":
+
+            chat_messages[message.clientId] = {
+                "clientId": message.clientId,
+                "sender": message.sender,
+                "text": message.text,
+                "timestamp": message.timestamp
+            }
+
+            response_message += message.text
+
+        if message.sender == "server":
+            server_message_client_id = message.clientId
 
     # Process the message and generate a server response
     server_message = {
         "id": str(uuid4()),  # Generate unique ID for server message
-        "text": f"Server response to: {message.text}",
+        "text": f"Server response to: {response_message}",
+        "clientId": server_message_client_id,
+        "sender": "server",
         "timestamp": datetime.now()
     }
     chat_messages[server_message["id"]] = server_message
