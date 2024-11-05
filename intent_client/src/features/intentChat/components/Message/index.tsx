@@ -15,10 +15,9 @@ import {pending, sent} from "../../../../constants/intentMessage.ts";
 function Index({ message, pendingMessage, submitConfirmMessage }: MessageProps)
 {
 
+    console.log("message ", message)
     let intentMessageDeliverStatus = ''
     let intentMessageDeliverStatusIcon = faCircleExclamation
-
-    console.log(message)
 
     if (message.status === "pending") {
         intentMessageDeliverStatus = pending
@@ -45,10 +44,14 @@ function Index({ message, pendingMessage, submitConfirmMessage }: MessageProps)
                         </div>
                     )
                 }
-                <span className="chat-message__item__text">{message.text}</span>
+                <span className="chat-message__item__text">
+                    <span className={ message.sender === "server" && message.status === "pending" ? "chat-message__loading": "" }>
+                        {message.text}
+                    </span>
+                </span>
             </div>
             { pendingMessage !== null &&
-                message.id === pendingMessage.id &&
+                message.clientId === pendingMessage.clientId &&
                 message.sender == 'user' &&
                 pendingMessage.isConfirmationDone === false &&
                 (
