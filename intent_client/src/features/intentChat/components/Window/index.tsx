@@ -9,19 +9,22 @@ import messageDate from "../../../../messages.json";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentAdditionTooltip from "../IntentAdditionTooltip";
+import {ChatWindowProps} from "./index.types.ts";
 
 
 function Index({
                         isOpen,
                         onClose,
-                        title
+                        title,
+                   message,
+                   setIntentMessage,
+                   setIntentHighlightedNodes
 }: ChatWindowProps) {
 
     const chatWindow = useRef<HTMLDivElement | null>(null);
     const chatWindowBody = useRef<HTMLDivElement | null>(null);
     const userInput = useRef<HTMLTextAreaElement | null>(null);
 
-    const [message, setValue] = useState("");
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
 
     const [token, setToken] = useState<string | null>(null);
@@ -42,7 +45,7 @@ function Index({
 
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setValue(event.target.value);
+        setIntentMessage(event.target.value);
     };
 
     // const handleMouseDown = (e: React.MouseEvent) => {
@@ -243,7 +246,8 @@ function Index({
 
     const handleSubmit = () => {
         submitMessage();
-        setValue("");
+        setIntentMessage("");
+        setIntentHighlightedNodes([])
     };
 
     const submitConfirmMessage = (isConfirm: boolean) => {

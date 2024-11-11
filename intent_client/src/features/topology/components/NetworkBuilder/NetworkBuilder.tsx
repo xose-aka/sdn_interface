@@ -47,12 +47,9 @@ export default function NetworkBuilder(
 
     const { screenToFlowPosition } = useReactFlow();
 
-    const [nodeCounter, setNodeCounter] = useState(1)
-
     const handleDeleteKeyPress = (event: React.KeyboardEvent) => {
 
         if (event.key === 'Delete') {
-            console.log(selectedNode, edges)
 
             if ( selectedNode !== null )
             {
@@ -71,6 +68,8 @@ export default function NetworkBuilder(
 
     const onConnect = useCallback(
         (params: Connection) => {
+
+            // console.log('gg')
 
             setEdges((eds) => addEdge(
                 { ...params },
@@ -97,21 +96,38 @@ export default function NetworkBuilder(
                     coordinates.y = y
                 }
 
+                let counter = 0
+                let isCounterNumberAlreadySet
+
+                do {
+
+                    isCounterNumberAlreadySet = false
+                    counter++
+
+                    for (const itemNode of nodes) {
+
+                        const nodeId = parseInt(itemNode.id, 10)
+
+                        if (nodeId == counter)
+                            isCounterNumberAlreadySet = true
+                    }
+
+
+                } while(isCounterNumberAlreadySet)
+
                 const newNode: Node = {
-                    id: `${nodeCounter}`,
+                    id: `${counter}`,
                     type: 'networkNode',
                     data: {
                         icon: icon,
-                        label: `${item.title} ${nodeCounter}`,
+                        label: `${item.title} ${counter}`,
                         selectedNode: selectedNode,
                         isThisNodeClicked: false
                     },
                     position: screenToFlowPosition(coordinates)
                 }
 
-
                 setNodes([...nodes, newNode])
-                setNodeCounter(nodeCounter + 1)
             }
         }),
         [nodes]
