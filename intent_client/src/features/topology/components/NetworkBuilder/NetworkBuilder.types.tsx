@@ -12,7 +12,8 @@ export interface NetworkBuilderProps {
     setEdges: Dispatch<SetStateAction<Edge[]>>,
     onNodesChange: OnNodesChange<Node>,
     onEdgesChange: OnEdgesChange<Edge>,
-    resetNodeSelection: () => void
+    resetNodeSelection: () => void,
+    intentHighlightedNodes: Node[]
 }
 interface SelectableNode {
     id: string

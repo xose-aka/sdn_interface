@@ -4,7 +4,7 @@ import {HTML5Backend} from "react-dnd-html5-backend";
 
 // import GraphWithReactFlow from "./components/GraphWithReactFlow.tsx";
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import ListNode from "../../features/topology/components/ListNodeSidebar/ListNode.tsx";
 import NetworkBuilder from "../../features/topology/components/NetworkBuilder/NetworkBuilder.tsx";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -30,6 +30,10 @@ const TopologyPage: React.FC = () => {
     )
 
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
+
+    const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
+
+    const [message, setIntentMessage] = useState("");
 
     const resetNodeSelection = () => {
         setSelectedNode(null)
@@ -85,6 +89,52 @@ const TopologyPage: React.FC = () => {
         setIsOpen(false);
     };
 
+    useEffect(() => {
+
+        let nodesHighlighTed: string[] = []
+
+        // if (message.length > 0) {
+        //     for (const nodeItem of nodes) {
+        //         const label = nodeItem.data.label as string
+        //
+        //         if (label.length > 0) {
+        //             if (message.includes(label)) {
+        //                 nodesHighlighTed.push(nodeItem.id)
+        //             }
+        //         }
+        //     }
+        // } else {
+        //     const newNodes = nodes.map((node) => {
+        //             node.data.isThisNodeClicked = false
+        //
+        //         return node
+        //     })
+        //
+        //     setNodes(newNodes)
+        // }
+
+
+        // for (const hi of nodesHighlighTed) {
+        //
+        //     const newNodes = nodes.map((node) => {
+        //
+        //         console.log(hi)
+        //
+        //         if (nodesHighlighTed.includes(node.id))
+        //             node.data.isThisNodeClicked = true;
+        //         else
+        //             node.data.isThisNodeClicked = false
+        //
+        //         return node
+        //     })
+        //
+        //     setNodes(newNodes)
+        // }
+        nodesHighlighTed = []
+
+
+    }, [message]);
+
     return (
         <div className={'main-container'}>
             <Container fluid={true} >
@@ -116,12 +166,16 @@ const TopologyPage: React.FC = () => {
                                     onNodesChange={onNodesChange}
                                     onEdgesChange={onEdgesChange}
                                     resetNodeSelection={resetNodeSelection}
+                                    intentHighlightedNodes={intentHighlightedNodes}
                                 />
                             </ReactFlowProvider>
                             <IntentWindow
                                 isOpen={isOpen}
                                 onClose={handleClose}
                                 title="Intent Window"
+                                message={message}
+                                setIntentMessage={setIntentMessage}
+                                setIntentHighlightedNodes={setIntentHighlightedNodes}
                             />
                         </Col>
                     </DndProvider>

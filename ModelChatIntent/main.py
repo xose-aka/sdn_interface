@@ -82,7 +82,7 @@ async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
             server_message_client_id = message.clientId
 
     # Process the message and generate a server response
-    server_message = {
+    server_message = {  
         "id": str(uuid4()),  # Generate unique ID for server message
         "text": f"Server response to: {response_message}",
         "clientId": server_message_client_id,
