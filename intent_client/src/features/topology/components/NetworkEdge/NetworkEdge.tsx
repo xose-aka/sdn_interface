@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     BaseEdge,
     EdgeLabelRenderer,
@@ -16,12 +16,28 @@ export default function CustomEdge({
                                        source,
                                        target,
                                        style = {},
+                                       data,
                                        markerEnd,
                                    }: EdgeProps) {
     const { setEdges } = useReactFlow();
 
     const onEdgeClick = () => {
+
         setEdges((edges) => edges.filter((edge) => edge.id !== id));
+    };
+
+    const onEdgeSourceIpSet = (ip: string) => {
+        setEdges((edges) => edges.map((edge) => {
+            edge.sourceHandle = ip
+            return edge;
+        } ));
+    };
+
+    const onEdgeTargetIpSet = (ip: string) => {
+        setEdges((edges) => edges.map((edge) => {
+            edge.targetHandle = ip
+            return edge;
+        } ));
     };
 
     const sourceNode = useInternalNode(source);
@@ -40,22 +56,68 @@ export default function CustomEdge({
         targetY: ty,
     });
 
+    const [sourceIp, setSourceIp] = useState<string>("")
+    const [tmp, setTmp] = useState<string>("")
+
     let targetX = -5
+    let sourceX = -5
 
     let targetY = -260
     let sourceY = -130
 
     if (sy > ty) {
-        targetY = -targetY -200
+        targetY = -targetY - 200
+        sourceY = sourceY - 200
     } else {
         sourceY = -sourceY
     }
 
-    // let inputCoordination2Y = labelY
-    let inputCoordination2Y = 650 + labelY
-    // let inputCoordination2X = labelX - 410
-    let inputCoordination2X = 410 - labelX
-    // let inputCoordination2X = labelX
+    const differenceY = Math.abs(sy) - Math.abs(ty)
+
+    if ( differenceY < 350 ) {
+        if (sx < tx) {
+            sourceX = -sourceX - 4
+        } else {
+            targetX = -targetX - 4
+        }
+    }
+
+    if (sx > tx) {
+        sourceX = sourceX - 13
+    } else {
+        targetX = targetX - 13
+    }
+
+    function isValidIPv4(ip: string) {
+        // Regular expression for a valid IPv4 address
+        const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
+
+        return ipv4Regex.test(ip);
+    }
+
+    const onSourceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;  // TypeScript knows this is a string
+        setTmp(value)
+    }
+
+    const handleSourceInputBlur = () => {
+        const ipWithoutUnderline = tmp.replace(/_/g, "")
+        if (isValidIPv4(ipWithoutUnderline)) {
+            onEdgeSourceIpSet(ipWithoutUnderline)
+        }
+    };
+
+    const onTargetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;  // TypeScript knows this is a string
+        setTmp(value)
+    }
+
+    const handleTargetInputBlur = () => {
+        const ipWithoutUnderline = tmp.replace(/_/g, "")
+        if (isValidIPv4(ipWithoutUnderline)) {
+            onEdgeTargetIpSet(ipWithoutUnderline)
+        }
+    };
 
     return (
         <>
@@ -67,7 +129,7 @@ export default function CustomEdge({
                 <div
                     style={{
                         // position: 'absolute',
-                        transform: `translate(-5%, ${sourceY}%) translate(${sx}px,${sy}px)`,
+                        transform: `translate(${sourceX}%, ${sourceY}%) translate(${sx}px,${sy}px)`,
                         fontSize: 12,
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
@@ -81,7 +143,10 @@ export default function CustomEdge({
                     {/*    size={15}*/}
                     {/*    pattern="^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$"*/}
                     {/*/>*/}
-                    <IpInput/>
+                    <IpInput
+                        onChange={onSourceChange}
+                        handleInputBlur={handleSourceInputBlur}
+                    />
                 </div>
 
                 <div
@@ -119,7 +184,10 @@ export default function CustomEdge({
                     {/*    size={15}*/}
                     {/*    pattern="^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$"*/}
                     {/*/>*/}
-                    <IpInput/>
+                    <IpInput
+                        onChange={onTargetChange}
+                        handleInputBlur={handleTargetInputBlur}
+                    />
 
                 </div>
             </EdgeLabelRenderer>

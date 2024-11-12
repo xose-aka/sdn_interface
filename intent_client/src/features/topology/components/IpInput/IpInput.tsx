@@ -60,11 +60,18 @@ const props = {
     }
 };
 
-const IpInput: React.FC = () => {
+interface IpInputProps {
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+    handleInputBlur: () => void
+}
+
+const IpInput: React.FC<IpInputProps> = ({onChange, handleInputBlur}) => {
 
     return (
         <div>
             <MaskedInput
+                onChange={ onChange }
+                onBlur={handleInputBlur}
                 className="bg-white text-reset"
                 placeholder={"IP address e.g 192.168.0.1"}
                 {...props} />
