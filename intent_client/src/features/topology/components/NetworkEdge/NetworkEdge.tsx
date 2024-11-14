@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState } from 'react';
 import {
     BaseEdge,
     EdgeLabelRenderer,
@@ -22,7 +22,6 @@ export default function CustomEdge({
     const { setEdges } = useReactFlow();
 
     const onEdgeClick = () => {
-
         setEdges((edges) => edges.filter((edge) => edge.id !== id));
     };
 
@@ -124,7 +123,6 @@ export default function CustomEdge({
             <BaseEdge
                 path={edgePath}
                       markerEnd={markerEnd} style={style} />
-
             <EdgeLabelRenderer>
                 <div
                     style={{
@@ -136,19 +134,11 @@ export default function CustomEdge({
                         pointerEvents: 'all',
                     }}
                 >
-                    {/*<input*/}
-                    {/*    type="text"*/}
-                    {/*    minLength={7}*/}
-                    {/*    maxLength={15}*/}
-                    {/*    size={15}*/}
-                    {/*    pattern="^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$"*/}
-                    {/*/>*/}
                     <IpInput
                         onChange={onSourceChange}
                         handleInputBlur={handleSourceInputBlur}
                     />
                 </div>
-
                 <div
                     style={{
                         position: 'absolute',
@@ -161,7 +151,6 @@ export default function CustomEdge({
                     }}
                     className="nodrag nopan"
                 >
-
                     <button className="edgebutton" onClick={onEdgeClick}>
                         ×
                     </button>
@@ -177,18 +166,10 @@ export default function CustomEdge({
                         pointerEvents: 'all',
                     }}
                 >
-                    {/*<input*/}
-                    {/*    type="text"*/}
-                    {/*    minLength={7}*/}
-                    {/*    maxLength={15}*/}
-                    {/*    size={15}*/}
-                    {/*    pattern="^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$"*/}
-                    {/*/>*/}
                     <IpInput
                         onChange={onTargetChange}
                         handleInputBlur={handleTargetInputBlur}
                     />
-
                 </div>
             </EdgeLabelRenderer>
         </>
