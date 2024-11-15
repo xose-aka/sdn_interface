@@ -10,7 +10,7 @@ from langchain.utils.math import cosine_similarity
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.output_parsers import JsonOutputParser
 # from langchain_core.pydantic_v1 import BaseModel, Field
-from pydantic.v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain_google_genai import ChatGoogleGenerativeAI,GoogleGenerativeAIEmbeddings
@@ -22,6 +22,10 @@ from langchain.globals import set_debug
 import json
 import requests
 import os
+
+set_debug(True)
+
+os.environ['GOOGLE_API_KEY'] = 'AIzaSyDIYm_-MdLqK3lFlTj0qF9nudXavXtp_zA'
 
 app = FastAPI()
 
@@ -352,8 +356,6 @@ async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
                 "timestamp": message.timestamp
             }
 
-            response_message += message.text
-
             chain = prompt_router(message.text, fix_prompt)
 
             result = chain.invoke(message.text)
@@ -361,42 +363,48 @@ async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
             goal = result.get("goal")
 
             dpid = result.get("switch_id")
-            filled_dpid = format(dpid, "d").zfill(16)
 
-            if goal == "blockTraffic":
-                ipv4_src = result.get("ipv4_src")
-                ipv4_dst = result.get("ipv4_dst")
-                request_data = {
-                    "ipv4_src": ipv4_src,
-                    "ipv4_dst": ipv4_dst
-                }
-                url = f"http://127.0.0.1:8080/simpleswitch/firewall/{filled_dpid}"
-            elif goal == "setWeights":
-                weights = result.get("weights")
-
-                request_data = {
-                    "weights": weights
-                }
-                url = f"http://127.0.0.1:8080/simpleswitch/weights/{filled_dpid}"
-            elif goal == "setRate":
-                rate = result.get("rate")
-                request_data = {
-                    "rate": rate
-                }
-                url = f"http://127.0.0.1:8080/simpleswitch/meters/{filled_dpid}"
-
-            elif goal == "deleteFlowMod":
-                ipv4_src = result.get("ip_source")
-                ipv4_dst = result.get("ip_dest")
-                request_data = {
-                    "ipv4_src": ipv4_src,
-                    "ipv4_dst": ipv4_dst
-                }
-                url = f"http://127.0.0.1:8080/simpleswitch/rules/{filled_dpid}"
+            if dpid is None:
+                response_message = "Not well formated intent"
             else:
-                print("Not available service for that intent")
+                filled_dpid = format(dpid, "d").zfill(16)
 
-            make_request(url, request_data)
+                if goal == "blockTraffic":
+                    ipv4_src = result.get("ipv4_src")
+                    ipv4_dst = result.get("ipv4_dst")
+                    request_data = {
+                        "ipv4_src": ipv4_src,
+                        "ipv4_dst": ipv4_dst
+                    }
+                    url = f"http://127.0.0.1:8080/simpleswitch/firewall/{filled_dpid}"
+                elif goal == "setWeights":
+                    weights = result.get("weights")
+
+                    request_data = {
+                        "weights": weights
+                    }
+                    url = f"http://127.0.0.1:8080/simpleswitch/weights/{filled_dpid}"
+                elif goal == "setRate":
+                    rate = result.get("rate")
+                    request_data = {
+                        "rate": rate
+                    }
+                    url = f"http://127.0.0.1:8080/simpleswitch/meters/{filled_dpid}"
+
+                elif goal == "deleteFlowMod":
+                    ipv4_src = result.get("ip_source")
+                    ipv4_dst = result.get("ip_dest")
+                    request_data = {
+                        "ipv4_src": ipv4_src,
+                        "ipv4_dst": ipv4_dst
+                    }
+                    url = f"http://127.0.0.1:8080/simpleswitch/rules/{filled_dpid}"
+                else:
+                    print("Not available service for that intent")
+
+                make_request(url, request_data)
+
+                response_message += message.text
 
         if message.sender == "server":
             server_message_client_id = message.clientId
@@ -442,6 +450,8 @@ def prompt_router(input,fix):
         parser = JsonOutputParser(pydantic_resultect=DeleteFlow)
     elif most_similar == rate_template:
         parser = JsonOutputParser(pydantic_resultect=RateLimiter)
+
+    print('Parser', parser)
 
     selected_examples = example_selector.select_examples({"question": input})
     prompt = PromptTemplate.from_template(most_similar, partial_variables={"format_instructions": parser.get_format_instructions(),"examples":str(selected_examples),"fix":fix})
