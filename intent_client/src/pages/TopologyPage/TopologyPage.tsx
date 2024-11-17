@@ -2,7 +2,6 @@ import {Button, Col, Container, Row} from "react-bootstrap";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 
-// import GraphWithReactFlow from "./components/GraphWithReactFlow.tsx";
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
 import React, {useEffect, useState} from "react";
 import ListNode from "../../features/topology/components/ListNodeSidebar/ListNode.tsx";
@@ -41,6 +40,8 @@ const TopologyPage: React.FC = () => {
 
     const [isOpen, setIsOpen] = useState(false);
 
+    const [isShowIntentButton, setIsShowIntentButton] = useState(false);
+
     const buildTopology = () => {
 
         setIsOpen(!isOpen)
@@ -64,6 +65,7 @@ const TopologyPage: React.FC = () => {
                 return edge.source === node.id || edge.target === node.id;
 
             })
+
                 .map(edge => {
                     if (edge.source === node.id)
                         return edge.target
@@ -90,50 +92,16 @@ const TopologyPage: React.FC = () => {
     };
 
     useEffect(() => {
+        document.title = 'Topology build';
+    }, []);
 
-        let nodesHighlighTed: string[] = []
-
-        // if (message.length > 0) {
-        //     for (const nodeItem of nodes) {
-        //         const label = nodeItem.data.label as string
-        //
-        //         if (label.length > 0) {
-        //             if (message.includes(label)) {
-        //                 nodesHighlighTed.push(nodeItem.id)
-        //             }
-        //         }
-        //     }
-        // } else {
-        //     const newNodes = nodes.map((node) => {
-        //             node.data.isThisNodeClicked = false
-        //
-        //         return node
-        //     })
-        //
-        //     setNodes(newNodes)
-        // }
-
-
-        // for (const hi of nodesHighlighTed) {
-        //
-        //     const newNodes = nodes.map((node) => {
-        //
-        //         console.log(hi)
-        //
-        //         if (nodesHighlighTed.includes(node.id))
-        //             node.data.isThisNodeClicked = true;
-        //         else
-        //             node.data.isThisNodeClicked = false
-        //
-        //         return node
-        //     })
-        //
-        //     setNodes(newNodes)
-        // }
-        nodesHighlighTed = []
-
-
-    }, [message]);
+    useEffect(() => {
+        if ( nodes.length > 0 ) {
+            setIsShowIntentButton(true)
+        } else {
+            setIsShowIntentButton(false)
+        }
+    }, [JSON.stringify(nodes)]);
 
     return (
         <div className={'main-container'}>
@@ -148,8 +116,11 @@ const TopologyPage: React.FC = () => {
                             />
                         </Col>
                         <Col xs={10}>
-                            <Button className="position-relative float-end z-3"
-                                style={{ top: "20px" }}
+                            <Button  className="position-relative float-end z-3"
+                                style={{
+                                    top: "20px",
+                                    display: isShowIntentButton ? "block" : "none"
+                                }}
                                 variant="primary" onClick={() => buildTopology() }>
                                 <FontAwesomeIcon icon={faComments} />
                                 <span className="m-1">Input Intent </span>
