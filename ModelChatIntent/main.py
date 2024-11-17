@@ -2,26 +2,22 @@ from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException, Header
 from uuid import uuid4
-from pydantic import BaseModel
-from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 
 from langchain.utils.math import cosine_similarity
-from langchain_core.output_parsers import StrOutputParser
 from langchain_core.output_parsers import JsonOutputParser
-# from langchain_core.pydantic_v1 import BaseModel, Field
-from pydantic import BaseModel, Field
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough
 from langchain_google_genai import ChatGoogleGenerativeAI,GoogleGenerativeAIEmbeddings
 import time
-from typing import Dict
 from langchain.prompts import SemanticSimilarityExampleSelector
 from langchain_community.vectorstores import Chroma
 from langchain.globals import set_debug
 import json
 import requests
 import os
+
+from schemas import TokenResponse
 
 set_debug(True)
 
@@ -266,45 +262,7 @@ Here is the intent:
 {query}"""
 
 
-# Pydantic models
-class TokenResponse(BaseModel):
-    token: str
 
-
-class Message(BaseModel):
-    text: str
-    clientId: str
-    sender: str
-    timestamp: datetime
-
-class MessagesList(BaseModel):
-    items: List[Message]
-
-class ChatResponse(BaseModel):
-    message: Message
-    history: List[Message]
-
-class BlockTraffic(BaseModel):
-    goal: str = Field(description="it must be set to blockTraffic")
-    switch_id: int = Field(description="the id that identifies the switch")
-    ip_source: str =  Field(description="the ip source address of the traffic to block ")
-    ip_dest: str =  Field(description="the ip destination address of the traffic to block ")
-
-class LoadProfiling(BaseModel):
-    goal: str = Field(description="it must be set to setWeights")
-    switch_id: int = Field(description="the id that identifies the switch")
-    weights: Dict[int, int]  =  Field(description="the weights associated to the releted port as key ")
-
-class DeleteFlow(BaseModel):
-    goal: str = Field(description="it must be set to deleteFlow")
-    switch_id: int = Field(description="the id that identifies the switch")
-    ip_source: str =  Field(description="the ip source address of the rule to delete")
-    ip_dest: str =  Field(description="the ip destination address of the rule to delete ")
-
-class RateLimiter(BaseModel):
-    goal: str = Field(description="it must be set to setRate")
-    switch_id: int = Field(description="the id that identifies the switch")
-    rate: int=  Field(description="the rate to apply on the switch")
 
 
 #embedding examples
@@ -360,6 +318,8 @@ async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
 
             result = chain.invoke(message.text)
 
+            print(result)
+
             goal = result.get("goal")
 
             dpid = result.get("switch_id")
@@ -370,8 +330,8 @@ async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
                 filled_dpid = format(dpid, "d").zfill(16)
 
                 if goal == "blockTraffic":
-                    ipv4_src = result.get("ipv4_src")
-                    ipv4_dst = result.get("ipv4_dst")
+                    ipv4_src = result.get("ip_source")
+                    ipv4_dst = result.get("ip_dest")
                     request_data = {
                         "ipv4_src": ipv4_src,
                         "ipv4_dst": ipv4_dst
@@ -429,8 +389,6 @@ async def chat(messages_list: MessagesList, token: str = Depends(verify_token)):
     }
 
 def make_request(url, request_data):
-    print(request_data)
-    print(url)
     response = requests.post(url, json=request_data)
     if response.status_code == 200:
         print("Request successful")
@@ -451,8 +409,6 @@ def prompt_router(input,fix):
     elif most_similar == rate_template:
         parser = JsonOutputParser(pydantic_resultect=RateLimiter)
 
-    print('Parser', parser)
-
     selected_examples = example_selector.select_examples({"question": input})
     prompt = PromptTemplate.from_template(most_similar, partial_variables={"format_instructions": parser.get_format_instructions(),"examples":str(selected_examples),"fix":fix})
 
@@ -462,7 +418,5 @@ def prompt_router(input,fix):
             | ChatGoogleGenerativeAI(model="gemini-pro")
             | parser
     )
-
-
 
     return chain
