@@ -1,30 +1,7 @@
-from datetime import datetime
-from typing import List
 from pydantic import BaseModel, Field
 from typing import Dict
 
 
-class TokenResponse(BaseModel):
-    token: str
-
-
-class Message(BaseModel):
-    text: str
-    clientId: str
-    sender: str
-    timestamp: datetime
-
-
-class MessagesList(BaseModel):
-    items: List[Message]
-
-
-class ChatResponse(BaseModel):
-    message: Message
-    history: List[Message]
-
-
-# Pydantic models
 class BlockTraffic(BaseModel):
     goal: str = Field(description="it must be set to blockTraffic")
     switch_id: int = Field(description="the id that identifies the switch")

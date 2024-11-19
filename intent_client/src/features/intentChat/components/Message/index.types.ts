@@ -1,7 +1,7 @@
-import {IntentMessage} from "../../types";
+import {IntentMessage, IntentMessageDTO} from "../../types";
 
 export interface MessageProps {
     message: IntentMessage
-    pendingMessage: IntentMessage | null
+    pendingMessage: IntentMessageDTO | null
     submitConfirmMessage: (isConfirm: boolean) => void
 }

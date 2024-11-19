@@ -69,8 +69,6 @@ export default function NetworkBuilder(
     const onConnect = useCallback(
         (params: Connection) => {
 
-            // console.log('gg')
-
             setEdges((eds) => addEdge(
                 { ...params },
                 eds))

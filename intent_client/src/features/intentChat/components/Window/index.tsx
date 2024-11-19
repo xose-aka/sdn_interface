@@ -2,14 +2,17 @@ import React, { useEffect, useRef, useState} from 'react';
 import Message from "../Message";
 import {createFocusTrap, FocusTrap} from "focus-trap";
 import './index.scss'
-import axios from "axios";
-import {IntentMessage} from "../../types";
+import axios, {AxiosResponse} from "axios";
+import {IntentMessage, IntentMessageDTO} from "../../types";
 import { v4 as uuidv4 } from "uuid";
 import messageDate from "../../../../messages.json";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentAdditionTooltip from "../IntentAdditionTooltip";
 import {ChatWindowProps} from "./index.types.ts";
+import {prepareIntentMessageDTO, prepareIntentMessage} from "../../../topology/message.ts";
+import {API_CONFIG} from "../../../../config/api.ts";
+import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 
 
 function Index({
@@ -32,11 +35,14 @@ function Index({
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
     const [messages, setMessages] = useState<IntentMessage[]>([]);
-    const [pendingMessage, setPendingMessage] = useState<IntentMessage | null>(null);
+    const [pendingMessage, setPendingMessage] = useState<IntentMessageDTO | null>(null);
 
     const [isIntentAdditionTooltipOpen, setIsIntentAdditionTooltipOpen] = useState<boolean>(false);
 
+    const [conversationId, setConversationId] = useState<string>(uuidv4());
+
     let messageCounter = 0
+
     // const [position, setPosition] = useState({ x: 0, y: 0 });
     // const [size, setSize] = useState({ width: 500, height: 300 });
     // const [isDragging, setIsDragging] = useState(false);
@@ -145,7 +151,7 @@ function Index({
     // Function to request a token from the backend
     const getToken = async () => {
         try {
-            const response = await axios.get('http://localhost:8000/generate-token');
+            const response = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TOKEN}`);
             const newToken = response.data.token;
             setToken(newToken);
             localStorage.setItem('chat_token', newToken); // Save token in localStorage
@@ -157,30 +163,39 @@ function Index({
     };
 
     const submitMessage = () => {
-        const messageId = uuidv4(); // Generate a unique ID (use UUID or similar)
-        const timestamp = new Date(); // Current timestamp
-        const messageObject: IntentMessage = {
-            clientId: messageId,
-            sender: 'user',
-            text: message,
-            timestamp: timestamp,
-            status: 'pending',  // Message is pending until server confirms
-            sequence: messageCounter,
-            isConfirmed: null,
-            isConfirmationDone: false
-        };
+
+        const newIntent = prepareIntentMessage(
+            message,
+            conversationId,
+            Statuses["PENDING"],
+            SenderTypes["USER"]
+        )
+
+
+        // Add the message to the local chat history
+        setChatHistory(prevHistory => [...prevHistory, newIntent]);
+
+        const serverResponseMessage = prepareIntentMessage(
+            "Responding...",
+            conversationId,
+            Statuses["PENDING"],
+            SenderTypes["SERVER"]
+        )
+
+        const intentMessageDTO = prepareIntentMessageDTO(
+            newIntent.messageId,
+            serverResponseMessage.messageId,
+            conversationId,
+            newIntent.text
+        )
+
+        setPendingMessage(intentMessageDTO)
 
         setMessages([
             ...messages,
-            { ...messageObject }
+            { ...newIntent },
+            { ...serverResponseMessage }
         ]);
-
-        messageCounter++
-
-        setPendingMessage(messageObject)
-
-        // Add the message to the local chat history
-        setChatHistory(prevHistory => [...prevHistory, messageObject]);
     }
 
     // Function to send a chat message to the server
@@ -190,54 +205,17 @@ function Index({
             return;
         }
 
-        let sendingMessages: IntentMessage[] = []
-
-        sendingMessages = messages.filter(messageItem => {
-            return messageItem.status === "pending"
-        })
+        if (pendingMessage === null) {
+            return;
+        }
 
         try {
             // Send message to the server
-            const response = await axios.post(
-                'http://localhost:8000/chat',
-                { items: sendingMessages },
+            return await axios.post<IntentMessageDTO>(
+                `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MESSAGE_VERIFY}`,
+                pendingMessage,
                 { headers: { 'X-Token': token } }
-            );
-
-
-            // Update the message status to 'received'
-            setChatHistory(prevHistory =>
-                prevHistory.map(msg =>
-                    msg.id === pendingMessage?.clientId ? { ...msg, status: 'received' } : msg
-                )
-            );
-
-            // setChatHistory(prevHistory => [...prevHistory, serverResponse]);
-            // setMessages(prevMessage => [...prevMessage, serverResponse]);
-            console.log(response.data)
-            const updatedMessages = messages.map(messageItem => {
-                // update client message send
-                if ( messageItem.clientId === pendingMessage?.clientId ) {
-                    messageItem.isConfirmed = pendingMessage.isConfirmed
-                    messageItem.isConfirmationDone = pendingMessage.isConfirmationDone
-                }
-
-                if (messageItem.sender === "user")
-                    messageItem.status = "sent"
-
-                // server response loading update
-                if ( messageItem.clientId === response.data.message.clientId ) {
-                    messageItem.serverId = response.data.message.clientId
-                    messageItem.status = 'received'
-                    messageItem.text = response.data.message.text
-                }
-
-                return messageItem;
-            })
-
-            setMessages(updatedMessages)
-            setPendingMessage(null)
-
+            )
         } catch (error) {
             console.error('Error sending message:', error);
             // Handle error, e.g., retry mechanism
@@ -254,35 +232,41 @@ function Index({
 
         if (pendingMessage !== null) {
 
-            const modifyPendingMessage: IntentMessage = {
-                clientId: pendingMessage.clientId,
-                sender: pendingMessage.sender,
-                text: pendingMessage.text,
-                timestamp: pendingMessage.timestamp,
-                status: pendingMessage.status,
-                isConfirmed: isConfirm,
-                isConfirmationDone: true
-            }
+            // const modifyPendingMessage: IntentMessage = {
+            //     messageId: pendingMessage.messageId,
+            //     sender: pendingMessage.sender,
+            //     text: pendingMessage.text,
+            //     timestamp: pendingMessage.timestamp,
+            //     status: pendingMessage.status,
+            //     isConfirmed: isConfirm,
+            //     isConfirmationDone: true
+            // }
 
             if (isConfirm) {
 
-                const spinnerMessage: IntentMessage = {
-                    clientId:  uuidv4(),
-                    sender: 'server',
-                    text: "Responding...",
-                    timestamp: new Date(), // New timestamp for server's response
-                    status: 'pending'
-                };
+                if ( conversationId != null ) {
 
-                setMessages([
-                    ...messages,
-                    { ...spinnerMessage }
-                ]);
+
+
+                }
+
+                // const spinnerMessage: IntentMessage = {
+                //     messageId:  uuidv4(),
+                //     sender: 'server',
+                //     text: "Responding...",
+                //     timestamp: new Date(), // New timestamp for server's response
+                //     status: 'pending'
+                // };
+
+                // setMessages([
+                //     ...messages,
+                //     { ...spinnerMessage }
+                // ]);
             } else {
                 setIsIntentAdditionTooltipOpen(true)
             }
 
-            setPendingMessage(modifyPendingMessage)
+            // setPendingMessage(modifyPendingMessage)
         }
     }
 
@@ -297,8 +281,44 @@ function Index({
     }, [isIntentAdditionTooltipOpen]);
 
     useEffect(() => {
-        if (pendingMessage?.isConfirmed)
-            sendMessage()
+        sendMessage()
+            .then((response) => {
+
+                if (response != undefined) {
+                    setChatHistory(prevHistory =>
+                        prevHistory.map(msg =>
+                            msg.id === pendingMessage?.intentId ? { ...msg, status: 'received' } : msg
+                        )
+                    );
+
+                    // setChatHistory(prevHistory => [...prevHistory, serverResponse]);
+                    // setMessages(prevMessage => [...prevMessage, serverResponse]);
+
+                    const updatedMessages = messages.map(messageItem => {
+                        // update client message send
+                        if (
+                            messageItem.messageId === pendingMessage?.intentId &&
+                            messageItem.sender === SenderTypes["USER"]
+                        ) {
+                            messageItem.isConfirmed = true
+                            messageItem.isConfirmationDone = true
+                            messageItem.status = Statuses["RECEIVED"]
+                        }
+
+                        // server response loading update
+                        if ( messageItem.messageId === response.data.responseMessageId ) {
+                            // messageItem.serverId = response.data.message.clientId
+                            messageItem.status = Statuses["RECEIVED"]
+                            messageItem.text = response.data.intent
+                        }
+
+                        return messageItem;
+                    })
+
+                    setMessages(updatedMessages)
+                    setPendingMessage(null)
+                }
+            })
 
     }, [JSON.stringify(pendingMessage)]);
 
