@@ -1,0 +1,27 @@
+.intent-addition-tooltip {
+  padding: 2px 7px;
+  height: 2rem;
+  display: flex;
+  background-color: #007bff;
+  color: #ffffff;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3.5px;
+  z-index: 10;
+  position: absolute;
+  bottom: 88%;
+  left: 22%;
+  transition: all .1s;
+}
+
+.intent-addition-tooltip:after {
+  content: "";
+  position: absolute;
+  border-left: 7.5px solid rgba(0, 0, 0, 0);
+  border-right: 7.5px solid rgba(0, 0, 0, 0);
+  border-bottom: 7.5px solid rgba(0, 0, 0, 0);
+  border-top: 7.5px solid #007bff;
+  display: inline-block;
+  height: 15px;
+  top: 1.9em;
+}

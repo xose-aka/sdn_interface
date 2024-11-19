@@ -10,15 +10,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.6.0",
+    "@fortawesome/free-solid-svg-icons": "^6.6.0",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@xyflow/react": "^12.0.4",
+    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "focus-trap": "^7.6.0",
+    "moment": "^2.30.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.2",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
-    "reagraph": "^4.19.2"
+    "react-text-mask": "^5.5.0",
+    "reagraph": "^4.19.2",
+    "sass": "^1.80.3",
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

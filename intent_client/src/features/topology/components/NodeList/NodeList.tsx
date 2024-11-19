@@ -1,12 +1,8 @@
 import React from 'react';
-import {getNodeSvg} from "../helper.ts";
 import {useDrag} from "react-dnd";
+import {getNodeSvg} from "../../../../utils/node.ts";
 
-interface ListNodeProps {
-    title: string,
-}
-
-export default function ListNode({title}: ListNodeProps) {
+function NodeList({title}: ListNodeProps) {
 
     const nodeSvg = getNodeSvg(title)
 
@@ -23,3 +19,5 @@ export default function ListNode({title}: ListNodeProps) {
         </div>
     );
 }
+
+export default NodeList

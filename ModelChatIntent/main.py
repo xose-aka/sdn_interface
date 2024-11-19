@@ -1,54 +1,42 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from typing import List
+from dotenv import load_dotenv
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from api.v1.endpoints.message import router as message_endpoint
+from api.v1.endpoints.auth import router as auth_endpoint
+import os
+
+load_dotenv()
+
+gemini_api_key = os.getenv("GEMINI_API_KEY")
+
+# os.environ['GOOGLE_API_KEY'] = 'AIzaSyDIYm_-MdLqK3lFlTj0qF9nudXavXtp_zA'
 
 app = FastAPI()
 
-# List to store active connections
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to specify allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Adjust this to specify allowed HTTP methods
+    allow_headers=["*"],  # Adjust this to specify allowed headers
+)
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-manager = ConnectionManager()
-
-@app.websocket("/ws/chat")
-async def chat_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            bot_response = generate_bot_response(data)
-            await manager.broadcast(f"User: {data}")
-            await manager.broadcast(f"Bot: {bot_response}")
-    except WebSocketDisconnect:
-        manager.disconnect(websocket)
-
-def generate_bot_response(user_message):
-    # Here you can integrate AI or any static response generation logic
-    if "hello" in user_message.lower():
-        return "Hello! How can I help you today?"
-    return "I'm not sure I understand that."
+app.include_router(message_endpoint, prefix="/api/v1/messages")
+app.include_router(auth_endpoint, prefix="/api/v1")
 
 
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.post("/send-intent")
-async def send_intent():
-    return {"message": "Hello World"}
+def root():
+    return {"message": "Welcome to the app!"}
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+@app.get("/routes")
+async def list_routes():
+    routes = []
+    for route in app.routes:
+        routes.append({
+            "path": route.path,
+            "name": route.name,
+            "methods": list(route.methods)
+        })
+    return routes
