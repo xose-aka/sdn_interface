@@ -16,6 +16,7 @@ import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 
 
 function Index({
+                   handleShowAlert,
                         isOpen,
                         onClose,
                         title,
@@ -222,6 +223,29 @@ function Index({
         }
     };
 
+    const sendConfirmConversation = async () => {
+        if (!token) {
+            console.error('No token found, generating one...');
+            return;
+        }
+
+        if (conversationId === null) {
+            return;
+        }
+
+        try {
+            // Send message to the server
+            return await axios.post(
+                `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MESSAGE_CONFIRM}`,
+                {conversationId: conversationId},
+                { headers: { 'X-Token': token } }
+            )
+        } catch (error) {
+            console.error('Error sending message:', error);
+            // Handle error, e.g., retry mechanism
+        }
+    };
+
     const handleSubmit = () => {
         submitMessage();
         setIntentMessage("");
@@ -230,7 +254,7 @@ function Index({
 
     const submitConfirmMessage = (isConfirm: boolean) => {
 
-        if (pendingMessage !== null) {
+        // if (pendingMessage !== null) {
 
             // const modifyPendingMessage: IntentMessage = {
             //     messageId: pendingMessage.messageId,
@@ -244,30 +268,49 @@ function Index({
 
             if (isConfirm) {
 
-                if ( conversationId != null ) {
+                sendConfirmConversation()
+                    .then((response) => {
 
+                        setConversationId(uuidv4())
 
+                        const updatedMessages = messages.map(messageItem => {
 
-                }
+                            if (
+                                messageItem.isConfirmationDone === false &&
+                                messageItem.sender === SenderTypes["SERVER"]
+                            ) {
+                                messageItem.isConfirmed = true
+                                messageItem.isConfirmationDone = true
+                            }
 
-                // const spinnerMessage: IntentMessage = {
-                //     messageId:  uuidv4(),
-                //     sender: 'server',
-                //     text: "Responding...",
-                //     timestamp: new Date(), // New timestamp for server's response
-                //     status: 'pending'
-                // };
+                            return messageItem;
+                        })
 
-                // setMessages([
-                //     ...messages,
-                //     { ...spinnerMessage }
-                // ]);
+                        setMessages(updatedMessages)
+                        handleShowAlert(true)
+                })
+
             } else {
+
                 setIsIntentAdditionTooltipOpen(true)
+                const updatedMessages = messages.map(messageItem => {
+
+                    if (
+                        messageItem.isConfirmationDone === false &&
+                        messageItem.sender === SenderTypes["SERVER"]
+                    ) {
+                        messageItem.isConfirmed = false
+                        messageItem.isConfirmationDone = true
+                    }
+
+                    return messageItem;
+                })
+
+                setMessages(updatedMessages)
             }
 
             // setPendingMessage(modifyPendingMessage)
-        }
+        // }
     }
 
     useEffect(() => {

@@ -9,11 +9,18 @@ import NetworkBuilder from "../../features/topology/components/NetworkBuilder/Ne
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentWindow from "../../features/intentChat/components/Window";
+import BootstrapAlert from "../../components/BootstrapAlert.tsx";
+import {nodeTypes} from "../../constants/topology.ts";
 
 
 const TopologyPage: React.FC = () => {
 
-    const nodeList = ["router", "switch", "server"]
+    const [showAlert, setShowAlert] = useState(false);
+
+    const handleShowAlert = () => setShowAlert(true);
+    const handleCloseAlert = () => setShowAlert(false)
+
+    const nodeList = Object.values(nodeTypes)
 
     const [nodes, setNodes, onNodesChange] = useNodesState<Node>([])
 
@@ -54,12 +61,12 @@ const TopologyPage: React.FC = () => {
 
             let type = ''
 
-            if (icon.includes('router') )
-                type = 'router'
-            if (icon.includes('switch') )
-                type = 'switch'
-            if (icon.includes('server') )
-                type = 'host'
+            if (icon.includes(nodeTypes["ROUTER"]) )
+                type = nodeTypes["ROUTER"]
+            if (icon.includes(nodeTypes["SWITCH"]) )
+                type = nodeTypes["SWITCH"]
+            if (icon.includes(nodeTypes["HOST"]) )
+                type = nodeTypes["HOST"]
 
             const neighbours = edges.filter(edge => {
                 return edge.source === node.id || edge.target === node.id;
@@ -105,6 +112,13 @@ const TopologyPage: React.FC = () => {
 
     return (
         <div className={'main-container'}>
+            {showAlert && (
+                <BootstrapAlert
+                    message="Path installed!"
+                    type="success"
+                    onClose={handleCloseAlert}
+                />
+            )}
             <Container fluid={true} >
                 <Row className={'h-100'}>
                     <DndProvider backend={HTML5Backend}>
@@ -141,6 +155,7 @@ const TopologyPage: React.FC = () => {
                                 />
                             </ReactFlowProvider>
                             <IntentWindow
+                                handleShowAlert={handleShowAlert}
                                 isOpen={isOpen}
                                 onClose={handleClose}
                                 title="Intent Window"

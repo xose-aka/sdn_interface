@@ -11,7 +11,7 @@ import {
     faSpinner
 } from "@fortawesome/free-solid-svg-icons";
 import {pending, sent} from "../../../../constants/intentMessage.ts";
-import {SenderTypes} from "../../constants/intentMessage.ts";
+import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 
 function Index({ message, pendingMessage, submitConfirmMessage }: MessageProps)
 {
@@ -52,10 +52,11 @@ function Index({ message, pendingMessage, submitConfirmMessage }: MessageProps)
             </div>
             {
                 message.sender == SenderTypes["SERVER"] &&
+                message.status == Statuses["RECEIVED"] &&
                 message.isConfirmationDone === false &&
                 (
                     <div className="chat-message__item__text__confirmation bg-light border text-center mt-1">
-                        <div className="mt-1">Do you confirm it ?</div>
+                        <div className="mt-1">Is it correct ?</div>
                         <hr className="m-1"/>
                         <Row className="fs-6">
                             <Col>

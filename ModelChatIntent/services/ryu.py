@@ -250,7 +250,7 @@ def prompt_router(intent, fix):
     query_embedding = embeddings.embed_query(intent)
     similarity = cosine_similarity([query_embedding], prompt_embeddings)[0]
     most_similar = prompt_templates[similarity.argmax()]
-    # parser = JsonOutputParser(pydantic_resultect=BlockTraffic)
+    parser = JsonOutputParser(pydantic_resultect=BlockTraffic)
     if most_similar == block_template:
         parser = JsonOutputParser(pydantic_resultect=BlockTraffic)
     elif most_similar == weights_template:
@@ -262,10 +262,12 @@ def prompt_router(intent, fix):
     else:
         raise IntentGoalServiceNotAvailableException(f"Service isn't available for this goal: {most_similar} in ryu")
 
+    print("gg ", str(parser))
     selected_examples = example_selector.select_examples({"question": intent})
     prompt = PromptTemplate.from_template(most_similar,
                                           partial_variables={"format_instructions": parser.get_format_instructions(),
                                                              "examples": str(selected_examples), "fix": fix})
+    print("aa ", str(prompt))
 
     chain = (
             {"query": RunnablePassthrough()}
@@ -273,6 +275,9 @@ def prompt_router(intent, fix):
             | ChatGoogleGenerativeAI(model="gemini-pro")
             | parser
     )
+
+    print("dd", str(chain))
+
 
     return chain
 
