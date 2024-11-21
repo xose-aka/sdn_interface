@@ -2,20 +2,18 @@ import React from 'react';
 import {useDrag} from "react-dnd";
 import {getNodeSvg} from "../../../../utils/node.ts";
 
-function NodeList({title}: ListNodeProps) {
+function NodeList({type}: ListNodeProps) {
 
-    const nodeSvg = getNodeSvg(title)
-
-    const type = title
+    const nodeSvg = getNodeSvg(type)
 
     const [, drag] = useDrag(() => ({
         type,
-        item: { title }
+        item: { type }
     }))
 
     return (
         <div ref={drag}>
-            <img src={ nodeSvg  } alt={title}/>
+            <img src={ nodeSvg } alt={type}/>
         </div>
     );
 }

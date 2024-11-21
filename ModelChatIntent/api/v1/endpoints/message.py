@@ -1,4 +1,7 @@
+import re
 from datetime import datetime
+from json import JSONDecodeError
+from pyjson5 import pyjson5
 from uuid import uuid4
 from fastapi import Depends
 from fastapi import APIRouter
@@ -36,23 +39,30 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
 
             intent = message.intent
 
-            chain = prompt_router(intent, fix_prompt)
+            try:
 
-            result = chain.invoke(intent)
+                chain = prompt_router(intent, fix_prompt)
 
-            encoded_conversations[conversation_id] = {
-                "processed_intent": result,
-                "intent": intent,
-            }
+                result = chain.invoke(intent)
 
-            return {
-                "intentId": message.intentId,  # Generate unique ID for server message
-                "intent": str(result),
-                "sender": "server",
-                "conversationId": conversation_id,
-                "responseMessageId": message.responseMessageId,
-                "timestamp": datetime.now()
-            }
+                encoded_conversations[conversation_id] = {
+                    "processed_intent": result,
+                    "intent": intent,
+                }
+
+                print("Result 1")
+
+                return {
+                    "intentId": message.intentId,  # Generate unique ID for server message
+                    "intent": str(result),
+                    "sender": "server",
+                    "conversationId": conversation_id,
+                    "responseMessageId": message.responseMessageId,
+                    "timestamp": datetime.now()
+                }
+
+            except JSONDecodeError as e:
+                return JSONResponse(content={"message":str(e)}, status_code=500)
 
         else:
 
@@ -60,16 +70,21 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
             intent = conversation_data["intent"]
             result = conversation_data["processed_intent"]
 
-            fix_intent = message.text
+            fix_intent = message.intent
+
+            # valid_json = pyjson5.loads(result)
 
             fix_prompt = ("""[FIXES]:Before you have generated this network configuration:"""
-                          + str(result)
+                          + str(result).replace("'", '"')
+                          # + str(valid_json)
                           + "The user specify some fixes:" + fix_intent)
 
             try:
                 chain = prompt_router(intent, fix_prompt)
 
                 result = chain.invoke(intent)
+
+                print("result: ", str(result))
 
                 return {
                     "intentId": message.intentId,  # Generate unique ID for server message
@@ -81,6 +96,8 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
                 }
             except IntentGoalServiceNotAvailableException as e:
                 return JSONResponse(content={"message": e.detail}, status_code=e.status_code)
+            except JSONDecodeError as e:
+                return JSONResponse(content={"message":str(e)}, status_code=500)
 
 
 @router.post('/conversation/confirm')
