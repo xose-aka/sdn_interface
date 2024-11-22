@@ -1,4 +1,4 @@
-import React, { useCallback, useState} from "react";
+import React, { useCallback} from "react";
 import {useDrop} from "react-dnd";
 import {getNodeSvg} from "../../../../utils/node.ts";
 import {
@@ -81,7 +81,9 @@ export default function NetworkBuilder(
             accept: nodeList,
             drop: (item: DraggableNode, monitor) => {
                 const clientOffset = monitor.getClientOffset();
-                const icon = getNodeSvg(item.title)
+                const type = item.type
+
+                const icon = getNodeSvg(type)
 
                 let coordinates = {
                     x: 0,
@@ -104,21 +106,22 @@ export default function NetworkBuilder(
 
                     for (const itemNode of nodes) {
 
-                        const nodeId = parseInt(itemNode.id, 10)
-
-                        if (nodeId == counter)
-                            isCounterNumberAlreadySet = true
+                        if (itemNode.data.nodeType === type) {
+                            if (itemNode.id == `${type}${counter}`)
+                                isCounterNumberAlreadySet = true
+                        }
                     }
 
 
                 } while(isCounterNumberAlreadySet)
 
                 const newNode: Node = {
-                    id: `${counter}`,
+                    id: `${type}${counter}`,
                     type: 'networkNode',
                     data: {
                         icon: icon,
-                        label: `${item.title} ${counter}`,
+                        nodeType: type,
+                        label: `${type} ${counter}`,
                         selectedNode: selectedNode,
                         isThisNodeClicked: false
                     },

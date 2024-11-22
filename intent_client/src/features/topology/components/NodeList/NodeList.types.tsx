@@ -1,5 +1,5 @@
 interface ListNodeProps {
-    title: string,
+    type: string,
 }
 
 interface DraggableNode extends ListNodeProps {}
