@@ -10,15 +10,14 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentWindow from "../../features/intentChat/components/Window";
 import BootstrapAlert from "../../components/BootstrapAlert.tsx";
-import {nodeTypes} from "../../constants/topology.ts";
+import {nodeTypes, alertTypes} from "../../constants/topology.ts";
 
 
 const TopologyPage: React.FC = () => {
 
     const [showAlert, setShowAlert] = useState(false);
-
-    const handleShowAlert = () => setShowAlert(true);
-    const handleCloseAlert = () => setShowAlert(false)
+    const [alertType, setAlertType] = useState<alertTypes>(alertTypes.DANGER);
+    const [alertMessage, setAlertMessage] = useState("");
 
     const nodeList = Object.values(nodeTypes)
 
@@ -39,7 +38,6 @@ const TopologyPage: React.FC = () => {
 
     const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
 
-    const [message, setIntentMessage] = useState("");
 
     const resetNodeSelection = () => {
         setSelectedNode(null)
@@ -114,9 +112,9 @@ const TopologyPage: React.FC = () => {
         <div className={'main-container'}>
             {showAlert && (
                 <BootstrapAlert
-                    message="Path installed!"
-                    type="success"
-                    onClose={handleCloseAlert}
+                    message={alertMessage}
+                    type={alertType}
+                    setShowAlert={setShowAlert}
                 />
             )}
             <Container fluid={true} >
@@ -155,12 +153,12 @@ const TopologyPage: React.FC = () => {
                                 />
                             </ReactFlowProvider>
                             <IntentWindow
-                                handleShowAlert={handleShowAlert}
+                                setShowAlert={setShowAlert}
+                                setAlertType={setAlertType}
+                                setAlertMessage={setAlertMessage}
                                 isOpen={isOpen}
-                                onClose={handleClose}
+                                handleClose={handleClose}
                                 title="Intent Window"
-                                message={message}
-                                setIntentMessage={setIntentMessage}
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
                             />
                         </Col>

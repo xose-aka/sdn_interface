@@ -36,8 +36,8 @@
     &::after {
       content: '';
       display: block;
-      width: 0px;
-      height: 0px;
+      width: 0;
+      height: 0;
       border-left: 5px solid transparent;
       border-right: 5px solid transparent;
       border-top: 12px solid #eee;
@@ -46,34 +46,6 @@
       left: -6px;
       transform: rotate(45deg);
       z-index: 100;
-    }
-
-    &__confirmation {
-      border-radius: 8px;
-      font-size: 15px;
-      line-height: 1.2;
-      padding: 8px;
-      max-width: 40%;
-      position: relative;
-      z-index: 200;
-      left: 60%
-    }
-
-    &__deliver-status {
-      color: #0074d9;
-      margin-right: 3px;
-      font-size: 10px;
-      position: relative;
-
-      &__items {
-        position: absolute;
-        bottom: 5%;
-        right: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-      }
     }
   }
 

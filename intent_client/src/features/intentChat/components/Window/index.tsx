@@ -1,27 +1,29 @@
-import React, { useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Message from "../Message";
 import {createFocusTrap, FocusTrap} from "focus-trap";
 import './index.scss'
-import axios, {AxiosResponse} from "axios";
+import axios from "axios";
 import {IntentMessage, IntentMessageDTO} from "../../types";
-import { v4 as uuidv4 } from "uuid";
-import messageDate from "../../../../messages.json";
+import {v4 as uuidv4} from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentAdditionTooltip from "../IntentAdditionTooltip";
 import {ChatWindowProps} from "./index.types.ts";
-import {prepareIntentMessageDTO, prepareIntentMessage} from "../../../topology/message.ts";
+import {prepareIntentMessage, prepareIntentMessageDTO} from "../../../topology/message.ts";
 import {API_CONFIG} from "../../../../config/api.ts";
 import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
+import CloseButton from "../CloseButton";
+import {sendConfirmConversation, sendMessage} from "../../services/api.ts";
+import {alertTypes} from "../../../../constants/topology.ts";
 
 
 function Index({
-                   handleShowAlert,
-                        isOpen,
-                        onClose,
-                        title,
-                   message,
-                   setIntentMessage,
+                   setShowAlert,
+                   setAlertType,
+                   setAlertMessage,
+                   isOpen,
+                   handleClose,
+                   title,
                    setIntentHighlightedNodes
 }: ChatWindowProps) {
 
@@ -32,7 +34,6 @@ function Index({
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
 
     const [token, setToken] = useState<string | null>(null);
-    const [chatResponse, setChatResponse] = useState<string>('');
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
     const [messages, setMessages] = useState<IntentMessage[]>([]);
@@ -42,7 +43,7 @@ function Index({
 
     const [conversationId, setConversationId] = useState<string>(uuidv4());
 
-    let messageCounter = 0
+    const [intentMessage, setIntentMessage] = useState("");
 
     // const [position, setPosition] = useState({ x: 0, y: 0 });
     // const [size, setSize] = useState({ width: 500, height: 300 });
@@ -146,7 +147,7 @@ function Index({
 
     useEffect(() => {
         autExpandInput();
-    }, [message]);
+    }, [intentMessage]);
 
 
     // Function to request a token from the backend
@@ -166,15 +167,11 @@ function Index({
     const submitMessage = () => {
 
         const newIntent = prepareIntentMessage(
-            message,
+            intentMessage,
             conversationId,
             Statuses["PENDING"],
             SenderTypes["USER"]
         )
-
-
-        // Add the message to the local chat history
-        setChatHistory(prevHistory => [...prevHistory, newIntent]);
 
         const serverResponseMessage = prepareIntentMessage(
             "Responding...",
@@ -197,33 +194,73 @@ function Index({
             { ...newIntent },
             { ...serverResponseMessage }
         ]);
+
+        // Add the message to the local chat history
+        setChatHistory(prevHistory => [...prevHistory, newIntent]);
+
+        handleSendMessage(intentMessageDTO)
     }
 
     // Function to send a chat message to the server
-    const sendMessage = async () => {
+    const handleSendMessage = (intentMessageDTO: IntentMessageDTO) => {
         if (!token) {
-            console.error('No token found, generating one...');
+            setShowAlert(true)
+            setAlertType(alertTypes.DANGER)
+            setAlertMessage("No token set")
             return;
         }
 
-        if (pendingMessage === null) {
-            return;
-        }
+        // if (pendingMessage === null) {
+        //     setShowAlert(true)
+        //     setAlertType(alertTypes.DANGER)
+        //     setAlertMessage("No pending message")
+        //     return;
+        // }
+
+        console.log(intentMessageDTO)
 
         try {
             // Send message to the server
-            return await axios.post<IntentMessageDTO>(
-                `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MESSAGE_VERIFY}`,
-                pendingMessage,
-                { headers: { 'X-Token': token } }
-            )
+            sendMessage(token, intentMessageDTO)
+                .then((response) => {
+
+                    if (response != undefined) {
+                        setChatHistory(prevHistory =>
+                            prevHistory.map(msg =>
+                                msg.id === response.intentId ? { ...msg, status: 'received' } : msg
+                            )
+                        );
+
+                        setMessages(prevValues =>
+                            prevValues.map(prevVal => {
+                                if (
+                                    prevVal.messageId === response.intentId &&
+                                    prevVal.sender === SenderTypes["USER"]
+                                ) {
+                                    prevVal.isConfirmed = true
+                                    prevVal.isConfirmationDone = true
+                                    prevVal.status = Statuses["RECEIVED"]
+                                }
+
+                                // server response loading update
+                                if ( prevVal.messageId === response.responseMessageId ) {
+                                    // messageItem.serverId = response.data.message.clientId
+                                    prevVal.status = Statuses["RECEIVED"]
+                                    prevVal.text = response.intent
+                                }
+
+                                return prevVal;
+                            })
+                        )
+                    }
+                })
         } catch (error) {
             console.error('Error sending message:', error);
             // Handle error, e.g., retry mechanism
         }
     };
 
-    const sendConfirmConversation = async () => {
+    const handleSendConfirmConversation = () => {
         if (!token) {
             console.error('No token found, generating one...');
             return;
@@ -234,12 +271,28 @@ function Index({
         }
 
         try {
-            // Send message to the server
-            return await axios.post(
-                `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.MESSAGE_CONFIRM}`,
-                {conversationId: conversationId},
-                { headers: { 'X-Token': token } }
-            )
+            sendConfirmConversation(token, conversationId)
+                .then((response) => {
+
+                    setConversationId(uuidv4())
+
+                    setMessages(prevValues =>
+                        prevValues.map(prevVal => {
+                            if (
+                                prevVal.isConfirmationDone === false &&
+                                prevVal.sender === SenderTypes["SERVER"]
+                            ) {
+                                prevVal.isConfirmed = true
+                                prevVal.isConfirmationDone = true
+                            }
+
+                            return prevVal;
+                        })
+                    )
+                    setShowAlert(true)
+                    setAlertType(alertTypes.SUCCESS)
+                    setAlertMessage("Path installed")
+                });
         } catch (error) {
             console.error('Error sending message:', error);
             // Handle error, e.g., retry mechanism
@@ -254,63 +307,27 @@ function Index({
 
     const submitConfirmMessage = (isConfirm: boolean) => {
 
-        // if (pendingMessage !== null) {
+        if (isConfirm)
+        {
+            handleSendConfirmConversation()
+        } else
+        {
+            setIsIntentAdditionTooltipOpen(true)
 
-            // const modifyPendingMessage: IntentMessage = {
-            //     messageId: pendingMessage.messageId,
-            //     sender: pendingMessage.sender,
-            //     text: pendingMessage.text,
-            //     timestamp: pendingMessage.timestamp,
-            //     status: pendingMessage.status,
-            //     isConfirmed: isConfirm,
-            //     isConfirmationDone: true
-            // }
-
-            if (isConfirm) {
-
-                sendConfirmConversation()
-                    .then((response) => {
-
-                        setConversationId(uuidv4())
-
-                        const updatedMessages = messages.map(messageItem => {
-
-                            if (
-                                messageItem.isConfirmationDone === false &&
-                                messageItem.sender === SenderTypes["SERVER"]
-                            ) {
-                                messageItem.isConfirmed = true
-                                messageItem.isConfirmationDone = true
-                            }
-
-                            return messageItem;
-                        })
-
-                        setMessages(updatedMessages)
-                        handleShowAlert(true)
-                })
-
-            } else {
-
-                setIsIntentAdditionTooltipOpen(true)
-                const updatedMessages = messages.map(messageItem => {
-
+            setMessages(prevValues =>
+                prevValues.map(prevVal => {
                     if (
-                        messageItem.isConfirmationDone === false &&
-                        messageItem.sender === SenderTypes["SERVER"]
+                        prevVal.isConfirmationDone === false &&
+                        prevVal.sender === SenderTypes["SERVER"]
                     ) {
-                        messageItem.isConfirmed = false
-                        messageItem.isConfirmationDone = true
+                        prevVal.isConfirmed = false
+                        prevVal.isConfirmationDone = true
                     }
 
-                    return messageItem;
+                    return prevVal;
                 })
-
-                setMessages(updatedMessages)
-            }
-
-            // setPendingMessage(modifyPendingMessage)
-        // }
+            )
+        }
     }
 
     useEffect(() => {
@@ -324,44 +341,47 @@ function Index({
     }, [isIntentAdditionTooltipOpen]);
 
     useEffect(() => {
-        sendMessage()
-            .then((response) => {
 
-                if (response != undefined) {
-                    setChatHistory(prevHistory =>
-                        prevHistory.map(msg =>
-                            msg.id === pendingMessage?.intentId ? { ...msg, status: 'received' } : msg
-                        )
-                    );
 
-                    // setChatHistory(prevHistory => [...prevHistory, serverResponse]);
-                    // setMessages(prevMessage => [...prevMessage, serverResponse]);
 
-                    const updatedMessages = messages.map(messageItem => {
-                        // update client message send
-                        if (
-                            messageItem.messageId === pendingMessage?.intentId &&
-                            messageItem.sender === SenderTypes["USER"]
-                        ) {
-                            messageItem.isConfirmed = true
-                            messageItem.isConfirmationDone = true
-                            messageItem.status = Statuses["RECEIVED"]
-                        }
-
-                        // server response loading update
-                        if ( messageItem.messageId === response.data.responseMessageId ) {
-                            // messageItem.serverId = response.data.message.clientId
-                            messageItem.status = Statuses["RECEIVED"]
-                            messageItem.text = response.data.intent
-                        }
-
-                        return messageItem;
-                    })
-
-                    setMessages(updatedMessages)
-                    setPendingMessage(null)
-                }
-            })
+        // sendMessage()
+        //     .then((response) => {
+        //
+        //         if (response != undefined) {
+        //             setChatHistory(prevHistory =>
+        //                 prevHistory.map(msg =>
+        //                     msg.id === pendingMessage?.intentId ? { ...msg, status: 'received' } : msg
+        //                 )
+        //             );
+        //
+        //             // setChatHistory(prevHistory => [...prevHistory, serverResponse]);
+        //             // setMessages(prevMessage => [...prevMessage, serverResponse]);
+        //
+        //             const updatedMessages = messages.map(messageItem => {
+        //                 // update client message send
+        //                 if (
+        //                     messageItem.messageId === pendingMessage?.intentId &&
+        //                     messageItem.sender === SenderTypes["USER"]
+        //                 ) {
+        //                     messageItem.isConfirmed = true
+        //                     messageItem.isConfirmationDone = true
+        //                     messageItem.status = Statuses["RECEIVED"]
+        //                 }
+        //
+        //                 // server response loading update
+        //                 if ( messageItem.messageId === response.data.responseMessageId ) {
+        //                     // messageItem.serverId = response.data.message.clientId
+        //                     messageItem.status = Statuses["RECEIVED"]
+        //                     messageItem.text = response.data.intent
+        //                 }
+        //
+        //                 return messageItem;
+        //             })
+        //
+        //             setMessages(updatedMessages)
+        //             setPendingMessage(null)
+        //         }
+        //     })
 
     }, [JSON.stringify(pendingMessage)]);
 
@@ -401,52 +421,34 @@ function Index({
             <div className="chat-window__header">
                 <FontAwesomeIcon icon={faComments} inverse />
                 <div className="chat-window__title">{title}</div>
-                <button className="chat-window__close-btn" onClick={() => onClose()}>
-                    <svg
-                        version="1.1"
-                        id="Layer_1"
-                        xmlns="http://www.w3.org/2000/svg"
-                        xmlnsXlink="http://www.w3.org/1999/xlink"
-                        x="0px"
-                        y="0px"
-                        viewBox="0 0 512 512"
-                        xmlSpace="preserve"
-                    >
-                        <path
-                            d="M493.268,0H18.732C8.387,0,0,8.387,0,18.732v474.537C0,503.613,8.387,512,18.732,512h474.537
-		c10.345,0,18.732-8.387,18.732-18.732V18.732C512,8.387,503.613,0,493.268,0z M358.763,332.273c7.315,7.314,7.315,19.175,0,26.49
-		s-19.175,7.315-26.49,0L256,282.49l-76.273,76.273c-7.315,7.315-19.175,7.315-26.49,0c-7.315-7.314-7.315-19.175,0-26.49
-		L229.51,256l-76.273-76.273c-7.315-7.314-7.315-19.175,0-26.49c7.314-7.314,19.175-7.314,26.49,0L256,229.51l76.273-76.273
-		c7.314-7.314,19.175-7.314,26.49,0c7.315,7.314,7.315,19.175,0,26.49L282.49,256L358.763,332.273z"
-                        />
-                    </svg>
-                </button>
+                <CloseButton onClose={handleClose}/>
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
                 {messages.map(intentMessage => (
                     <Message
                         key={Math.random()}
                         message={intentMessage}
-                        pendingMessage={pendingMessage}
+                        // pendingMessage={pendingMessage}
                         submitConfirmMessage={submitConfirmMessage}
                     />
                 ))}
             </div>
             <div className="chat-window__footer">
-                <IntentAdditionTooltip message={'Enter additional intent'} isIntentAdditionTooltipOpen={isIntentAdditionTooltipOpen}/>
+                <IntentAdditionTooltip message={'Enter additional intent'}
+                                       isIntentAdditionTooltipOpen={isIntentAdditionTooltipOpen}/>
                 <textarea
                     ref={userInput}
                     className="chat-window__input"
                     rows={1}
                     placeholder="Enter your intent..."
-                    value={message}
+                    value={intentMessage}
                     onChange={handleChange}
                 />
                         <button
                             className="chat-window__send-btn"
                             type="button"
                             onClick={() => handleSubmit()}
-                            disabled={!message}
+                            disabled={!intentMessage}
                         >
                             Send
                         </button>
