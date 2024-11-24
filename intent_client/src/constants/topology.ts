@@ -3,3 +3,8 @@ export const nodeTypes = {
     SWITCH: "switch",
     HOST: "host"
 }
+
+export enum alertTypes {
+    SUCCESS =  "success",
+    DANGER = "danger"
+}

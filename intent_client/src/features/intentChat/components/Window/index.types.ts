@@ -1,11 +1,13 @@
 import {Dispatch, SetStateAction} from "react";
 import {Node} from "@xyflow/react";
+import {alertTypes} from "../../../../constants/topology.ts";
 
 export interface ChatWindowProps {
+    setShowAlert: Dispatch<SetStateAction<boolean>>,
+    setAlertType: Dispatch<SetStateAction<alertTypes>>,
+    setAlertMessage: Dispatch<SetStateAction<string>>,
     isOpen: boolean,
-    onClose: () => void,
+    handleClose: () => void,
     title: string,
-    message: string,
-    setIntentMessage: Dispatch<SetStateAction<string>>,
     setIntentHighlightedNodes: Dispatch<SetStateAction<Node[]>>,
 }
