@@ -14,7 +14,7 @@ import {API_CONFIG} from "../../../../config/api.ts";
 import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 import CloseButton from "../CloseButton";
 import {sendConfirmConversation, sendMessage} from "../../services/api.ts";
-import {alertTypes} from "../../../../constants/topology.ts";
+import {alertTypes} from "../../../../constants";
 
 
 function Index({
@@ -205,7 +205,7 @@ function Index({
     const handleSendMessage = (intentMessageDTO: IntentMessageDTO) => {
         if (!token) {
             setShowAlert(true)
-            setAlertType(alertTypes.DANGER)
+            setAlertType(alertTypes.danger)
             setAlertMessage("No token set")
             return;
         }
@@ -217,9 +217,7 @@ function Index({
         //     return;
         // }
 
-        console.log(intentMessageDTO)
 
-        try {
             // Send message to the server
             sendMessage(token, intentMessageDTO)
                 .then((response) => {
@@ -254,10 +252,30 @@ function Index({
                         )
                     }
                 })
-        } catch (error) {
-            console.error('Error sending message:', error);
-            // Handle error, e.g., retry mechanism
-        }
+                .catch((error) => {
+                    setShowAlert(true)
+                    setAlertType(alertTypes.danger)
+                    setAlertMessage(error.message)
+
+                    setChatHistory(prevHistory =>
+                        prevHistory.map(msg =>
+                            msg.id === intentMessageDTO.intentId ? { ...msg, status: Statuses["ERROR"] } : msg
+                        )
+                    );
+
+                    setMessages(prevValues =>
+                        prevValues.map(prevVal => {
+                            if (
+                                prevVal.messageId === intentMessageDTO.intentId &&
+                                prevVal.sender === SenderTypes["USER"]
+                            )
+                                prevVal.status = Statuses["ERROR"]
+
+                            return prevVal;
+                        })
+                    )
+
+                })
     };
 
     const handleSendConfirmConversation = () => {
@@ -290,7 +308,7 @@ function Index({
                         })
                     )
                     setShowAlert(true)
-                    setAlertType(alertTypes.SUCCESS)
+                    setAlertType(alertTypes.success)
                     setAlertMessage("Path installed")
                 });
         } catch (error) {
@@ -442,6 +460,7 @@ function Index({
                     rows={1}
                     placeholder="Enter your intent..."
                     value={intentMessage}
+                    disabled={messages.some(message => message.isConfirmationDone === false && message.status === Statuses["RECEIVED"])}
                     onChange={handleChange}
                 />
                         <button

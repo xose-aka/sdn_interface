@@ -1,19 +1,19 @@
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {
     faCheckDouble,
-    faCircleExclamation,
+    faCircleExclamation, faCircleQuestion,
     faSpinner
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
 import {MessageStatusProps} from "./index.types.ts";
 import './index.scss'
 import {Statuses} from "../../constants/intentMessage.ts";
-import {pending, sent} from "../../../../constants/intentMessage.ts";
+import {error, pending, sent} from "../../../../constants/intentMessage.ts";
 
 export default function Index({ status }: MessageStatusProps) {
 
     let intentMessageDeliverStatus = ''
-    let intentMessageDeliverStatusIcon = faCircleExclamation
+    let intentMessageDeliverStatusIcon = faCircleQuestion
 
     if (status === Statuses["PENDING"]) {
         intentMessageDeliverStatus = pending
@@ -21,6 +21,9 @@ export default function Index({ status }: MessageStatusProps) {
     } else if (status === Statuses["SENT"]) {
         intentMessageDeliverStatus = sent
         intentMessageDeliverStatusIcon = faCheckDouble
+    } else if (status === Statuses["ERROR"]) {
+        intentMessageDeliverStatus = error
+        intentMessageDeliverStatusIcon = faCircleExclamation
     }
 
     return (

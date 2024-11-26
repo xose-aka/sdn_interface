@@ -31,73 +31,74 @@ encoded_conversations = {}
 async def verify(message: IntentMessageRequest, token: str = Depends(verify_token)):
     fix_prompt = ""
 
-    if message.conversationId is not None:
+    conversation_id = message.conversationId
 
-        conversation_id = message.conversationId
+    if encoded_conversations.get(conversation_id) is None:
 
-        if encoded_conversations.get(conversation_id) is None:
+        intent = message.intent
 
-            intent = message.intent
+        print("1")
 
-            try:
+        try:
 
-                chain = prompt_router(intent, fix_prompt)
+            chain = prompt_router(intent, fix_prompt)
 
-                result = chain.invoke(intent)
+            result = chain.invoke(intent)
 
-                encoded_conversations[conversation_id] = {
-                    "processed_intent": result,
-                    "intent": intent,
-                }
+            encoded_conversations[conversation_id] = {
+                "processed_intent": result,
+                "intent": intent,
+            }
 
-                print("Result 1")
 
-                return {
-                    "intentId": message.intentId,  # Generate unique ID for server message
-                    "intent": str(result),
-                    "sender": "server",
-                    "conversationId": conversation_id,
-                    "responseMessageId": message.responseMessageId,
-                    "timestamp": datetime.now()
-                }
+            return {
+                "intentId": message.intentId,  # Generate unique ID for server message
+                "intent": str(result),
+                "sender": "server",
+                "conversationId": conversation_id,
+                "responseMessageId": message.responseMessageId,
+                "timestamp": datetime.now()
+            }
 
-            except JSONDecodeError as e:
-                return JSONResponse(content={"message":str(e)}, status_code=500)
+        except JSONDecodeError as e:
+            return JSONResponse(content={"message": str(e)}, status_code=500)
 
-        else:
+    else:
+        print("2")
 
-            conversation_data = encoded_conversations[conversation_id]
-            intent = conversation_data["intent"]
-            result = conversation_data["processed_intent"]
 
-            fix_intent = message.intent
+        conversation_data = encoded_conversations[conversation_id]
+        intent = conversation_data["intent"]
+        result = conversation_data["processed_intent"]
 
-            # valid_json = pyjson5.loads(result)
+        fix_intent = message.intent
 
-            fix_prompt = ("""[FIXES]:Before you have generated this network configuration:"""
-                          + str(result).replace("'", '"')
-                          # + str(valid_json)
-                          + "The user specify some fixes:" + fix_intent)
+        # valid_json = pyjson5.loads(result)
 
-            try:
-                chain = prompt_router(intent, fix_prompt)
+        fix_prompt = ("""[FIXES]:Before you have generated this network configuration:"""
+                      + str(result).replace("'", '"')
+                      # + str(valid_json)
+                      + "The user specify some fixes:" + fix_intent)
 
-                result = chain.invoke(intent)
+        try:
+            chain = prompt_router(intent, fix_prompt)
 
-                print("result: ", str(result))
+            result = chain.invoke(intent)
 
-                return {
-                    "intentId": message.intentId,  # Generate unique ID for server message
-                    "intent": str(result),
-                    "sender": "server",
-                    "conversationId": conversation_id,
-                    "responseMessageId": message.responseMessageId,
-                    "timestamp": datetime.now()
-                }
-            except IntentGoalServiceNotAvailableException as e:
-                return JSONResponse(content={"message": e.detail}, status_code=e.status_code)
-            except JSONDecodeError as e:
-                return JSONResponse(content={"message":str(e)}, status_code=500)
+            print("result: ", str(result))
+
+            return {
+                "intentId": message.intentId,  # Generate unique ID for server message
+                "intent": str(result),
+                "sender": "server",
+                "conversationId": conversation_id,
+                "responseMessageId": message.responseMessageId,
+                "timestamp": datetime.now()
+            }
+        except IntentGoalServiceNotAvailableException as e:
+            return JSONResponse(content={"message": e.detail}, status_code=e.status_code)
+        except JSONDecodeError as e:
+            return JSONResponse(content={"message": str(e)}, status_code=500)
 
 
 @router.post('/conversation/confirm')

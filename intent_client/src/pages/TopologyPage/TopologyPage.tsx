@@ -10,13 +10,14 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentWindow from "../../features/intentChat/components/Window";
 import BootstrapAlert from "../../components/BootstrapAlert.tsx";
-import {nodeTypes, alertTypes} from "../../constants/topology.ts";
+import {nodeTypes} from "../../constants/topology.ts";
+import {alertTypes} from "../../constants";
 
 
 const TopologyPage: React.FC = () => {
 
     const [showAlert, setShowAlert] = useState(false);
-    const [alertType, setAlertType] = useState<alertTypes>(alertTypes.DANGER);
+    const [alertType, setAlertType] = useState(alertTypes.primary);
     const [alertMessage, setAlertMessage] = useState("");
 
     const nodeList = Object.values(nodeTypes)
@@ -107,6 +108,21 @@ const TopologyPage: React.FC = () => {
             setIsShowIntentButton(false)
         }
     }, [JSON.stringify(nodes)]);
+
+    useEffect(() => {
+        let timeoutId = 0
+        if ( showAlert ) {
+            timeoutId = setTimeout(() => {
+                setShowAlert(prev => !prev)
+            }, 3000);
+
+            return () => {
+                if (timeoutId !== null)
+                    clearTimeout(timeoutId);
+            };
+        }
+    }, [showAlert]);
+
 
     return (
         <div className={'main-container'}>

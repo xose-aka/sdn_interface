@@ -1,3 +1,7 @@
+import json
+import re
+
+import demjson3
 from langchain.utils.math import cosine_similarity
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -26,7 +30,7 @@ examples = [
         "answer": """{
       "goal": "setWeights",
       "switch_id": 3,
-      "weights": {3:0.2,2:0.3,1:0.5}
+      "weights": {"3":0.2,"2":0.3,"1":0.5}
     }"""
     },
     {
@@ -52,7 +56,7 @@ examples = [
         "answer": """{
       "goal": "setWeights",
       "switch_id": 2,
-      "weights": {1:0.1,2:0.4,3:0.5}
+      "weights": {"1":0.1,"2":0.4,"3":0.5}
     }"""
     },
     {
@@ -78,7 +82,7 @@ examples = [
         "answer": """{
       "goal": "setWeights",
       "switch_id": 4,
-      "weights": {1:0.3,2:0.2,3:0.5}
+      "weights": {"1":0.3,"2":0.2,"3":0.5}
     }"""
     },
     {
@@ -104,7 +108,7 @@ examples = [
         "answer": """{
       "goal": "setWeights",
       "switch_id": 1,
-      "weights": {3:0.2,2:0.3,1:0.5}
+      "weights": {"3":0.2,"2":0.3,"1":0.5}
     }"""
     },
     {
@@ -262,12 +266,26 @@ def prompt_router(intent, fix):
     else:
         raise IntentGoalServiceNotAvailableException(f"Service isn't available for this goal: {most_similar} in ryu")
 
-    print("gg ", str(parser))
     selected_examples = example_selector.select_examples({"question": intent})
+
+    print("selected", selected_examples)
+
+    # fixed_data = demjson3.decode(invalid_json)
+    # for i in range(len(selected_examples)):
+    #     corrected_json = re.sub(r'(\b\w+\b):', r'"\1":', selected_examples[i]['answer'])
+    #
+    #     parsed_json = json.loads(corrected_json)
+    #
+    #     parsed_json = demjson3.decode(str(parsed_json))
+    #
+    #     print("aa", parsed_json)
+    #
+    #
+    #     selected_examples[i]['answer'] = parsed_json
+
     prompt = PromptTemplate.from_template(most_similar,
                                           partial_variables={"format_instructions": parser.get_format_instructions(),
                                                              "examples": str(selected_examples), "fix": fix})
-    print("aa ", str(prompt))
 
     chain = (
             {"query": RunnablePassthrough()}
@@ -275,9 +293,6 @@ def prompt_router(intent, fix):
             | ChatGoogleGenerativeAI(model="gemini-pro")
             | parser
     )
-
-    print("dd", str(chain))
-
 
     return chain
 
@@ -332,9 +347,6 @@ def prepare_ryu_url_and_request_data(processed_intent):
 
 
 def make_request(url, request_data):
-
-
-
     response = requests.post(url, json=request_data)
     if response.status_code == 200:
         print("Request successful")
