@@ -237,7 +237,7 @@ function Index({
                                 ) {
                                     prevVal.isConfirmed = true
                                     prevVal.isConfirmationDone = true
-                                    prevVal.status = Statuses["RECEIVED"]
+                                    prevVal.status = Statuses["SENT"]
                                 }
 
                                 // server response loading update
@@ -288,33 +288,52 @@ function Index({
             return;
         }
 
-        try {
-            sendConfirmConversation(token, conversationId)
-                .then((response) => {
+        sendConfirmConversation(token, conversationId)
+            .then((response) => {
 
-                    setConversationId(uuidv4())
+                setConversationId(uuidv4())
 
-                    setMessages(prevValues =>
-                        prevValues.map(prevVal => {
-                            if (
-                                prevVal.isConfirmationDone === false &&
-                                prevVal.sender === SenderTypes["SERVER"]
-                            ) {
-                                prevVal.isConfirmed = true
-                                prevVal.isConfirmationDone = true
-                            }
+                setMessages(prevValues =>
+                    prevValues.map(prevVal => {
+                        if (
+                            prevVal.isConfirmationDone === false &&
+                            prevVal.sender === SenderTypes["SERVER"]
+                        ) {
+                            prevVal.isConfirmed = true
+                            prevVal.isConfirmationDone = true
+                        }
 
-                            return prevVal;
-                        })
-                    )
-                    setShowAlert(true)
-                    setAlertType(alertTypes.success)
-                    setAlertMessage("Path installed")
-                });
-        } catch (error) {
-            console.error('Error sending message:', error);
-            // Handle error, e.g., retry mechanism
-        }
+                        return prevVal;
+                    })
+                )
+                setShowAlert(true)
+                setAlertType(alertTypes.success)
+                setAlertMessage("Path installed")
+            })
+            .catch((error) => {
+                setShowAlert(true)
+                setAlertType(alertTypes.danger)
+                setAlertMessage(error.message)
+
+                // setChatHistory(prevHistory =>
+                //     prevHistory.map(msg =>
+                //         msg.id === intentMessageDTO.intentId ? { ...msg, status: Statuses["ERROR"] } : msg
+                //     )
+                // );
+                //
+                // setMessages(prevValues =>
+                //     prevValues.map(prevVal => {
+                //         if (
+                //             prevVal.messageId === intentMessageDTO.intentId &&
+                //             prevVal.sender === SenderTypes["USER"]
+                //         )
+                //             prevVal.status = Statuses["ERROR"]
+                //
+                //         return prevVal;
+                //     })
+                // )
+
+            })
     };
 
     const handleSubmit = () => {

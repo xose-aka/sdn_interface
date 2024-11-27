@@ -1,9 +1,6 @@
-import re
 from datetime import datetime
 from json import JSONDecodeError
-from pyjson5 import pyjson5
-from uuid import uuid4
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi import APIRouter
 from httpx import HTTPStatusError, RequestError
 from starlette.responses import JSONResponse
@@ -50,7 +47,6 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
                 "intent": intent,
             }
 
-
             return {
                 "intentId": message.intentId,  # Generate unique ID for server message
                 "intent": str(result),
@@ -65,7 +61,6 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
 
     else:
         print("2")
-
 
         conversation_data = encoded_conversations[conversation_id]
         intent = conversation_data["intent"]
@@ -128,5 +123,6 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
             }
         except (IntentFormatException, IntentGoalServiceNotAvailableException) as e:
             return JSONResponse(content={"message": e.detail}, status_code=e.status_code)
-        except (HTTPStatusError, RequestError) as e:
-            return JSONResponse(content={"messages": str(e.detail)}, status_code=500)
+        except (HTTPStatusError, RequestError, HTTPException) as e:
+            print(str(e))
+            return JSONResponse(content={"messages": str(e.detail)}, status_code=e.status_code)

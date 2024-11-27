@@ -300,6 +300,8 @@ def prompt_router(intent, fix):
 def prepare_ryu_url_and_request_data(processed_intent):
     goal = processed_intent.get("goal")
 
+    print(goal)
+
     dpid = processed_intent.get("switch_id")
 
     if dpid is None:
@@ -329,7 +331,7 @@ def prepare_ryu_url_and_request_data(processed_intent):
             }
             url = f"http://127.0.0.1:8080/simpleswitch/meters/{filled_dpid}"
 
-        elif goal == "deleteFlowMod":
+        elif goal == "deleteFlow":
             ipv4_src = processed_intent.get("ip_source")
             ipv4_dst = processed_intent.get("ip_dest")
             request_data = {
