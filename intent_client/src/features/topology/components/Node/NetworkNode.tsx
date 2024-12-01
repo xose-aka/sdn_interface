@@ -41,14 +41,18 @@ export default function NetworkNode({ id, data }: NodeProps) {
                         position={Position.Right}
                         type="source"
                         isConnectable={isThisNodeClicked}
+                        id={`handle-source-${id}`}
                     />
                 )}
                 {/* We want to disable the target handle, if the connection was started from this node */}
                 { (!connection.inProgress || isTarget) && (
                     <Handle
-                        className="customHandle" position={Position.Left}
+                        className="customHandle"
+                        position={Position.Left}
                         type="target"
-                        isConnectableStart={false} />
+                        isConnectableStart={false}
+                        id={`handle-target-${id}`}
+                    />
                 )}
             </div>
             <div className='node-label'>{ label }</div>

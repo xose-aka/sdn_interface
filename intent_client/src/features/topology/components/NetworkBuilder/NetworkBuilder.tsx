@@ -68,9 +68,8 @@ export default function NetworkBuilder(
 
     const onConnect = useCallback(
         (params: Connection) => {
-
             setEdges((eds) => addEdge(
-                { ...params },
+                { ...params, data: {} },
                 eds))
         },
         []

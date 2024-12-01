@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     BaseEdge,
     EdgeLabelRenderer,
@@ -11,6 +11,8 @@ import {
 import { getEdgeParams } from '../../../../utils/edge.ts';
 import IpInput from "../IpInput/IpInput.tsx";
 import './index.css'
+import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
+import {Form} from "react-bootstrap";
 
 export default function CustomEdge({
                                        id,
@@ -24,20 +26,6 @@ export default function CustomEdge({
 
     const onEdgeClick = () => {
         setEdges((edges) => edges.filter((edge) => edge.id !== id));
-    };
-
-    const onEdgeSourceIpSet = (ip: string) => {
-        setEdges((edges) => edges.map((edge) => {
-            edge.sourceHandle = ip
-            return edge;
-        } ));
-    };
-
-    const onEdgeTargetIpSet = (ip: string) => {
-        setEdges((edges) => edges.map((edge) => {
-            edge.targetHandle = ip
-            return edge;
-        } ));
     };
 
     const sourceNode = useInternalNode(source);
@@ -55,9 +43,6 @@ export default function CustomEdge({
         targetX: tx,
         targetY: ty,
     });
-
-    const [sourceIp, setSourceIp] = useState<string>("")
-    const [tmp, setTmp] = useState<string>("")
 
     let targetX = -5
     let sourceX = -5
@@ -88,20 +73,37 @@ export default function CustomEdge({
         targetX = targetX - 13
     }
 
-    function isValidIPv4(ip: string) {
-        // Regular expression for a valid IPv4 address
-        const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
+    const [isSourceIPSet, setIsSourceIPSet] = useState(false)
+    const [isTargetIPSet, setIsTargetIPSet] = useState(false)
+    const [ipSuggestions, setIpSuggestions] = useState<string[]>([])
 
-        return ipv4Regex.test(ip);
-    }
+    const [inputIP, setInputIP] = useState<string>("")
+
+    const onEdgeSourceIpSet = (ip: string) => {
+        setEdges((edges) => edges.map((edge) => {
+            edge.data!.sourceIPAddress = ip
+            return edge;
+        } ));
+
+        setIsTargetIPSet(true)
+    };
+
+    const onEdgeTargetIpSet = (ip: string) => {
+        setEdges((edges) => edges.map((edge) => {
+            edge.data!.targetIPAddress = ip
+            return edge;
+        } ));
+
+        setIsSourceIPSet(true)
+    };
 
     const onSourceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;  // TypeScript knows this is a string
-        setTmp(value)
+        setInputIP(value)
     }
 
     const handleSourceInputBlur = () => {
-        const ipWithoutUnderline = tmp.replace(/_/g, "")
+        const ipWithoutUnderline = inputIP.replace(/_/g, "")
         if (isValidIPv4(ipWithoutUnderline)) {
             onEdgeSourceIpSet(ipWithoutUnderline)
         }
@@ -109,15 +111,21 @@ export default function CustomEdge({
 
     const onTargetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;  // TypeScript knows this is a string
-        setTmp(value)
+        setInputIP(value)
     }
 
     const handleTargetInputBlur = () => {
-        const ipWithoutUnderline = tmp.replace(/_/g, "")
+        const ipWithoutUnderline = inputIP.replace(/_/g, "")
         if (isValidIPv4(ipWithoutUnderline)) {
             onEdgeTargetIpSet(ipWithoutUnderline)
         }
     };
+
+    useEffect(() => {
+        if (isSourceIPSet || isTargetIPSet) {
+            setIpSuggestions(getIPSuggestions(inputIP))
+        }
+    }, [isSourceIPSet, isTargetIPSet]);
 
     return (
         <>
@@ -135,10 +143,24 @@ export default function CustomEdge({
                         pointerEvents: 'all',
                     }}
                 >
-                    <IpInput
-                        onChange={onSourceChange}
-                        handleInputBlur={handleSourceInputBlur}
-                    />
+                    {
+                        isSourceIPSet ?
+                            <Form.Select aria-label="Select source ip address" size="sm">
+                                <option>Select source ip address</option>
+                                {
+                                    ipSuggestions.map((suggestedIp) => (
+                                        <option key={suggestedIp} value={suggestedIp}>
+                                            {suggestedIp}
+                                        </option>
+                                    ))
+                                }
+                            </Form.Select>
+                            :
+                            <IpInput
+                                onChange={onSourceChange}
+                                handleInputBlur={handleSourceInputBlur}
+                            />
+                    }
                 </div>
                 <div
                     style={{
@@ -166,10 +188,24 @@ export default function CustomEdge({
                         pointerEvents: 'all',
                     }}
                 >
-                    <IpInput
-                        onChange={onTargetChange}
-                        handleInputBlur={handleTargetInputBlur}
-                    />
+                    {
+                        isTargetIPSet ?
+                            <Form.Select aria-label="Select target ip address" size="sm">
+                                <option>Select target ip address</option>
+                                {
+                                    ipSuggestions.map((suggestedIp) => (
+                                        <option key={suggestedIp} value={suggestedIp}>
+                                            {suggestedIp}
+                                        </option>
+                                    ))
+                                }
+                            </Form.Select>
+                            :
+                            <IpInput
+                                onChange={onTargetChange}
+                                handleInputBlur={handleTargetInputBlur}
+                            />
+                    }
                 </div>
             </EdgeLabelRenderer>
         </>

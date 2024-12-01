@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import MaskedInput from 'react-text-mask';
 
 const props = {
@@ -71,7 +71,7 @@ const IpInput: React.FC<IpInputProps> = ({onChange, handleInputBlur}) => {
         <div>
             <MaskedInput
                 onChange={ onChange }
-                onBlur={handleInputBlur}
+                onBlur={ handleInputBlur }
                 className="bg-white text-reset"
                 placeholder={"IP address e.g 192.168.0.1"}
                 {...props} />
