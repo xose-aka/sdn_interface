@@ -300,6 +300,7 @@ function Index({
                             prevVal.sender === SenderTypes["SERVER"]
                         ) {
                             prevVal.isConfirmed = true
+                            prevVal.status = Statuses["RECEIVED"]
                             prevVal.isConfirmationDone = true
                         }
 
@@ -314,6 +315,22 @@ function Index({
                 setShowAlert(true)
                 setAlertType(alertTypes.danger)
                 setAlertMessage(error.message)
+
+                setConversationId(uuidv4())
+                setMessages(prevValues =>
+                    prevValues.map(prevVal => {
+                        if (
+                            prevVal.isConfirmationDone === false &&
+                            prevVal.sender === SenderTypes["SERVER"]
+                        ) {
+                            prevVal.isConfirmed = false
+                            prevVal.status = Statuses["ERROR"]
+                            prevVal.isConfirmationDone = true
+                        }
+
+                        return prevVal;
+                    })
+                )
 
                 // setChatHistory(prevHistory =>
                 //     prevHistory.map(msg =>

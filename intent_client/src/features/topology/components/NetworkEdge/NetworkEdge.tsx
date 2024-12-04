@@ -12,7 +12,6 @@ import { getEdgeParams } from '../../../../utils/edge.ts';
 import IpInput from "../IpInput/IpInput.tsx";
 import './index.css'
 import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
-import {Form} from "react-bootstrap";
 
 export default function CustomEdge({
                                        id,
@@ -44,33 +43,32 @@ export default function CustomEdge({
         targetY: ty,
     });
 
-    let targetX = -5
-    let sourceX = -5
+    let targetX = -50
+    let targetY = -180
 
-    let targetY = -260
-    let sourceY = -130
+    let sourceY = 35
+    let sourceX = -50
 
-    if (sy > ty) {
-        targetY = -targetY - 200
-        sourceY = sourceY - 200
+    if (sy < ty) {
+        targetY = -targetY - 100
+        sourceY = -sourceY - 100
     } else {
-        sourceY = -sourceY
+        // sourceY = -sourceY
     }
 
     const differenceY = Math.abs(sy) - Math.abs(ty)
 
-    if ( differenceY < 350 ) {
-        if (sx < tx) {
-            sourceX = -sourceX - 4
-        } else {
-            targetX = -targetX - 4
-        }
-    }
 
-    if (sx > tx) {
-        sourceX = sourceX - 13
-    } else {
-        targetX = targetX - 13
+    if ( differenceY < 70 ) {
+        // targetX += ( 70 - differenceY )
+        // targetY -= (90)
+
+
+        if (sx < tx) {
+            // sourceX = -sourceX - 4
+        } else {
+            // targetX = -targetX - 4
+        }
     }
 
     const [isSourceIPSet, setIsSourceIPSet] = useState(false)
@@ -127,16 +125,22 @@ export default function CustomEdge({
         }
     }, [isSourceIPSet, isTargetIPSet]);
 
+    const labelSource = sourceNode.data.label as string
+    const labelTarget = targetNode.data.label as string
+
     return (
         <>
             <BaseEdge
                 path={edgePath}
                       markerEnd={markerEnd} style={style} />
+            <circle r="10" fill="#ff0073">
+                <animateMotion dur="2s" repeatCount="indefinite" path={edgePath} />
+            </circle>
             <EdgeLabelRenderer>
                 <div
                     style={{
                         position: 'absolute',
-                        transform: `translate(${sourceX}%, ${sourceY}%) translate(${sx}px,${sy}px)`,
+                        transform: `translate(${sourceX}%, ${sourceY}%) translate(${labelX}px,${labelY}px)`,
                         fontSize: 12,
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
@@ -144,22 +148,14 @@ export default function CustomEdge({
                     }}
                 >
                     {
-                        isSourceIPSet ?
-                            <Form.Select aria-label="Select source ip address" size="sm">
-                                <option>Select source ip address</option>
-                                {
-                                    ipSuggestions.map((suggestedIp) => (
-                                        <option key={suggestedIp} value={suggestedIp}>
-                                            {suggestedIp}
-                                        </option>
-                                    ))
-                                }
-                            </Form.Select>
-                            :
-                            <IpInput
-                                onChange={onSourceChange}
-                                handleInputBlur={handleSourceInputBlur}
-                            />
+                        <IpInput
+                            onChange={onSourceChange}
+                            handleInputBlur={handleSourceInputBlur}
+                            type={"source"}
+                            isIPSet={isSourceIPSet}
+                            ipSuggestions={ipSuggestions}
+                            label={labelSource}
+                        />
                     }
                 </div>
                 <div
@@ -180,8 +176,7 @@ export default function CustomEdge({
                 <div
                     style={{
                         position: 'absolute',
-                        transform: `translate(${targetX}%, ${targetY}%) translate(${tx}px,${ty}px)`,
-                        // transform: `translate(${inputCoordination2X}%, ${inputCoordination2Y}%) translate(${labelX}px,${labelY}px)`,
+                        transform: `translate(${targetX}%, ${targetY}%) translate(${labelX}px,${labelY}px)`,
                         fontSize: 12,
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
@@ -189,22 +184,14 @@ export default function CustomEdge({
                     }}
                 >
                     {
-                        isTargetIPSet ?
-                            <Form.Select aria-label="Select target ip address" size="sm">
-                                <option>Select target ip address</option>
-                                {
-                                    ipSuggestions.map((suggestedIp) => (
-                                        <option key={suggestedIp} value={suggestedIp}>
-                                            {suggestedIp}
-                                        </option>
-                                    ))
-                                }
-                            </Form.Select>
-                            :
-                            <IpInput
-                                onChange={onTargetChange}
-                                handleInputBlur={handleTargetInputBlur}
-                            />
+                        <IpInput
+                            onChange={onTargetChange}
+                            handleInputBlur={handleTargetInputBlur}
+                            type={"target"}
+                            isIPSet={isTargetIPSet}
+                            ipSuggestions={ipSuggestions}
+                            label={labelTarget}
+                        />
                     }
                 </div>
             </EdgeLabelRenderer>

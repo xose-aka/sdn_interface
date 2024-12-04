@@ -1,5 +1,6 @@
 import React from 'react';
 import MaskedInput from 'react-text-mask';
+import {Form} from "react-bootstrap";
 
 const props = {
     guide: true,
@@ -12,10 +13,10 @@ const props = {
 
             if (chunk === "") {
                 result.push(/\d/, /\d/, /\d/, ".");
-                continue;
+
             } else if (+chunk === 0) {
                 result.push(/\d/, ".");
-                continue;
+
             } else if (
                 chunks.length < 4 ||
                 (chunk.length < 3 && chunks[i].indexOf("_") !== -1)
@@ -25,14 +26,14 @@ const props = {
                     (chunk.length < 3 && +`${chunk}0` > 255)
                 ) {
                     result.push(/\d/, /\d/, ".");
-                    continue;
+
                 } else {
                     result.push(/\d/, /\d/, /\d/, ".");
-                    continue;
+
                 }
             } else {
                 result.push(...new Array(chunk.length).fill(/\d/), ".");
-                continue;
+
             }
         }
 
@@ -63,19 +64,47 @@ const props = {
 interface IpInputProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
     handleInputBlur: () => void
+    type: string
+    isIPSet: boolean
+    ipSuggestions: string[]
+    label: string
 }
 
-const IpInput: React.FC<IpInputProps> = ({onChange, handleInputBlur}) => {
+const IpInput: React.FC<IpInputProps> = (
+    {
+        onChange,
+        handleInputBlur,
+        type,
+        isIPSet,
+        ipSuggestions,
+        label
+    }
+    ) => {
 
     return (
-        <div>
-            <MaskedInput
-                onChange={ onChange }
-                onBlur={ handleInputBlur }
-                className="bg-white text-reset"
-                placeholder={"IP address e.g 192.168.0.1"}
-                {...props} />
-        </div>
+        <Form.Group>
+            <Form.Label>{label}</Form.Label>
+            {
+                isIPSet ?
+                    <Form.Select aria-label={`Select ${type} ip address`} size="sm">
+                        <option>{`Select ${type} ip address`}</option>
+                        {
+                            ipSuggestions.map((suggestedIp) => (
+                                <option key={suggestedIp} value={suggestedIp}>
+                                    {suggestedIp}
+                                </option>
+                            ))
+                        }
+                    </Form.Select>
+                    :
+                    <MaskedInput
+                        onChange={ onChange }
+                        onBlur={ handleInputBlur }
+                        className="bg-white text-reset form-control form-control-sm"
+                        placeholder={`Enter IP address e.g 192.168.0.1`}
+                        {...props} />
+            }
+        </Form.Group>
     );
 };
 

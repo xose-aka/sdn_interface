@@ -8,7 +8,7 @@ import React from "react";
 import {MessageStatusProps} from "./index.types.ts";
 import './index.scss'
 import {Statuses} from "../../constants/intentMessage.ts";
-import {error, pending, sent} from "../../../../constants/intentMessage.ts";
+import {error, pending, received, sent} from "../../../../constants/intentMessage.ts";
 
 export default function Index({ status }: MessageStatusProps) {
 
@@ -24,6 +24,9 @@ export default function Index({ status }: MessageStatusProps) {
     } else if (status === Statuses["ERROR"]) {
         intentMessageDeliverStatus = error
         intentMessageDeliverStatusIcon = faCircleExclamation
+    } else if (status === Statuses["RECEIVED"]) {
+        intentMessageDeliverStatus = ""
+        intentMessageDeliverStatusIcon = faCheckDouble
     }
 
     return (

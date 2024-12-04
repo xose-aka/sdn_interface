@@ -1,15 +1,7 @@
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.v1.endpoints.message import router as message_endpoint
 from api.v1.endpoints.auth import router as auth_endpoint
-import os
-
-load_dotenv()
-
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-
-# os.environ['GOOGLE_API_KEY'] = 'AIzaSyDIYm_-MdLqK3lFlTj0qF9nudXavXtp_zA'
 
 app = FastAPI()
 
