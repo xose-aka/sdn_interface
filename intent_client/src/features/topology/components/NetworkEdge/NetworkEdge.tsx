@@ -12,6 +12,8 @@ import { getEdgeParams } from '../../../../utils/edge.ts';
 import IpInput from "../IpInput/IpInput.tsx";
 import './index.css'
 import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
+import {Badge, Button} from "react-bootstrap";
+import IpSetButton from "../IpSetButton";
 
 export default function CustomEdge({
                                        id,
@@ -148,14 +150,18 @@ export default function CustomEdge({
                     }}
                 >
                     {
-                        <IpInput
-                            onChange={onSourceChange}
-                            handleInputBlur={handleSourceInputBlur}
-                            type={"source"}
-                            isIPSet={isSourceIPSet}
-                            ipSuggestions={ipSuggestions}
+                        <IpSetButton
+
                             label={labelSource}
                         />
+                        // <IpInput
+                        //     onChange={onSourceChange}
+                        //     handleInputBlur={handleSourceInputBlur}
+                        //     type={"source"}
+                        //     isIPSet={isSourceIPSet}
+                        //     ipSuggestions={ipSuggestions}
+                        //     label={labelSource}
+                        // />
                     }
                 </div>
                 <div
