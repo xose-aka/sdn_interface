@@ -48,7 +48,7 @@ export default function CustomEdge({
     let targetX = -50
     let targetY = -180
 
-    let sourceY = 35
+    let sourceY = 75
     let sourceX = -50
 
     if (sy < ty) {
@@ -190,14 +190,18 @@ export default function CustomEdge({
                     }}
                 >
                     {
-                        <IpInput
-                            onChange={onTargetChange}
-                            handleInputBlur={handleTargetInputBlur}
-                            type={"target"}
-                            isIPSet={isTargetIPSet}
-                            ipSuggestions={ipSuggestions}
+                        <IpSetButton
+
                             label={labelTarget}
                         />
+                        // <IpInput
+                        //     onChange={onTargetChange}
+                        //     handleInputBlur={handleTargetInputBlur}
+                        //     type={"target"}
+                        //     isIPSet={isTargetIPSet}
+                        //     ipSuggestions={ipSuggestions}
+                        //     label={labelTarget}
+                        // />
                     }
                 </div>
             </EdgeLabelRenderer>
