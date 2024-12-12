@@ -12,14 +12,24 @@ import IntentWindow from "../../features/intentChat/components/Window";
 import BootstrapAlert from "../../components/BootstrapAlert.tsx";
 import {nodeTypes} from "../../constants/topology.ts";
 import {alertTypes} from "../../constants";
+import NetworkNode from "../../features/topology/components/Node/NetworkNode.tsx";
+import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkEdge.tsx";
 
+const  networkNodeTypes = {
+    networkNode: NetworkNode
+};
 
+const edgeTypes = {
+    networkEdge: NetworkEdge
+};
 
 const TopologyPage: React.FC = () => {
 
     const [showAlert, setShowAlert] = useState(false);
     const [alertType, setAlertType] = useState(alertTypes.primary);
     const [alertMessage, setAlertMessage] = useState("");
+    const [showSetIPModal, setShowSetIPModal] = useState(false);
+
 
     const nodeList = Object.values(nodeTypes)
 
@@ -167,6 +177,8 @@ const TopologyPage: React.FC = () => {
                                     onEdgesChange={onEdgesChange}
                                     resetNodeSelection={resetNodeSelection}
                                     intentHighlightedNodes={intentHighlightedNodes}
+                                    networkNodeTypes={networkNodeTypes}
+                                    edgeTypes={edgeTypes}
                                 />
                             </ReactFlowProvider>
                             <IntentWindow

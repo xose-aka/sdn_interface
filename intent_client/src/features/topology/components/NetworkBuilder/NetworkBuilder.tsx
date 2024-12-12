@@ -13,14 +13,11 @@ import NetworkEdge from '../NetworkEdge/NetworkEdge.tsx';
 import NetworkNode from '../Node/NetworkNode.tsx';
 import CustomConnectionLine from '../CustomConnectionLine/CustomConnectionLine.tsx';
 import {NetworkBuilderProps} from "./NetworkBuilder.types.tsx";
+import SetIPModal from "../SetIPModal";
+import {useModal} from "../SetIPModalProvider/useModal.ts";
+import {SetIPModalProvider} from "../SetIPModalProvider";
 
-const  nodeTypes = {
-    networkNode: NetworkNode,
-};
 
-const edgeTypes = {
-    networkEdge: NetworkEdge,
-};
 
 const connectionLineStyle = { stroke: "#0a0a0a" };
 
@@ -42,7 +39,9 @@ export default function NetworkBuilder(
         setEdges,
         onNodesChange,
         onEdgesChange,
-        resetNodeSelection
+        resetNodeSelection,
+        networkNodeTypes,
+        edgeTypes
     }: NetworkBuilderProps ) {
 
     const { screenToFlowPosition } = useReactFlow();
@@ -175,15 +174,17 @@ export default function NetworkBuilder(
     //     };
     // }, [selectedNode, selectedEdge]);
 
+
     return (
         <div className="graph-container h-100 position-relative" ref={drop} onKeyDown={handleDeleteKeyPress}>
+            <SetIPModalProvider>
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
-                    nodeTypes={nodeTypes}
+                    nodeTypes={networkNodeTypes}
                     edgeTypes={edgeTypes}
                     connectionLineStyle={connectionLineStyle}
                     connectionLineComponent={CustomConnectionLine}
@@ -194,8 +195,8 @@ export default function NetworkBuilder(
                 >
                     <Controls />
                 </ReactFlow>
-
-
+                <SetIPModal/>
+            </SetIPModalProvider>
         </div>
     );
 }

@@ -1,5 +1,6 @@
 import {Badge, Button} from "react-bootstrap";
 import React from "react";
+import {useModal} from "../SetIPModalProvider/useModal.ts";
 
 export default function IpSetButton(
     {
@@ -10,6 +11,10 @@ export default function IpSetButton(
         // ipSuggestions,
         label
     }: IpSetButtonProps) {
+
+    const { showModal } = useModal();
+
+
     return (
         <Button
             variant="primary"
@@ -18,7 +23,7 @@ export default function IpSetButton(
                 color: "white",
                 position: "relative"
             }}
-            // onClick={onClick}
+            onClick={showModal}
         >
             <Badge
                 bg="primary"

@@ -13,7 +13,7 @@ import IpInput from "../IpInput/IpInput.tsx";
 import './index.css'
 import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
 import {Badge, Button} from "react-bootstrap";
-import IpSetButton from "../IpSetButton";
+import IpSetButton from "../SetIPButton";
 
 export default function CustomEdge({
                                        id,
