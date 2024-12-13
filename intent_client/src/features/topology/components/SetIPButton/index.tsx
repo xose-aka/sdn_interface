@@ -23,7 +23,7 @@ export default function IpSetButton(
                 color: "white",
                 position: "relative"
             }}
-            onClick={showModal}
+            onClick={() => showModal(label)}
         >
             <Badge
                 bg="primary"

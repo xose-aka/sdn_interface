@@ -9,8 +9,10 @@ export const SetIPModalProvider: React.FC<{ children: ReactNode }> = ({ children
     // const [modalContent, setModalContent] = useState<ReactNode | null>(null);
     const [isVisible, setIsVisible] = useState(false);
 
-    const showModal = () => {
-        // setModalContent();
+    const [label, setLabel] = useState("");
+
+    const showModal = (localLabel: string) => {
+        setLabel(localLabel);
         setIsVisible(true);
     };
 
@@ -20,7 +22,7 @@ export const SetIPModalProvider: React.FC<{ children: ReactNode }> = ({ children
     };
 
     return (
-        <ModalContext.Provider value={{ showModal, hideModal, isVisible }}>
+        <ModalContext.Provider value={{ showModal, label, hideModal, isVisible }}>
             {children}
         </ModalContext.Provider>
     );

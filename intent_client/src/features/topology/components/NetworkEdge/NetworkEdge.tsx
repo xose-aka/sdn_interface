@@ -73,60 +73,6 @@ export default function CustomEdge({
         }
     }
 
-    const [isSourceIPSet, setIsSourceIPSet] = useState(false)
-    const [isTargetIPSet, setIsTargetIPSet] = useState(false)
-    const [ipSuggestions, setIpSuggestions] = useState<string[]>([])
-
-    const [inputIP, setInputIP] = useState<string>("")
-
-    const onEdgeSourceIpSet = (ip: string) => {
-        setEdges((edges) => edges.map((edge) => {
-            edge.data!.sourceIPAddress = ip
-            return edge;
-        } ));
-
-        setIsTargetIPSet(true)
-    };
-
-    const onEdgeTargetIpSet = (ip: string) => {
-        setEdges((edges) => edges.map((edge) => {
-            edge.data!.targetIPAddress = ip
-            return edge;
-        } ));
-
-        setIsSourceIPSet(true)
-    };
-
-    const onSourceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;  // TypeScript knows this is a string
-        setInputIP(value)
-    }
-
-    const handleSourceInputBlur = () => {
-        const ipWithoutUnderline = inputIP.replace(/_/g, "")
-        if (isValidIPv4(ipWithoutUnderline)) {
-            onEdgeSourceIpSet(ipWithoutUnderline)
-        }
-    };
-
-    const onTargetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;  // TypeScript knows this is a string
-        setInputIP(value)
-    }
-
-    const handleTargetInputBlur = () => {
-        const ipWithoutUnderline = inputIP.replace(/_/g, "")
-        if (isValidIPv4(ipWithoutUnderline)) {
-            onEdgeTargetIpSet(ipWithoutUnderline)
-        }
-    };
-
-    useEffect(() => {
-        if (isSourceIPSet || isTargetIPSet) {
-            setIpSuggestions(getIPSuggestions(inputIP))
-        }
-    }, [isSourceIPSet, isTargetIPSet]);
-
     const labelSource = sourceNode.data.label as string
     const labelTarget = targetNode.data.label as string
 
@@ -151,17 +97,8 @@ export default function CustomEdge({
                 >
                     {
                         <IpSetButton
-
                             label={labelSource}
                         />
-                        // <IpInput
-                        //     onChange={onSourceChange}
-                        //     handleInputBlur={handleSourceInputBlur}
-                        //     type={"source"}
-                        //     isIPSet={isSourceIPSet}
-                        //     ipSuggestions={ipSuggestions}
-                        //     label={labelSource}
-                        // />
                     }
                 </div>
                 <div
@@ -191,17 +128,8 @@ export default function CustomEdge({
                 >
                     {
                         <IpSetButton
-
                             label={labelTarget}
                         />
-                        // <IpInput
-                        //     onChange={onTargetChange}
-                        //     handleInputBlur={handleTargetInputBlur}
-                        //     type={"target"}
-                        //     isIPSet={isTargetIPSet}
-                        //     ipSuggestions={ipSuggestions}
-                        //     label={labelTarget}
-                        // />
                     }
                 </div>
             </EdgeLabelRenderer>

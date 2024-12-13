@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import MaskedInput from 'react-text-mask';
 import {Form} from "react-bootstrap";
 
@@ -81,30 +81,71 @@ const IpInput: React.FC<IpInputProps> = (
     }
     ) => {
 
+    const [maskValue, setMaskValue] = useState<string>('');
+
+    const handleMaskInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        let inputValue = event.target.value;
+
+        // Remove non-numeric characters and limit to 2 digits
+        inputValue = inputValue.replace(/[^0-9]/g, '').slice(0, 2);
+
+        setMaskValue(inputValue);
+    }
+
     return (
-        <Form.Group>
-            <Form.Label>{label}</Form.Label>
+        <div className={"row"}>
+
             {
-                isIPSet ?
-                    <Form.Select aria-label={`Select ${type} ip address`} size="sm">
-                        <option>{`Select ${type} ip address`}</option>
-                        {
-                            ipSuggestions.map((suggestedIp) => (
-                                <option key={suggestedIp} value={suggestedIp}>
-                                    {suggestedIp}
-                                </option>
-                            ))
-                        }
-                    </Form.Select>
-                    :
-                    <MaskedInput
-                        onChange={ onChange }
-                        onBlur={ handleInputBlur }
-                        className="bg-white text-reset form-control form-control-sm"
-                        placeholder={`Enter IP address e.g 192.168.0.1`}
-                        {...props} />
+                // isIPSet ?
+                //     <Form.Select aria-label={`Select ${type} ip address`} size="sm">
+                //         <option>{`Select ${type} ip address`}</option>
+                //         {
+                //             ipSuggestions.map((suggestedIp) => (
+                //                 <option key={suggestedIp} value={suggestedIp}>
+                //                     {suggestedIp}
+                //                 </option>
+                //             ))
+                //         }
+                //     </Form.Select>
+                //     :
             }
-        </Form.Group>
+                <Form.Group className="col-9" controlId={`exampleForm.${label}`}>
+                    <Form.Label>IP Address</Form.Label>
+                        <MaskedInput
+                            onChange={ onChange }
+                            onBlur={ handleInputBlur }
+                            className="bg-white text-reset form-control"
+                            placeholder={`Enter IP address e.g 192.168.0.1`}
+                            autoFocus
+                            {...props} />
+                </Form.Group>
+                <div className={"col-1"}>
+                    <div className={"pt-4"} style={{
+                        fontSize: 31
+                    }}>
+                        /
+
+                    </div>
+
+                    {/*<div className={"d-flex flex-column justify-content-end"}>*/}
+                    {/*    <div>*/}
+                    {/*    </div>*/}
+                    {/*</div>*/}
+                </div>
+                <Form.Group className="col-2" controlId="exampleForm.ControlInput1">
+                    <Form.Label>Mask</Form.Label>
+                    <Form.Control
+                        type="text"
+                        maxLength={2}
+                        placeholder="Mask"
+                        value={maskValue}
+                        onChange={handleMaskInput}
+                    />
+                </Form.Group>
+
+            </div>
+
+
     );
 };
 
