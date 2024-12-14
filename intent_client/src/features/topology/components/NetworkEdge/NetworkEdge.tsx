@@ -14,6 +14,7 @@ import './index.css'
 import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
 import {Badge, Button} from "react-bootstrap";
 import IpSetButton from "../SetIPButton";
+import {NodeTypes} from "../../constants.ts";
 
 export default function CustomEdge({
                                        id,
@@ -97,6 +98,7 @@ export default function CustomEdge({
                 >
                     {
                         <IpSetButton
+                            type={NodeTypes["SOURCE"]}
                             label={labelSource}
                         />
                     }
@@ -128,6 +130,7 @@ export default function CustomEdge({
                 >
                     {
                         <IpSetButton
+                            type={NodeTypes["TARGET"]}
                             label={labelTarget}
                         />
                     }

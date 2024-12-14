@@ -6,14 +6,13 @@ export default function IpSetButton(
     {
         // onClick,
         // handleInputBlur,
-        // type,
+        type,
         // isIPSet,
         // ipSuggestions,
         label
     }: IpSetButtonProps) {
 
     const { showModal } = useModal();
-
 
     return (
         <Button
@@ -23,7 +22,7 @@ export default function IpSetButton(
                 color: "white",
                 position: "relative"
             }}
-            onClick={() => showModal(label)}
+            onClick={() => showModal(label, type)}
         >
             <Badge
                 bg="primary"

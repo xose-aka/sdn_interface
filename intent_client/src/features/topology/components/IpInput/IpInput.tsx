@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import MaskedInput from 'react-text-mask';
 import {Form} from "react-bootstrap";
+import "./index.css"
 
 const props = {
     guide: true,
@@ -63,7 +64,7 @@ const props = {
 
 interface IpInputProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-    handleInputBlur: () => void
+    // handleInputBlur: () => void
     type: string
     isIPSet: boolean
     ipSuggestions: string[]
@@ -89,6 +90,8 @@ const IpInput: React.FC<IpInputProps> = (
         // Remove non-numeric characters and limit to 2 digits
         inputValue = inputValue.replace(/[^0-9]/g, '').slice(0, 2);
 
+        if (parseInt(inputValue) > 32) return
+
         setMaskValue(inputValue);
     }
 
@@ -109,8 +112,8 @@ const IpInput: React.FC<IpInputProps> = (
                 //     </Form.Select>
                 //     :
             }
-                <Form.Group className="col-9" controlId={`exampleForm.${label}`}>
-                    <Form.Label>IP Address</Form.Label>
+                <Form.Group className="col-8" controlId={`exampleForm.${label}`}>
+                    <Form.Label className="required">IP Address</Form.Label>
                         <MaskedInput
                             onChange={ onChange }
                             onBlur={ handleInputBlur }
@@ -132,8 +135,8 @@ const IpInput: React.FC<IpInputProps> = (
                     {/*    </div>*/}
                     {/*</div>*/}
                 </div>
-                <Form.Group className="col-2" controlId="exampleForm.ControlInput1">
-                    <Form.Label>Mask</Form.Label>
+                <Form.Group className="col-3" controlId="exampleForm.ControlInput1">
+                    <Form.Label className="required">Mask</Form.Label>
                     <Form.Control
                         type="text"
                         maxLength={2}

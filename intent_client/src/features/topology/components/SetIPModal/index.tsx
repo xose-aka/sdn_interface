@@ -4,11 +4,12 @@ import IpInput from "../IpInput/IpInput.tsx";
 import React, {useEffect, useState} from "react";
 import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
 import {useReactFlow} from "@xyflow/react";
+import {NodeTypes} from "../../constants.ts";
 
 export default function () {
     const { setEdges } = useReactFlow();
 
-    const { isVisible, label, hideModal } = useModal();
+    const { isVisible, label, type, hideModal } = useModal();
 
     const [isSourceIPSet, setIsSourceIPSet] = useState(false)
     const [isTargetIPSet, setIsTargetIPSet] = useState(false)
@@ -46,15 +47,25 @@ export default function () {
         }
     };
 
-    const onTargetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const onIPChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;  // TypeScript knows this is a string
         setInputIP(value)
     }
 
-    const handleTargetInputBlur = () => {
+    const handleIPSet = () => {
+
         const ipWithoutUnderline = inputIP.replace(/_/g, "")
+
         if (isValidIPv4(ipWithoutUnderline)) {
-            onEdgeTargetIpSet(ipWithoutUnderline)
+
+            switch (type) {
+                case NodeTypes["SOURCE"]:
+                    onEdgeSourceIpSet(ipWithoutUnderline)
+                    break;
+                case NodeTypes["TARGET"]:
+                    onEdgeTargetIpSet(ipWithoutUnderline)
+                    break;
+            }
         }
     };
 
@@ -64,6 +75,7 @@ export default function () {
         }
     }, [isSourceIPSet, isTargetIPSet]);
 
+
     return (
         <Modal show={isVisible} onHide={hideModal}>
             <Modal.Header closeButton>
@@ -72,9 +84,9 @@ export default function () {
             <Modal.Body>
                 <Form>
                      <IpInput
-                         onChange={onTargetChange}
-                         handleInputBlur={handleTargetInputBlur}
-                         type={"target"}
+                         onChange={onIPChange}
+                         // handleInputBlur={handleTargetInputBlur}
+                         type={type}
                          isIPSet={isTargetIPSet}
                          ipSuggestions={ipSuggestions}
                          label={label}
@@ -97,11 +109,11 @@ export default function () {
                 </Form>
             </Modal.Body>
             <Modal.Footer>
+                <Button variant="primary" onClick={handleIPSet}>
+                    Save
+                </Button>
                 <Button variant="secondary" onClick={hideModal}>
                     Close
-                </Button>
-                <Button variant="primary" onClick={hideModal}>
-                    Save Changes
                 </Button>
             </Modal.Footer>
         </Modal>
