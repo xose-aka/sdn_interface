@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
     BaseEdge,
     EdgeLabelRenderer,
@@ -9,12 +9,10 @@ import {
 } from '@xyflow/react';
 
 import { getEdgeParams } from '../../../../utils/edge.ts';
-import IpInput from "../IpInput/IpInput.tsx";
 import './index.css'
-import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
-import {Badge, Button} from "react-bootstrap";
 import IpSetButton from "../SetIPButton";
 import {NodeTypes} from "../../constants.ts";
+import {useModal} from "../SetIPModalProvider/useModal.ts";
 
 export default function CustomEdge({
                                        id,
@@ -25,6 +23,8 @@ export default function CustomEdge({
                                        markerEnd,
                                    }: EdgeProps) {
     const { setEdges } = useReactFlow();
+
+    const { showModal } = useModal();
 
     const onEdgeClick = () => {
         setEdges((edges) => edges.filter((edge) => edge.id !== id));
@@ -76,6 +76,9 @@ export default function CustomEdge({
 
     const labelSource = sourceNode.data.label as string
     const labelTarget = targetNode.data.label as string
+    const targetIP = data!.sourceIPAddress as string
+    const sourceIP = data!.targetIPAddress as string
+
 
     return (
         <>
@@ -98,8 +101,9 @@ export default function CustomEdge({
                 >
                     {
                         <IpSetButton
-                            type={NodeTypes["SOURCE"]}
+                            ipAddress={sourceIP}
                             label={labelSource}
+                            showModal={ () => showModal(labelSource, NodeTypes["SOURCE"]) }
                         />
                     }
                 </div>
@@ -130,8 +134,9 @@ export default function CustomEdge({
                 >
                     {
                         <IpSetButton
-                            type={NodeTypes["TARGET"]}
+                            ipAddress={targetIP}
                             label={labelTarget}
+                            showModal={ () => showModal(labelTarget, NodeTypes["TARGET"]) }
                         />
                     }
                 </div>

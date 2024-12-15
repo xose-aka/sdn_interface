@@ -17,8 +17,17 @@ export default function () {
 
     const [inputIP, setInputIP] = useState<string>("")
 
+    const [maskValue, setMaskValue] = useState<string>('');
+
+
     const onEdgeSourceIpSet = (ip: string) => {
+
+        console.log(ip)
+        console.log('aa')
+
         setEdges((edges) => edges.map((edge) => {
+            console.log(edge, 'gg')
+
             edge.data!.sourceIPAddress = ip
             return edge;
         } ));
@@ -54,17 +63,23 @@ export default function () {
 
     const handleIPSet = () => {
 
-        const ipWithoutUnderline = inputIP.replace(/_/g, "")
+        if (inputIP.length > 0 && maskValue.length > 0) {
+            const ipWithoutUnderline = inputIP.replace(/_/g, "")
 
-        if (isValidIPv4(ipWithoutUnderline)) {
+            if (isValidIPv4(ipWithoutUnderline)) {
 
-            switch (type) {
-                case NodeTypes["SOURCE"]:
-                    onEdgeSourceIpSet(ipWithoutUnderline)
-                    break;
-                case NodeTypes["TARGET"]:
-                    onEdgeTargetIpSet(ipWithoutUnderline)
-                    break;
+                // console.log(ipWithoutUnderline, type, NodeTypes["SOURCE"], NodeTypes["SOURCE"] === type)
+
+                switch (type) {
+                    case NodeTypes["SOURCE"]:
+                        onEdgeSourceIpSet(ipWithoutUnderline)
+                        break;
+                    case NodeTypes["TARGET"]:
+                        onEdgeTargetIpSet(ipWithoutUnderline)
+                        break;
+                }
+
+                hideModal()
             }
         }
     };
@@ -86,6 +101,8 @@ export default function () {
                      <IpInput
                          onChange={onIPChange}
                          // handleInputBlur={handleTargetInputBlur}
+                         maskValue={maskValue}
+                         setMaskValue={setMaskValue}
                          type={type}
                          isIPSet={isTargetIPSet}
                          ipSuggestions={ipSuggestions}

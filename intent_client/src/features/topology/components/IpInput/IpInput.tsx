@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {Dispatch, SetStateAction} from 'react';
 import MaskedInput from 'react-text-mask';
 import {Form} from "react-bootstrap";
 import "./index.css"
@@ -69,20 +69,23 @@ interface IpInputProps {
     isIPSet: boolean
     ipSuggestions: string[]
     label: string
+    maskValue: string
+    setMaskValue: Dispatch<SetStateAction<string>>
 }
 
 const IpInput: React.FC<IpInputProps> = (
     {
         onChange,
-        handleInputBlur,
+        // handleInputBlur,
         type,
         isIPSet,
         ipSuggestions,
+        maskValue,
+        setMaskValue,
         label
     }
     ) => {
 
-    const [maskValue, setMaskValue] = useState<string>('');
 
     const handleMaskInput = (event: React.ChangeEvent<HTMLInputElement>) => {
         let inputValue = event.target.value;
@@ -116,7 +119,7 @@ const IpInput: React.FC<IpInputProps> = (
                     <Form.Label className="required">IP Address</Form.Label>
                         <MaskedInput
                             onChange={ onChange }
-                            onBlur={ handleInputBlur }
+                            // onBlur={ handleInputBlur }
                             className="bg-white text-reset form-control"
                             placeholder={`Enter IP address e.g 192.168.0.1`}
                             autoFocus

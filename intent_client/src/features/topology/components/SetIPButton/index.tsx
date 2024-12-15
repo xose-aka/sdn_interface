@@ -6,13 +6,20 @@ export default function IpSetButton(
     {
         // onClick,
         // handleInputBlur,
-        type,
         // isIPSet,
         // ipSuggestions,
+        showModal,
+        ipAddress,
         label
     }: IpSetButtonProps) {
 
-    const { showModal } = useModal();
+
+    console.log(ipAddress)
+
+    let IPAddressLabel = "No IP address set"
+
+    if ( ipAddress !== undefined && ipAddress.length > 0)
+        IPAddressLabel = ipAddress
 
     return (
         <Button
@@ -22,7 +29,7 @@ export default function IpSetButton(
                 color: "white",
                 position: "relative"
             }}
-            onClick={() => showModal(label, type)}
+            onClick={() => showModal() }
         >
             <Badge
                 bg="primary"
@@ -31,7 +38,7 @@ export default function IpSetButton(
                     top: "-10px"
                 }}
             > {label}</Badge>
-            No IP address set
+            {IPAddressLabel}
         </Button>
     )
 }
