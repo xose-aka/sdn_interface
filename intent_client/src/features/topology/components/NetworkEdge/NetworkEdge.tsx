@@ -79,7 +79,6 @@ export default function CustomEdge({
     const targetIP = data!.sourceIPAddress as string
     const sourceIP = data!.targetIPAddress as string
 
-
     return (
         <>
             <BaseEdge

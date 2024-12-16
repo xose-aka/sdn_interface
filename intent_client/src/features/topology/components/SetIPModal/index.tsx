@@ -22,12 +22,7 @@ export default function () {
 
     const onEdgeSourceIpSet = (ip: string) => {
 
-        console.log(ip)
-        console.log('aa')
-
         setEdges((edges) => edges.map((edge) => {
-            console.log(edge, 'gg')
-
             edge.data!.sourceIPAddress = ip
             return edge;
         } ));
@@ -79,9 +74,14 @@ export default function () {
                         break;
                 }
 
-                hideModal()
+                handleHideModal()
             }
         }
+    };
+
+    const handleHideModal = () => {
+        setMaskValue("")
+        hideModal();
     };
 
     useEffect(() => {
@@ -92,7 +92,7 @@ export default function () {
 
 
     return (
-        <Modal show={isVisible} onHide={hideModal}>
+        <Modal show={isVisible} onHide={handleHideModal}>
             <Modal.Header closeButton>
                 <Modal.Title>{`Set IP for ${label}`}</Modal.Title>
             </Modal.Header>
@@ -108,28 +108,13 @@ export default function () {
                          ipSuggestions={ipSuggestions}
                          label={label}
                      />
-                    {/*<Form.Group className="mb-3" controlId="exampleForm.ControlInput1">*/}
-                    {/*    <Form.Label>Email address</Form.Label>*/}
-                    {/*    <Form.Control*/}
-                    {/*        type="email"*/}
-                    {/*        placeholder="name@example.com"*/}
-                    {/*        autoFocus*/}
-                    {/*    />*/}
-                    {/*</Form.Group>*/}
-                    {/*<Form.Group*/}
-                    {/*    className="mb-3"*/}
-                    {/*    controlId="exampleForm.ControlTextarea1"*/}
-                    {/*>*/}
-                    {/*    <Form.Label>Example textarea</Form.Label>*/}
-                    {/*    <Form.Control as="textarea" rows={3} />*/}
-                    {/*</Form.Group>*/}
                 </Form>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="primary" onClick={handleIPSet}>
                     Save
                 </Button>
-                <Button variant="secondary" onClick={hideModal}>
+                <Button variant="secondary" onClick={handleHideModal}>
                     Close
                 </Button>
             </Modal.Footer>

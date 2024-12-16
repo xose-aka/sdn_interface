@@ -1,3 +1,5 @@
+import {TouchBackend} from "react-dnd-touch-backend";
+import {HTML5Backend} from "react-dnd-html5-backend";
 
 function isObjectEmpty(obj: object) {
     for (const prop in obj) {
@@ -40,4 +42,12 @@ function getIPSuggestions(baseIp: string) {
     return []
 }
 
-export {isObjectEmpty, isValidIPv4, getIPSuggestions}
+function isMobile(): boolean {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function getReactDnDBackend() {
+    return  isMobile() ? TouchBackend : HTML5Backend;
+}
+
+export {isObjectEmpty, isValidIPv4, getIPSuggestions, getReactDnDBackend}

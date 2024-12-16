@@ -1,6 +1,7 @@
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
+import { TouchBackend } from 'react-dnd-touch-backend'
 
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
 import React, {useEffect, useState} from "react";
@@ -14,6 +15,7 @@ import {nodeTypes} from "../../constants/topology.ts";
 import {alertTypes} from "../../constants";
 import NetworkNode from "../../features/topology/components/Node/NetworkNode.tsx";
 import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkEdge.tsx";
+import {getReactDnDBackend} from "../../utils/helper.ts";
 
 const  networkNodeTypes = {
     networkNode: NetworkNode
@@ -134,6 +136,7 @@ const TopologyPage: React.FC = () => {
         }
     }, [showAlert]);
 
+    const backend = getReactDnDBackend()
 
     return (
         <div className={'main-container'}>
@@ -145,16 +148,22 @@ const TopologyPage: React.FC = () => {
                 />
             )}
             <Container fluid={true} >
-                <Row className={'h-100'}>
-                    <DndProvider backend={HTML5Backend}>
-                        <Col xs={2} className={'border-end bg-light'}
+                <Row className={'vh-100'}>
+                    <DndProvider backend={ backend }
+                                 options={{ enableMouseEvents: true }}
+                    >
+                        <Col
+                            sm={12}
+                            md={3}
+                            xl={2}
+                             className={'border-end bg-light "h-sm-30'}
                              onClick={ () => resetNodeSelection() }>
                             <ListNode
                                 nodeList={nodeList}
                                 resetNodeSelection={() => resetNodeSelection()}
                             />
                         </Col>
-                        <Col xs={10}>
+                        <Col className="h-sm-70">
                             <Button  className="position-relative float-end z-3"
                                 style={{
                                     top: "20px",

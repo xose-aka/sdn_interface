@@ -27,7 +27,8 @@ export default function IpSetButton(
             size="sm"
             style={{
                 color: "white",
-                position: "relative"
+                position: "relative",
+                width: "135px"
             }}
             onClick={() => showModal() }
         >
@@ -35,7 +36,8 @@ export default function IpSetButton(
                 bg="primary"
                 style={{
                     position: "absolute",
-                    top: "-10px"
+                    top: "-10px",
+                    left: "10px"
                 }}
             > {label}</Badge>
             {IPAddressLabel}
