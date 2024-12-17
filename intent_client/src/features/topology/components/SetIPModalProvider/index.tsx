@@ -7,26 +7,28 @@ export const ModalContext = createContext<ModalContextType | undefined>(undefine
 
 // ModalProvider to wrap your application
 export const SetIPModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // const [modalContent, setModalContent] = useState<ReactNode | null>(null);
+
     const [isVisible, setIsVisible] = useState(false);
 
     const [label, setLabel] = useState("");
 
     const [type, setType] = useState("");
 
-    const showModal = (localLabel: string, localType: string) => {
+    const [edgeId, setEdgeId] = useState("");
+
+    const showModal = (localEdgeId: string, localType: string, localLabel: string) => {
         setLabel(localLabel);
         setType(localType)
+        setEdgeId(localEdgeId)
         setIsVisible(true);
     };
 
     const hideModal = () => {
-        // setModalContent(null);
         setIsVisible(false);
     };
 
     return (
-        <ModalContext.Provider value={{ showModal, label, type, hideModal, isVisible }}>
+        <ModalContext.Provider value={{ showModal, label, type, hideModal, isVisible, edgeId }}>
             {children}
         </ModalContext.Provider>
     );

@@ -26,9 +26,6 @@ export default function CustomEdge({
 
     const { showModal } = useModal();
 
-    const onEdgeClick = () => {
-        setEdges((edges) => edges.filter((edge) => edge.id !== id));
-    };
 
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
@@ -36,6 +33,14 @@ export default function CustomEdge({
     if (!sourceNode || !targetNode) {
         return null;
     }
+
+    const labelSource = sourceNode.data.label as string
+    const labelTarget = targetNode.data.label as string
+
+    const onEdgeClick = () => {
+        if (confirm(`Do you want to remove link between ${labelSource} and ${labelTarget} ?`))
+            setEdges((edges) => edges.filter((edge) => edge.id !== id));
+    };
 
     const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
 
@@ -74,16 +79,18 @@ export default function CustomEdge({
         }
     }
 
-    const labelSource = sourceNode.data.label as string
-    const labelTarget = targetNode.data.label as string
-    const targetIP = data!.sourceIPAddress as string
-    const sourceIP = data!.targetIPAddress as string
+    const sourceIP = data!.sourceIPAddress as string
+    const targetIP = data!.targetIPAddress as string
+    const mask = data!.mask as string
 
     return (
-        <>
+        <
+
+        >
             <BaseEdge
                 path={edgePath}
-                      markerEnd={markerEnd} style={style} />
+                markerEnd={markerEnd}
+                style={style} />
             <circle r="10" fill="#ff0073">
                 <animateMotion dur="2s" repeatCount="indefinite" path={edgePath} />
             </circle>
@@ -102,7 +109,8 @@ export default function CustomEdge({
                         <IpSetButton
                             ipAddress={sourceIP}
                             label={labelSource}
-                            showModal={ () => showModal(labelSource, NodeTypes["SOURCE"]) }
+                            mask={mask}
+                            showModal={ () => showModal(id, NodeTypes["SOURCE"], labelSource) }
                         />
                     }
                 </div>
@@ -116,10 +124,12 @@ export default function CustomEdge({
                     className="button-edge__label nodrag nopan"
                 >
 
-                    <button className="edgebutton" onClick={onEdgeClick}>
+                    <button
+                            className="edgebutton"
+                            onClick={onEdgeClick}
+                    >
                         ×
                     </button>
-
                 </div>
                 <div
                     style={{
@@ -135,7 +145,8 @@ export default function CustomEdge({
                         <IpSetButton
                             ipAddress={targetIP}
                             label={labelTarget}
-                            showModal={ () => showModal(labelTarget, NodeTypes["TARGET"]) }
+                            mask={mask}
+                            showModal={ () => showModal(id, NodeTypes["TARGET"], labelTarget) }
                         />
                     }
                 </div>

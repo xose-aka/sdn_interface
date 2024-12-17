@@ -1,6 +1,6 @@
 import React, {Dispatch, SetStateAction} from 'react';
 import MaskedInput from 'react-text-mask';
-import {Form} from "react-bootstrap";
+import {Form, Row} from "react-bootstrap";
 import "./index.css"
 
 const props = {
@@ -64,8 +64,9 @@ const props = {
 
 interface IpInputProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-    // handleInputBlur: () => void
+    onSelectChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
     type: string
+    inputIP: string
     isIPSet: boolean
     ipSuggestions: string[]
     label: string
@@ -76,8 +77,9 @@ interface IpInputProps {
 const IpInput: React.FC<IpInputProps> = (
     {
         onChange,
-        // handleInputBlur,
+        onSelectChange,
         type,
+        inputIP,
         isIPSet,
         ipSuggestions,
         maskValue,
@@ -98,60 +100,61 @@ const IpInput: React.FC<IpInputProps> = (
         setMaskValue(inputValue);
     }
 
+    const selectInput = (
+        isIPSet ?
+
+            <Form.Group className="col-8" controlId={`exampleForm.${label}`}>
+                <Form.Label className="required">IP Address</Form.Label>
+                <Form.Select className="w-100"
+                             aria-label={`Select ${type} ip address`}
+                             onChange={ onSelectChange }
+                >
+                    <option>{`Select ${type} ip address`}</option>
+                    {
+                        ipSuggestions.map((suggestedIp) => (
+                            <option key={suggestedIp} value={suggestedIp}>
+                                {suggestedIp}
+                            </option>
+                        ))
+                    }
+                </Form.Select>
+            </Form.Group>
+
+            :
+
+            <Form.Group className="col-8" controlId={`exampleForm.${label}`}>
+                <Form.Label className="required">IP Address</Form.Label>
+                <MaskedInput
+                    onChange={ onChange }
+                    className="bg-white text-reset form-control"
+                    placeholder={`Enter IP address e.g 192.168.0.1`}
+                    value={inputIP}
+                    autoFocus
+                    {...props} />
+            </Form.Group>
+    )
+
     return (
-        <div className={"row"}>
-
-            {
-                // isIPSet ?
-                //     <Form.Select aria-label={`Select ${type} ip address`} size="sm">
-                //         <option>{`Select ${type} ip address`}</option>
-                //         {
-                //             ipSuggestions.map((suggestedIp) => (
-                //                 <option key={suggestedIp} value={suggestedIp}>
-                //                     {suggestedIp}
-                //                 </option>
-                //             ))
-                //         }
-                //     </Form.Select>
-                //     :
-            }
-                <Form.Group className="col-8" controlId={`exampleForm.${label}`}>
-                    <Form.Label className="required">IP Address</Form.Label>
-                        <MaskedInput
-                            onChange={ onChange }
-                            // onBlur={ handleInputBlur }
-                            className="bg-white text-reset form-control"
-                            placeholder={`Enter IP address e.g 192.168.0.1`}
-                            autoFocus
-                            {...props} />
-                </Form.Group>
-                <div className={"col-1"}>
-                    <div className={"pt-4"} style={{
-                        fontSize: 31
-                    }}>
-                        /
-
-                    </div>
-
-                    {/*<div className={"d-flex flex-column justify-content-end"}>*/}
-                    {/*    <div>*/}
-                    {/*    </div>*/}
-                    {/*</div>*/}
+        <Row >
+            {selectInput}
+            <div className={"col-1"}>
+                <div className={"pt-4"} style={{
+                    fontSize: 31
+                }}>
+                    /
                 </div>
-                <Form.Group className="col-3" controlId="exampleForm.ControlInput1">
-                    <Form.Label className="required">Mask</Form.Label>
-                    <Form.Control
-                        type="text"
-                        maxLength={2}
-                        placeholder="Mask"
-                        value={maskValue}
-                        onChange={handleMaskInput}
-                    />
-                </Form.Group>
-
             </div>
-
-
+            <Form.Group className="col-3" controlId="exampleForm.ControlInput1">
+                <Form.Label className="required">Mask</Form.Label>
+                <Form.Control
+                    type="text"
+                    maxLength={2}
+                    placeholder="Mask"
+                    value={maskValue}
+                    onChange={handleMaskInput}
+                />
+            </Form.Group>
+        </Row>
     );
 };
 

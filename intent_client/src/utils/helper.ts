@@ -18,28 +18,39 @@ function isValidIPv4(ip: string) {
     return ipv4Regex.test(ip);
 }
 
-function getIPSuggestions(baseIp: string) {
-    const subnetMask = 24
-    const ipParts = baseIp.split('.').map(Number);
+function getIPSuggestions(baseIp: string, mask: string) {
+    const subnetMask = parseInt( mask)
 
-    if (subnetMask === 24) {
-        const suggestions: string[] = [];
+    const ipToLong = (baseIp: string) =>
+        baseIp.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
 
-        let counter = 1
+    const longToIp = (long: number) =>
+        [24, 16, 8, 0].map((shift) => (long >> shift) & 255).join('.');
 
-        for (let i = 1; i <= 254; i++)
-        {
-            if (i === ipParts[3]) continue
+    const ipLong = ipToLong(baseIp);
+    const maskLong = ~((1 << (32 - subnetMask)) - 1) >>> 0; // Create subnet mask
+    const network = ipLong & maskLong;
+    const broadcast = network | ~maskLong;
 
-            suggestions.push(`${ipParts[0]}.${ipParts[1]}.${ipParts[2]}.${i}`);
+    // const result = {
+    //     network: longToIp(network),
+    //     broadcast: longToIp(broadcast),
+    //     usableIPs: [],
+    // };
 
-            if (counter === 10) break
-        }
+    let result = []
 
-        return suggestions;
+    // Generate usable IPs (excluding network and broadcast addresses)
+    for (let i = network + 1; i < broadcast; i++) {
+
+        const usableIP = longToIp(i)
+
+        if (baseIp == usableIP) continue
+
+        result.push(usableIP);
     }
 
-    return []
+    return result;
 }
 
 function isMobile(): boolean {

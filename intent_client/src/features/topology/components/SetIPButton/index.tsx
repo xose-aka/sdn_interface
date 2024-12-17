@@ -1,25 +1,19 @@
 import {Badge, Button} from "react-bootstrap";
 import React from "react";
-import {useModal} from "../SetIPModalProvider/useModal.ts";
 
 export default function IpSetButton(
     {
-        // onClick,
-        // handleInputBlur,
-        // isIPSet,
-        // ipSuggestions,
+        mask,
         showModal,
         ipAddress,
         label
     }: IpSetButtonProps) {
 
 
-    console.log(ipAddress)
-
     let IPAddressLabel = "No IP address set"
 
     if ( ipAddress !== undefined && ipAddress.length > 0)
-        IPAddressLabel = ipAddress
+        IPAddressLabel = `${ipAddress}/${mask}`
 
     return (
         <Button

@@ -31,11 +31,9 @@ export default function NetworkNode({ id, data }: NodeProps) {
                      height: `${dimensions.height}px`,
                  }}
             >
-                {/*<img src={ data.icon  } alt={data.icon}/>*/}
                 {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}
                 {/* In this case we don't need to use useUpdateNodeInternals, since !isConnecting is true at the beginning and all handles are rendered initially. */}
                 { !connection.inProgress && (
-                    /*{{ !connection.inProgress && (}*/
                     <Handle
                         className="customHandle"
                         position={Position.Right}

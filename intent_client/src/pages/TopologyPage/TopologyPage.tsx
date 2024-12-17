@@ -1,7 +1,5 @@
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {DndProvider} from "react-dnd";
-import {HTML5Backend} from "react-dnd-html5-backend";
-import { TouchBackend } from 'react-dnd-touch-backend'
 
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
 import React, {useEffect, useState} from "react";
@@ -160,7 +158,6 @@ const TopologyPage: React.FC = () => {
                              onClick={ () => resetNodeSelection() }>
                             <ListNode
                                 nodeList={nodeList}
-                                resetNodeSelection={() => resetNodeSelection()}
                             />
                         </Col>
                         <Col className="h-sm-70">

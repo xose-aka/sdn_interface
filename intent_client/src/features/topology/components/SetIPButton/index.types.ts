@@ -2,8 +2,7 @@
 interface IpSetButtonProps {
     // onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
     // handleInputBlur: () => void
-    // isIPSet: boolean
-    // ipSuggestions: string[]
+    mask: string
     showModal: () => void
     ipAddress: string
     label: string

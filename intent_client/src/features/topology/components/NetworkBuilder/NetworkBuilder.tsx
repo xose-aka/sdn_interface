@@ -9,14 +9,10 @@ import {
     Node,
     Connection
 } from "@xyflow/react";
-import NetworkEdge from '../NetworkEdge/NetworkEdge.tsx';
-import NetworkNode from '../Node/NetworkNode.tsx';
 import CustomConnectionLine from '../CustomConnectionLine/CustomConnectionLine.tsx';
 import {NetworkBuilderProps} from "./NetworkBuilder.types.tsx";
 import SetIPModal from "../SetIPModal";
-import {useModal} from "../SetIPModalProvider/useModal.ts";
 import {SetIPModalProvider} from "../SetIPModalProvider";
-
 
 
 const connectionLineStyle = { stroke: "#0a0a0a" };
@@ -52,16 +48,18 @@ export default function NetworkBuilder(
 
             if ( selectedNode !== null )
             {
-                const newEdges = edges.filter(edge => !( edge.source == selectedNode.id ||
-                                                                        edge.target == selectedNode.id))
-                setEdges(newEdges)
+                if (confirm(`Do you want to really remove node ${selectedNode.data.lavel}`)) {
+                    const newEdges = edges.filter(edge => !( edge.source == selectedNode.id ||
+                        edge.target == selectedNode.id))
+                    setEdges(newEdges)
 
-                const newNodes = nodes.filter(node => node.id !== selectedNode.id)
-                setNodes(newNodes)
+                    const newNodes = nodes.filter(node => node.id !== selectedNode.id)
+                    setNodes(newNodes)
+
+                    // Perform your delete action here
+                    resetNodeSelection()
+                }
             }
-
-            // Perform your delete action here
-            resetNodeSelection()
         }
     };
 
@@ -70,6 +68,8 @@ export default function NetworkBuilder(
             setEdges((eds) => addEdge(
                 { ...params, data: {} },
                 eds))
+
+            resetNodeSelection()
         },
         []
     );
@@ -176,7 +176,7 @@ export default function NetworkBuilder(
 
 
     return (
-        <div className="graph-container h-100 position-relative" ref={drop} onKeyDown={handleDeleteKeyPress}>
+        <div className="graph-container h-100 position-relative cursor-progress" ref={drop} onKeyDown={handleDeleteKeyPress}>
             <SetIPModalProvider>
                 <ReactFlow
                     nodes={nodes}
