@@ -11,8 +11,9 @@ import {
 import { getEdgeParams } from '../../../../utils/edge.ts';
 import './index.css'
 import IpSetButton from "../SetIPButton";
-import {NodeTypes} from "../../constants.ts";
+import {NodeEdgeTypes} from "../../constants.ts";
 import {useModal} from "../SetIPModalProvider/useModal.ts";
+import {nodeTypes} from "../../../../constants/topology.ts";
 
 export default function CustomEdge({
                                        id,
@@ -106,12 +107,14 @@ export default function CustomEdge({
                     }}
                 >
                     {
-                        <IpSetButton
+                        sourceNode?.data?.nodeType !== undefined &&
+                        sourceNode.data!.nodeType !== nodeTypes["SWITCH"] &&
+                        (<IpSetButton
                             ipAddress={sourceIP}
                             label={labelSource}
                             mask={mask}
-                            showModal={ () => showModal(id, NodeTypes["SOURCE"], labelSource) }
-                        />
+                            showModal={ () => showModal(id, NodeEdgeTypes["SOURCE"], labelSource) }
+                        />)
                     }
                 </div>
                 <div
@@ -142,12 +145,14 @@ export default function CustomEdge({
                     }}
                 >
                     {
-                        <IpSetButton
+                        targetNode?.data?.nodeType !== undefined &&
+                        targetNode.data.nodeType !== nodeTypes["SWITCH"] &&
+                        (<IpSetButton
                             ipAddress={targetIP}
                             label={labelTarget}
                             mask={mask}
-                            showModal={ () => showModal(id, NodeTypes["TARGET"], labelTarget) }
-                        />
+                            showModal={ () => showModal(id, NodeEdgeTypes["TARGET"], labelTarget) }
+                        />)
                     }
                 </div>
             </EdgeLabelRenderer>

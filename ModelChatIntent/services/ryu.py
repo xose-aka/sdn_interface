@@ -324,6 +324,7 @@ def prepare_ryu_url_and_request_data(processed_intent):
                 "weights": weights
             }
             url = f"http://127.0.0.1:8080/simpleswitch/weights/{filled_dpid}"
+            # url = f"http://127.0.0.1:8080/simpleswitch/weights"
         elif goal == "setRate":
             rate = processed_intent.get("rate")
             request_data = {

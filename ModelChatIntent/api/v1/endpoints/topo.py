@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from mininet.util import dumpNodeConnections
+
 from api.v1.dependencies import verify_token
 
-from mininet.node import CPULimitedHost
+from mininet.node import CPULimitedHost, Host
 from mininet.topo import Topo
 from mininet.net import Mininet
 from mininet.log import setLogLevel, info
@@ -33,8 +35,9 @@ links = set()
 
 class MyCustomTopology(Topo):
 
-    def __init__(self, topoData, **opts):
+    def __init__(self, topology_nodes, **opts):
 
+    # def build(self, topology_nodes, **opts):
         """Create custom topo."""
         # Initialize topology
         super(MyCustomTopology, self).__init__(**opts)
@@ -53,37 +56,43 @@ class MyCustomTopology(Topo):
         # Parse the JSON data into a Python dictionary
         try:
             #data = json.loads(extracted)
-            data = topoData
-            print(data)
+            # data = nodes
+            # print(data)
 
             switch_counter = 0
             host_counter = 0
 
-            for node_data in data["nodes"]:
-                node_type = node_data["type"]
-                node_id = node_data["id"]
+            self.addHost("h1")
+            self.addHost("h2")
 
-                if node_type == "host":
-                    host_counter = host_counter + 1
-                    nodes[node_id] = self.addHost("h" + str(host_counter))
-                elif node_type == "switch":
-                    switch_counter = switch_counter + 1
-                    obj = self.addSwitch("s" + str(switch_counter), opts=opts)
-                    nodes[node_id] = obj
-                    switches[node_id] = obj
+            link_key = self.addLink("h1", "h2")
 
-            for node_data in data["nodes"]:
-                node_id = node_data["id"]
-                node_neighbors = node_data["neighbors"]
 
-                for neighbor_id in node_neighbors:
-                    link = tuple(sorted((node_id, neighbor_id)))
-                    if link not in links:
-                        self.addLink(node_id, neighbor_id, bw=100)
-                        links.add(link)
-                        print("added link " + node_id + "--->" + neighbor_id)
-                    else:
-                        print("already added link " + node_id + "--->" + neighbor_id)
+            # for node_data in topology_nodes:
+            #     node_type = node_data.type
+            #     node_id = node_data.id
+            #
+            #     if node_type == "host":
+            #         host_counter = host_counter + 1
+            #         nodes[node_id] = self.addHost(node_id)
+            #     elif node_type == "switch":
+            #         switch_counter = switch_counter + 1
+            #         obj = self.addSwitch(node_id, opts=opts)
+            #         nodes[node_id] = obj
+            #         switches[node_id] = obj
+            #
+            # for node_data in topology_nodes:
+            #     node_id = node_data.id
+            #     node_neighbors = node_data.neighbours
+            #
+            #     for neighbor_id in node_neighbors:
+            #         link = tuple(sorted((node_id, neighbor_id)))
+            #         if link not in links:
+            #             self.addLink(node_id, neighbor_id, bw=100)
+            #             links.add(link)
+            #             print("added link " + node_id + "--->" + neighbor_id)
+            #         else:
+            #             print("already added link " + node_id + "--->" + neighbor_id)
         except json.JSONDecodeError as e:
             print(f"Error decoding JSON data: {e}")
 
@@ -91,12 +100,40 @@ class MyCustomTopology(Topo):
 @router.post("/build")
 async def build_topt(topo: TopoBuildRequest, token: str = Depends(verify_token)):
 
-    myTopology = MyCustomTopology(topo)
+    print(topo.nodes)
+    setLogLevel(  'output' )
+
+
+    my_topology = MyCustomTopology(topo.nodes)
 
     # c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
-    # net = Mininet(topo=myTopology, controller=None)
+    net = Mininet(topo=my_topology, controller=None)
     # net.addController(c)
-    # net.start()
-    # net.pingAll()
-    # CLI(net)
-    # net.stop()
+    net.start()
+    print( "Dumping host connections" )
+
+    for host in net.hosts:
+
+        for intf in host.intfList():
+
+            if intf.link and host.name == "h1":
+                # intfs = [ intf.link.intf1, intf.link.intf2 ]
+                # intfs.remove( intf )
+                # print( intfs[ 0 ] )
+                print(intf.link)
+                host.cmd(f'ifconfig ${intf} 10.0.0.1/24')
+            elif intf.link and host.name == "h2":
+                # intfs = [ intf.link.intf1, intf.link.intf2 ]
+                # intfs.remove( intf )
+                # print( intfs[ 0 ] )
+                host.cmd(f'ifconfig ${intf} 10.0.0.2/24')
+            else:
+                print( ' ' )
+
+    print( "Testing network connectivity" )
+
+    dumpNodeConnections(net.hosts)
+    net.pingAll()
+
+    CLI(net)
+    net.stop()

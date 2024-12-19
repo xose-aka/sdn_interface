@@ -14,6 +14,9 @@ import {alertTypes} from "../../constants";
 import NetworkNode from "../../features/topology/components/Node/NetworkNode.tsx";
 import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkEdge.tsx";
 import {getReactDnDBackend} from "../../utils/helper.ts";
+import {sendTopo} from "../../services/api.ts";
+import useToken from "../../hooks";
+import {Neighbour, TopoEntityDTO} from "../../types";
 
 const  networkNodeTypes = {
     networkNode: NetworkNode
@@ -25,11 +28,33 @@ const edgeTypes = {
 
 const TopologyPage: React.FC = () => {
 
+    /*
+     {
+       "nodes":
+               [
+                   {
+                        "id": "s1",
+                        "neighbors": [
+                                       {
+                                           "node_id":"s1",
+                                           "connection_ip": "ip mask"
+                                       },
+                                       {
+                                           "node_id":"s1",
+                                           "connection_ip": null
+                                       }
+                                      ],
+                       "type": "host"
+                      }
+                 ]
+     */
+
     const [showAlert, setShowAlert] = useState(false);
     const [alertType, setAlertType] = useState(alertTypes.primary);
     const [alertMessage, setAlertMessage] = useState("");
-    const [showSetIPModal, setShowSetIPModal] = useState(false);
+    // const [token, setToken] = useState<string | null>(null);
 
+    const { token } = useToken()
 
     const nodeList = Object.values(nodeTypes)
 
@@ -50,7 +75,6 @@ const TopologyPage: React.FC = () => {
 
     const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
 
-
     const resetNodeSelection = () => {
         setSelectedNode(null)
     }
@@ -63,43 +87,55 @@ const TopologyPage: React.FC = () => {
 
         setIsOpen(!isOpen)
 
-        let topologyNodes: object[] = []
+        let topologyNodes: TopoEntityDTO[] = []
 
         nodes.forEach(node => {
 
-            const icon: string = node.data.icon as string
+            let neighbours: Neighbour[] = []
 
             let type = ''
 
-            if (icon.includes(nodeTypes["ROUTER"]) )
+            if (node.data.nodeType == nodeTypes["ROUTER"] )
                 type = nodeTypes["ROUTER"]
-            if (icon.includes(nodeTypes["SWITCH"]) )
+            if (node.data.nodeType == nodeTypes["SWITCH"] )
                 type = nodeTypes["SWITCH"]
-            if (icon.includes(nodeTypes["HOST"]) )
+            if (node.data.nodeType == nodeTypes["HOST"] )
                 type = nodeTypes["HOST"]
 
-            const neighbours = edges.filter(edge => {
+            neighbours = edges.filter(edge => {
                 return edge.source === node.id || edge.target === node.id;
-
             })
-
                 .map(edge => {
                     if (edge.source === node.id)
-                        return edge.target
+                        return {
+                            "node": edge.target,
+                            "connection_ip": edge.data!.sourceIPAddress
+                        }
 
                     if (edge.target === node.id)
-                        return edge.source
+                        return {
+                            "node": edge.source,
+                            "connection_ip": edge.data!.targetIPAddress
+                        }
                 })
+                .filter((result): result is Neighbour => result !== undefined && result !== null);
 
             const newTopologyNode = {
                 type: type,
                 id: node.id,
-                neighbors: neighbours
+                neighbours: neighbours
             }
 
             topologyNodes.push(newTopologyNode)
 
         })
+
+        // if (token) {
+        //     sendTopo(token, topologyNodes)
+        //         .then(r => {
+        //             console.log(r)
+        //         })
+        // }
 
         console.log(topologyNodes)
     }
@@ -193,6 +229,7 @@ const TopologyPage: React.FC = () => {
                                 setAlertMessage={setAlertMessage}
                                 isOpen={isOpen}
                                 handleClose={handleClose}
+                                token={token}
                                 title="Intent Window"
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
                             />

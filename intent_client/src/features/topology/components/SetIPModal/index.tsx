@@ -2,62 +2,19 @@ import {Button, Form, Modal} from "react-bootstrap";
 import {useModal} from "../SetIPModalProvider/useModal.ts";
 import IpInput from "../IpInput/IpInput.tsx";
 import React, {useEffect, useState} from "react";
-import {getIPSuggestions, isValidIPv4} from "../../../../utils/helper.ts";
+import { isValidIPv4} from "../../../../utils/helper.ts";
 import {useReactFlow} from "@xyflow/react";
-import {NodeTypes} from "../../constants.ts";
+import {NodeEdgeTypes} from "../../constants.ts";
 
 export default function () {
+
     const { setEdges, getEdges } = useReactFlow();
 
     const { isVisible, label, type, hideModal, edgeId} = useModal();
 
-    const [isIPSuggest, setIsIPSuggest] = useState(false)
-    const [ipSuggestions, setIpSuggestions] = useState<string[]>([])
-
-    const [inputIP, setInputIP] = useState<string>("")
+    const [octets, setOctets] = useState<string[]>(["", "", "", ""]);
 
     const [localMask, setLocalMask] = useState<string>("");
-
-    useEffect(() => {
-
-        if (isVisible) {
-
-            const edges = getEdges()
-
-            for (const edge of edges) {
-                if (edge.id == edgeId) {
-
-                    const mask = edge?.data?.mask as string || "";
-                    setLocalMask(mask)
-
-                    if ( type === NodeTypes["SOURCE"] ) {
-                        const sourceIP = edge?.data?.sourceIPAddress as string || "";
-                        setInputIP(sourceIP)
-
-                        const targetIP = edge?.data?.targetIPAddress as string || "";
-
-                        if (targetIP && !sourceIP) {
-                            console.log('aa')
-
-                            setIpSuggestions(getIPSuggestions(targetIP, mask))
-                            setIsIPSuggest(true)
-                        }
-
-                    } else if ( type === NodeTypes["TARGET"] ) {
-                        const targetIP = edge?.data?.targetIPAddress as string || "";
-                        setInputIP(targetIP)
-
-                        const sourceIP = edge?.data?.sourceIPAddress as string || "";
-
-                        if (!targetIP && sourceIP) {
-                            setIpSuggestions(getIPSuggestions(sourceIP, mask))
-                            setIsIPSuggest(true)
-                        }
-                    }
-                }
-            }
-        }
-    }, [isVisible]);
 
     const onEdgeSourceIpSet = (ip: string, mask: string) => {
 
@@ -86,29 +43,20 @@ export default function () {
         } ));
     };
 
-    const onIPChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const value = event.target.value
-        setInputIP(value)
-    }
-
-    const onSelectIPChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = event.target.value;  // TypeScript knows this is a string
-        setInputIP(value)
-    }
-
     const handleIPSet = () => {
 
-        if (inputIP.length > 0 && localMask.length > 0) {
-            const ipWithoutUnderline = inputIP.replace(/_/g, "")
+        if (octets.every(element => element.trim() !== "") && localMask.length > 0) {
 
-            if (isValidIPv4(ipWithoutUnderline)) {
+            const ip = octets.join(".")
+
+            if (isValidIPv4(ip)) {
 
                 switch (type) {
-                    case NodeTypes["SOURCE"]:
-                        onEdgeSourceIpSet(ipWithoutUnderline, localMask)
+                    case NodeEdgeTypes["SOURCE"]:
+                        onEdgeSourceIpSet(ip, localMask)
                         break;
-                    case NodeTypes["TARGET"]:
-                        onEdgeTargetIpSet(ipWithoutUnderline, localMask)
+                    case NodeEdgeTypes["TARGET"]:
+                        onEdgeTargetIpSet(ip, localMask)
                         break;
                 }
 
@@ -119,18 +67,54 @@ export default function () {
 
     const handleHideModal = () => {
         setLocalMask("")
-        setIsIPSuggest(false)
         hideModal();
     };
 
-    // useEffect(() => {
-    //     if (isIPSuggest) {
-    //         console.log(inputIP, localMask)
-    //         console.log(getIPSuggestions(inputIP, localMask))
-    //         setIpSuggestions(getIPSuggestions(inputIP, localMask))
-    //     }
-    // }, [isIPSuggest]);
+    const handleMaskInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+        let inputValue = event.target.value;
 
+        // Remove non-numeric characters and limit to 2 digits
+        inputValue = inputValue.replace(/[^0-9]/g, '').slice(0, 2);
+
+        if (parseInt(inputValue) > 32) return
+
+        setLocalMask(inputValue);
+    }
+
+    const handleOctetChange = (index: number, value: string) => {
+        if (/^\d*$/.test(value) && +value >= 0 && +value <= 255) {
+            const newOctets = [...octets];
+            newOctets[index] = value;
+            setOctets(newOctets);
+        }
+    };
+
+    useEffect(() => {
+
+        if (isVisible) {
+
+            const edges = getEdges()
+
+            for (const edge of edges) {
+                if (edge.id == edgeId) {
+
+                    const mask = edge?.data?.mask as string || "";
+                    setLocalMask(mask)
+
+                    if ( type === NodeEdgeTypes["SOURCE"] ) {
+                        const sourceIP = edge?.data?.sourceIPAddress as string || "...";
+                        const splitIP = sourceIP.split(".");  // Split the IP by dot into an array
+                        setOctets(splitIP);
+
+                    } else if ( type === NodeEdgeTypes["TARGET"] ) {
+                        const targetIP = edge?.data?.targetIPAddress as string || "...";
+                        const splitIP = targetIP.split(".");  // Split the IP by dot into an array
+                        setOctets(splitIP);
+                    }
+                }
+            }
+        }
+    }, [isVisible]);
 
     return (
         <Modal show={isVisible} onHide={handleHideModal}>
@@ -140,15 +124,10 @@ export default function () {
             <Modal.Body>
                 <Form>
                      <IpInput
-                         onChange={onIPChange}
-                         onSelectChange={onSelectIPChange}
-                         // handleInputBlur={handleTargetInputBlur}
                          maskValue={localMask}
-                         setMaskValue={setLocalMask}
-                         inputIP={inputIP}
-                         type={type}
-                         isIPSet={isIPSuggest}
-                         ipSuggestions={ipSuggestions}
+                         handleMaskInput={handleMaskInput}
+                         handleOctetChange={handleOctetChange}
+                         octets={octets}
                          label={label}
                      />
                 </Form>

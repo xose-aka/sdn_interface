@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import Message from "../Message";
 import {createFocusTrap, FocusTrap} from "focus-trap";
 import './index.scss'
-import axios from "axios";
 import {IntentMessage, IntentMessageDTO} from "../../types";
 import {v4 as uuidv4} from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -10,7 +9,6 @@ import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentAdditionTooltip from "../IntentAdditionTooltip";
 import {ChatWindowProps} from "./index.types.ts";
 import {prepareIntentMessage, prepareIntentMessageDTO} from "../../../topology/message.ts";
-import {API_CONFIG} from "../../../../config/api.ts";
 import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 import CloseButton from "../CloseButton";
 import {sendConfirmConversation, sendMessage} from "../../services/api.ts";
@@ -24,6 +22,7 @@ function Index({
                    isOpen,
                    handleClose,
                    title,
+                   token,
                    setIntentHighlightedNodes
 }: ChatWindowProps) {
 
@@ -33,7 +32,7 @@ function Index({
 
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
 
-    const [token, setToken] = useState<string | null>(null);
+    // const [token, setToken] = useState<string | null>(null);
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
     const [messages, setMessages] = useState<IntentMessage[]>([]);
@@ -151,18 +150,18 @@ function Index({
 
 
     // Function to request a token from the backend
-    const getToken = async () => {
-        try {
-            const response = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TOKEN}`);
-            const newToken = response.data.token;
-            setToken(newToken);
-            localStorage.setItem('chat_token', newToken); // Save token in localStorage
-            return response.status
-        } catch (error) {
-            console.error('Error generating token:', error);
-            return error
-        }
-    };
+    // const getToken = async () => {
+    //     try {
+    //         const response = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TOKEN}`);
+    //         const newToken = response.data.token;
+    //         setToken(newToken);
+    //         localStorage.setItem('chat_token', newToken); // Save token in localStorage
+    //         return response.status
+    //     } catch (error) {
+    //         console.error('Error generating token:', error);
+    //         return error
+    //     }
+    // };
 
     const submitMessage = () => {
 
@@ -440,21 +439,21 @@ function Index({
     }, [JSON.stringify(pendingMessage)]);
 
     // Load token from localStorage or request a new one if not available
-    useEffect(() => {
-
-        if (isOpen) {
-            const savedToken = localStorage.getItem('chat_token');
-            if (savedToken) {
-                setToken(savedToken);
-            } else {
-                getToken()
-                    .then((returnMessage) => {
-                        console.log(returnMessage)
-                    }); // Generate new token if not found
-            }
-        }
-
-    }, [isOpen]);
+    // useEffect(() => {
+    //
+    //     if (isOpen) {
+    //         const savedToken = localStorage.getItem('chat_token');
+    //         if (savedToken) {
+    //             setToken(savedToken);
+    //         } else {
+    //             getToken()
+    //                 .then((returnMessage) => {
+    //                     console.log(returnMessage)
+    //                 }); // Generate new token if not found
+    //         }
+    //     }
+    //
+    // }, [isOpen]);
 
     return (
         <div
