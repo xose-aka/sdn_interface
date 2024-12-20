@@ -109,13 +109,13 @@ const TopologyPage: React.FC = () => {
                     if (edge.source === node.id)
                         return {
                             "node": edge.target,
-                            "connection_ip": edge.data!.sourceIPAddress
+                            "connection_ip": edge.data && edge.data.sourceIPAddress && edge.data.mask ? edge.data.sourceIPAddress as string + "/" + edge.data.mask : null
                         }
 
                     if (edge.target === node.id)
                         return {
                             "node": edge.source,
-                            "connection_ip": edge.data!.targetIPAddress
+                            "connection_ip": edge.data && edge.data.targetIPAddress && edge.data.mask ? edge.data.targetIPAddress as string + "/" + edge.data.mask : null
                         }
                 })
                 .filter((result): result is Neighbour => result !== undefined && result !== null);
@@ -130,12 +130,12 @@ const TopologyPage: React.FC = () => {
 
         })
 
-        // if (token) {
-        //     sendTopo(token, topologyNodes)
-        //         .then(r => {
-        //             console.log(r)
-        //         })
-        // }
+        if (token) {
+            sendTopo(token, topologyNodes)
+                .then(r => {
+                    console.log(r)
+                })
+        }
 
         console.log(topologyNodes)
     }

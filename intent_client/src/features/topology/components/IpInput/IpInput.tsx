@@ -20,8 +20,6 @@ const IpInput: React.FC<IpInputProps> = (
     }
     ) => {
 
-    console.log(octets)
-
     return (
         <Row >
             <Form.Group className="col-9" controlId={`exampleForm.${label}`}>
@@ -30,13 +28,14 @@ const IpInput: React.FC<IpInputProps> = (
                     {
                         octets.map((octet, index) => {
                             return  (
-                                <>
-                                    <div key={index}>
+                                <div className="d-flex" key={index}>
+                                    <div>
                                         <Form.Control
                                             type="text"
                                             maxLength={3}
                                             placeholder="0-255"
                                             value={octet}
+                                            autoComplete="off"
                                             onChange={(e) => handleOctetChange(index, e.target.value)}
                                             autoFocus={ index === 0 }
                                         />
@@ -44,7 +43,7 @@ const IpInput: React.FC<IpInputProps> = (
                                     {
                                         index < 3 && <div className="h2">.</div>
                                     }
-                                </>
+                                </div>
                             )
                         })
                     }
@@ -62,6 +61,7 @@ const IpInput: React.FC<IpInputProps> = (
                     maxLength={2}
                     placeholder="Mask"
                     value={maskValue}
+                    autoComplete="off"
                     onChange={handleMaskInput}
                 />
             </Form.Group>
