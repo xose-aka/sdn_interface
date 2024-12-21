@@ -5,12 +5,12 @@ import './index.scss'
 import {IntentMessage, IntentMessageDTO} from "../../types";
 import {v4 as uuidv4} from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faComments} from "@fortawesome/free-solid-svg-icons";
+import {faComments, faRotate, faXmark} from "@fortawesome/free-solid-svg-icons";
 import IntentAdditionTooltip from "../IntentAdditionTooltip";
 import {ChatWindowProps} from "./index.types.ts";
 import {prepareIntentMessage, prepareIntentMessageDTO} from "../../../topology/message.ts";
 import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
-import CloseButton from "../CloseButton";
+import WindowButton from "../WindowButton";
 import {sendConfirmConversation, sendMessage} from "../../services/api.ts";
 import {alertTypes} from "../../../../constants";
 
@@ -53,6 +53,12 @@ function Index({
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setIntentMessage(event.target.value);
+    };
+
+
+
+    const handleConversationReset = () => {
+        if (confirm("Do you want to reset conversation")) setConversationId(uuidv4());
     };
 
     // const handleMouseDown = (e: React.MouseEvent) => {
@@ -474,7 +480,10 @@ function Index({
             <div className="chat-window__header">
                 <FontAwesomeIcon icon={faComments} inverse />
                 <div className="chat-window__title">{title}</div>
-                <CloseButton onClose={handleClose}/>
+                <div className="d-flex justify-content-between">
+                    <WindowButton handler={handleConversationReset} icon={faRotate} />
+                    <WindowButton handler={handleClose} icon={faXmark}/>
+                </div>
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
                 {messages.map(intentMessage => (

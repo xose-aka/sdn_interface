@@ -131,39 +131,44 @@ class MyCustomTopology(Topo):
 @router.post("/build")
 async def build_topt(topo: TopoBuildRequest, token: str = Depends(verify_token)):
     my_topology = MyCustomTopology(topo.nodes)
-    #
+
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
     net = Mininet(topo=my_topology, controller=None)
     net.addController(c)
     net.start()
-    # print( "Dumping host connections" )
-    #
 
-    print(my_topology.get_inserted_nodes())
+    inserted_nodes = my_topology.get_inserted_nodes()
+
+    print(inserted_nodes)
+
+
     for host in net.hosts:
         # print(host.name + " ")
+        node_id = host.name
 
         for intf in host.intfList():
-            print(intf)
 
-            # if intf.link and host.name == "h1":
-            #     # intfs = [ intf.link.intf1, intf.link.intf2 ]
-            #     # intfs.remove( intf )
-            #     # print( intfs[ 0 ] )
-            #     print(intf.link)
-            #     host.cmd(f'ifconfig ${intf} 10.0.0.1/24')
-            # elif intf.link and host.name == "h2":
-            #     # intfs = [ intf.link.intf1, intf.link.intf2 ]
-            #     # intfs.remove( intf )
-            #     # print( intfs[ 0 ] )
-            #     host.cmd(f'ifconfig ${intf} 10.0.0.2/24')
-            # else:
-            #     print( ' ' )
+            if node_id in inserted_nodes:
+
+                node_neighbours = inserted_nodes[node_id]
+
+                host_intf = str(intf.link.intf2)
+
+                neighbour_intf = str(intf.link.intf1)
+
+                neighbour_intf_split = neighbour_intf.split("-")
+
+                neighbour_node_id = neighbour_intf_split[0]
+
+                if neighbour_node_id in node_neighbours:
+                    host_ip_for_connection = node_neighbours[neighbour_node_id]
+                    host.cmd(f'ifconfig {host_intf} {host_ip_for_connection} up')
+
 
     # print( "Testing network connectivity" )
     #
     # dumpNodeConnections(net.hosts)
-    # net.pingAll()
+    net.pingAll()
     #
     # CLI(net)
     net.stop()

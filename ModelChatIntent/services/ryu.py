@@ -300,8 +300,6 @@ def prompt_router(intent, fix):
 def prepare_ryu_url_and_request_data(processed_intent):
     goal = processed_intent.get("goal")
 
-    print(goal)
-
     dpid = processed_intent.get("switch_id")
 
     if dpid is None:

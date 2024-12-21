@@ -34,8 +34,6 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
 
         intent = message.intent
 
-        print("1")
-
         try:
 
             chain = prompt_router(intent, fix_prompt)
@@ -60,7 +58,6 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
             return JSONResponse(content={"message": str(e)}, status_code=500)
 
     else:
-        print("2")
 
         conversation_data = encoded_conversations[conversation_id]
         intent = conversation_data["intent"]
