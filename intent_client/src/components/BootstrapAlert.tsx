@@ -2,7 +2,7 @@ import React, {Dispatch, SetStateAction} from 'react';
 
 interface AlertProps {
   message: string;
-  type: 'success' | 'danger' | 'warning' | 'info'; // Restrict to Bootstrap's alert types
+  type: string; // Restrict to Bootstrap's alert types
   setShowAlert: Dispatch<SetStateAction<boolean>>,
 }
 

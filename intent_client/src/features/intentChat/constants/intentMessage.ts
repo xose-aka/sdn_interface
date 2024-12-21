@@ -6,5 +6,6 @@ export const SenderTypes = {
 export const Statuses = {
     SENT: 'sent',
     RECEIVED: 'received',
-    PENDING: 'pending'
+    PENDING: 'pending',
+    ERROR: 'error',
 }

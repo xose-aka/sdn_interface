@@ -1,5 +1,5 @@
 import {Dispatch, SetStateAction} from "react";
-import {Edge, Node, OnEdgesChange, OnNodesChange} from "@xyflow/react";
+import {Edge, EdgeTypes, Node, NodeTypes, OnEdgesChange, OnNodesChange} from "@xyflow/react";
 
 
 export interface NetworkBuilderProps {
@@ -13,7 +13,9 @@ export interface NetworkBuilderProps {
     onNodesChange: OnNodesChange<Node>,
     onEdgesChange: OnEdgesChange<Edge>,
     resetNodeSelection: () => void,
-    intentHighlightedNodes: Node[]
+    intentHighlightedNodes: Node[],
+    edgeTypes: EdgeTypes,
+    networkNodeTypes: NodeTypes
 }
 interface SelectableNode {
     id: string

@@ -1,6 +1,5 @@
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {DndProvider} from "react-dnd";
-import {HTML5Backend} from "react-dnd-html5-backend";
 
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
 import React, {useEffect, useState} from "react";
@@ -10,14 +9,52 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentWindow from "../../features/intentChat/components/Window";
 import BootstrapAlert from "../../components/BootstrapAlert.tsx";
-import {nodeTypes, alertTypes} from "../../constants/topology.ts";
+import {nodeTypes} from "../../constants/topology.ts";
+import {alertTypes} from "../../constants";
+import NetworkNode from "../../features/topology/components/Node/NetworkNode.tsx";
+import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkEdge.tsx";
+import {getReactDnDBackend} from "../../utils/helper.ts";
+import {sendTopo} from "../../services/api.ts";
+import useToken from "../../hooks";
+import {Neighbour, TopoEntityDTO} from "../../types";
 
+const  networkNodeTypes = {
+    networkNode: NetworkNode
+};
+
+const edgeTypes = {
+    networkEdge: NetworkEdge
+};
 
 const TopologyPage: React.FC = () => {
 
+    /*
+     {
+       "nodes":
+               [
+                   {
+                        "id": "s1",
+                        "neighbors": [
+                                       {
+                                           "node_id":"s1",
+                                           "connection_ip": "ip mask"
+                                       },
+                                       {
+                                           "node_id":"s1",
+                                           "connection_ip": null
+                                       }
+                                      ],
+                       "type": "host"
+                      }
+                 ]
+     */
+
     const [showAlert, setShowAlert] = useState(false);
-    const [alertType, setAlertType] = useState<alertTypes>(alertTypes.DANGER);
+    const [alertType, setAlertType] = useState(alertTypes.primary);
     const [alertMessage, setAlertMessage] = useState("");
+    // const [token, setToken] = useState<string | null>(null);
+
+    const { token } = useToken()
 
     const nodeList = Object.values(nodeTypes)
 
@@ -38,7 +75,6 @@ const TopologyPage: React.FC = () => {
 
     const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
 
-
     const resetNodeSelection = () => {
         setSelectedNode(null)
     }
@@ -51,43 +87,55 @@ const TopologyPage: React.FC = () => {
 
         setIsOpen(!isOpen)
 
-        let topologyNodes: object[] = []
+        let topologyNodes: TopoEntityDTO[] = []
 
         nodes.forEach(node => {
 
-            const icon: string = node.data.icon as string
+            let neighbours: Neighbour[] = []
 
             let type = ''
 
-            if (icon.includes(nodeTypes["ROUTER"]) )
+            if (node.data.nodeType == nodeTypes["ROUTER"] )
                 type = nodeTypes["ROUTER"]
-            if (icon.includes(nodeTypes["SWITCH"]) )
+            if (node.data.nodeType == nodeTypes["SWITCH"] )
                 type = nodeTypes["SWITCH"]
-            if (icon.includes(nodeTypes["HOST"]) )
+            if (node.data.nodeType == nodeTypes["HOST"] )
                 type = nodeTypes["HOST"]
 
-            const neighbours = edges.filter(edge => {
+            neighbours = edges.filter(edge => {
                 return edge.source === node.id || edge.target === node.id;
-
             })
-
                 .map(edge => {
                     if (edge.source === node.id)
-                        return edge.target
+                        return {
+                            "node": edge.target,
+                            "connection_ip": edge.data && edge.data.sourceIPAddress && edge.data.mask ? edge.data.sourceIPAddress as string + "/" + edge.data.mask : null
+                        }
 
                     if (edge.target === node.id)
-                        return edge.source
+                        return {
+                            "node": edge.source,
+                            "connection_ip": edge.data && edge.data.targetIPAddress && edge.data.mask ? edge.data.targetIPAddress as string + "/" + edge.data.mask : null
+                        }
                 })
+                .filter((result): result is Neighbour => result !== undefined && result !== null);
 
             const newTopologyNode = {
                 type: type,
                 id: node.id,
-                neighbors: neighbours
+                neighbours: neighbours
             }
 
             topologyNodes.push(newTopologyNode)
 
         })
+
+        if (token) {
+            sendTopo(token, topologyNodes)
+                .then(r => {
+                    console.log(r)
+                })
+        }
 
         console.log(topologyNodes)
     }
@@ -108,6 +156,22 @@ const TopologyPage: React.FC = () => {
         }
     }, [JSON.stringify(nodes)]);
 
+    useEffect(() => {
+        let timeoutId = 0
+        if ( showAlert ) {
+            timeoutId = setTimeout(() => {
+                setShowAlert(prev => !prev)
+            }, 3000);
+
+            return () => {
+                if (timeoutId !== null)
+                    clearTimeout(timeoutId);
+            };
+        }
+    }, [showAlert]);
+
+    const backend = getReactDnDBackend()
+
     return (
         <div className={'main-container'}>
             {showAlert && (
@@ -118,16 +182,21 @@ const TopologyPage: React.FC = () => {
                 />
             )}
             <Container fluid={true} >
-                <Row className={'h-100'}>
-                    <DndProvider backend={HTML5Backend}>
-                        <Col xs={2} className={'border-end bg-light'}
+                <Row className={'vh-100'}>
+                    <DndProvider backend={ backend }
+                                 options={{ enableMouseEvents: true }}
+                    >
+                        <Col
+                            sm={12}
+                            md={3}
+                            xl={2}
+                             className={'border-end bg-light "h-sm-30'}
                              onClick={ () => resetNodeSelection() }>
                             <ListNode
                                 nodeList={nodeList}
-                                resetNodeSelection={() => resetNodeSelection()}
                             />
                         </Col>
-                        <Col xs={10}>
+                        <Col className="h-sm-70">
                             <Button  className="position-relative float-end z-3"
                                 style={{
                                     top: "20px",
@@ -150,6 +219,8 @@ const TopologyPage: React.FC = () => {
                                     onEdgesChange={onEdgesChange}
                                     resetNodeSelection={resetNodeSelection}
                                     intentHighlightedNodes={intentHighlightedNodes}
+                                    networkNodeTypes={networkNodeTypes}
+                                    edgeTypes={edgeTypes}
                                 />
                             </ReactFlowProvider>
                             <IntentWindow
@@ -158,6 +229,7 @@ const TopologyPage: React.FC = () => {
                                 setAlertMessage={setAlertMessage}
                                 isOpen={isOpen}
                                 handleClose={handleClose}
+                                token={token}
                                 title="Intent Window"
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
                             />

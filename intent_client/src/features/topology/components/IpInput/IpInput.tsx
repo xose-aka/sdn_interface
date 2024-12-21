@@ -1,81 +1,71 @@
-import React, { useState } from 'react';
-import MaskedInput from 'react-text-mask';
-
-const props = {
-    guide: true,
-    mask: (value: string) => {
-        let result = [];
-        const chunks = value.split(".");
-
-        for (let i = 0; i < 4; ++i) {
-            const chunk = (chunks[i] || "").replace(/_/gi, "");
-
-            if (chunk === "") {
-                result.push(/\d/, /\d/, /\d/, ".");
-                continue;
-            } else if (+chunk === 0) {
-                result.push(/\d/, ".");
-                continue;
-            } else if (
-                chunks.length < 4 ||
-                (chunk.length < 3 && chunks[i].indexOf("_") !== -1)
-            ) {
-                if (
-                    (chunk.length < 2 && +`${chunk}00` > 255) ||
-                    (chunk.length < 3 && +`${chunk}0` > 255)
-                ) {
-                    result.push(/\d/, /\d/, ".");
-                    continue;
-                } else {
-                    result.push(/\d/, /\d/, /\d/, ".");
-                    continue;
-                }
-            } else {
-                result.push(...new Array(chunk.length).fill(/\d/), ".");
-                continue;
-            }
-        }
-
-        result = result.slice(0, -1);
-        return result;
-    },
-    pipe: (value: string) => {
-        if (value === "." || value.endsWith("..")) return false;
-
-        const parts = value.split(".");
-
-        if (
-            parts.length > 4 ||
-            parts.some((part) => {
-                const onePart = parseInt(part, 10)
-
-                // return part === "00" || part < 0 || part > 255)
-                return onePart < 0 || onePart > 255
-            })
-        ) {
-            return false;
-        }
-
-        return value;
-    }
-};
+import React from 'react';
+import {Form, Row} from "react-bootstrap";
+import "./index.css"
 
 interface IpInputProps {
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-    handleInputBlur: () => void
+    handleMaskInput: (event: React.ChangeEvent<HTMLInputElement>) => void
+    handleOctetChange: (index: number, value: string) => void
+    label: string
+    maskValue: string
+    octets: string[]
 }
 
-const IpInput: React.FC<IpInputProps> = ({onChange, handleInputBlur}) => {
+const IpInput: React.FC<IpInputProps> = (
+    {
+        maskValue,
+        octets,
+        handleOctetChange,
+        handleMaskInput,
+        label
+    }
+    ) => {
 
     return (
-        <div>
-            <MaskedInput
-                onChange={ onChange }
-                onBlur={handleInputBlur}
-                className="bg-white text-reset"
-                placeholder={"IP address e.g 192.168.0.1"}
-                {...props} />
-        </div>
+        <Row >
+            <Form.Group className="col-9" controlId={`exampleForm.${label}`}>
+                <Form.Label className="required">IP Address</Form.Label>
+                <div className="d-flex justify-content-between">
+                    {
+                        octets.map((octet, index) => {
+                            return  (
+                                <div className="d-flex" key={index}>
+                                    <div>
+                                        <Form.Control
+                                            type="text"
+                                            maxLength={3}
+                                            placeholder="0-255"
+                                            value={octet}
+                                            autoComplete="off"
+                                            onChange={(e) => handleOctetChange(index, e.target.value)}
+                                            autoFocus={ index === 0 }
+                                        />
+                                    </div>
+                                    {
+                                        index < 3 && <div className="h2">.</div>
+                                    }
+                                </div>
+                            )
+                        })
+                    }
+                </div>
+            </Form.Group>
+            <div className={"col-1"}>
+                <div className={"pt-4"} style={{ fontSize: 31 }}>
+                    /
+                </div>
+            </div>
+            <Form.Group className="col-2" controlId="exampleForm.ControlInput1">
+                <Form.Label className="required">Mask</Form.Label>
+                <Form.Control
+                    type="text"
+                    maxLength={2}
+                    placeholder="Mask"
+                    value={maskValue}
+                    autoComplete="off"
+                    onChange={handleMaskInput}
+                />
+            </Form.Group>
+        </Row>
     );
 };
 

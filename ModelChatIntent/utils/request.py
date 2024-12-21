@@ -16,9 +16,8 @@ async def request_post_external_data(url: str, data: dict, headers: dict = None,
             else:
                 return response
     except httpx.HTTPStatusError as e:
-        print("error ", str(e))
         raise HTTPException(status_code=e.response.status_code, detail=str(e))
     except httpx.RequestError as e:
-        raise HTTPException(status_code=500, detail="External service unavailable")
+        raise HTTPException(status_code=500, detail=str(e))
     except JSONDecodeError:
         return response.text

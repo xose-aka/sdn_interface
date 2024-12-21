@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     BaseEdge,
     EdgeLabelRenderer,
@@ -9,8 +9,11 @@ import {
 } from '@xyflow/react';
 
 import { getEdgeParams } from '../../../../utils/edge.ts';
-import IpInput from "../IpInput/IpInput.tsx";
 import './index.css'
+import IpSetButton from "../SetIPButton";
+import {NodeEdgeTypes} from "../../constants.ts";
+import {useModal} from "../SetIPModalProvider/useModal.ts";
+import {nodeTypes} from "../../../../constants/topology.ts";
 
 export default function CustomEdge({
                                        id,
@@ -22,23 +25,8 @@ export default function CustomEdge({
                                    }: EdgeProps) {
     const { setEdges } = useReactFlow();
 
-    const onEdgeClick = () => {
-        setEdges((edges) => edges.filter((edge) => edge.id !== id));
-    };
+    const { showModal } = useModal();
 
-    const onEdgeSourceIpSet = (ip: string) => {
-        setEdges((edges) => edges.map((edge) => {
-            edge.sourceHandle = ip
-            return edge;
-        } ));
-    };
-
-    const onEdgeTargetIpSet = (ip: string) => {
-        setEdges((edges) => edges.map((edge) => {
-            edge.targetHandle = ip
-            return edge;
-        } ));
-    };
 
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
@@ -46,6 +34,14 @@ export default function CustomEdge({
     if (!sourceNode || !targetNode) {
         return null;
     }
+
+    const labelSource = sourceNode.data.label as string
+    const labelTarget = targetNode.data.label as string
+
+    const onEdgeClick = () => {
+        if (confirm(`Do you want to remove link between ${labelSource} and ${labelTarget} ?`))
+            setEdges((edges) => edges.filter((edge) => edge.id !== id));
+    };
 
     const { sx, sy, tx, ty } = getEdgeParams(sourceNode, targetNode);
 
@@ -56,89 +52,70 @@ export default function CustomEdge({
         targetY: ty,
     });
 
-    const [sourceIp, setSourceIp] = useState<string>("")
-    const [tmp, setTmp] = useState<string>("")
+    let targetX = -50
+    let targetY = -180
 
-    let targetX = -5
-    let sourceX = -5
+    let sourceY = 75
+    let sourceX = -50
 
-    let targetY = -260
-    let sourceY = -130
-
-    if (sy > ty) {
-        targetY = -targetY - 200
-        sourceY = sourceY - 200
+    if (sy < ty) {
+        targetY = -targetY - 100
+        sourceY = -sourceY - 100
     } else {
-        sourceY = -sourceY
+        // sourceY = -sourceY
     }
 
     const differenceY = Math.abs(sy) - Math.abs(ty)
 
-    if ( differenceY < 350 ) {
+
+    if ( differenceY < 70 ) {
+        // targetX += ( 70 - differenceY )
+        // targetY -= (90)
+
+
         if (sx < tx) {
-            sourceX = -sourceX - 4
+            // sourceX = -sourceX - 4
         } else {
-            targetX = -targetX - 4
+            // targetX = -targetX - 4
         }
     }
 
-    if (sx > tx) {
-        sourceX = sourceX - 13
-    } else {
-        targetX = targetX - 13
-    }
-
-    function isValidIPv4(ip: string) {
-        // Regular expression for a valid IPv4 address
-        const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/;
-
-        return ipv4Regex.test(ip);
-    }
-
-    const onSourceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;  // TypeScript knows this is a string
-        setTmp(value)
-    }
-
-    const handleSourceInputBlur = () => {
-        const ipWithoutUnderline = tmp.replace(/_/g, "")
-        if (isValidIPv4(ipWithoutUnderline)) {
-            onEdgeSourceIpSet(ipWithoutUnderline)
-        }
-    };
-
-    const onTargetChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const value = event.target.value;  // TypeScript knows this is a string
-        setTmp(value)
-    }
-
-    const handleTargetInputBlur = () => {
-        const ipWithoutUnderline = tmp.replace(/_/g, "")
-        if (isValidIPv4(ipWithoutUnderline)) {
-            onEdgeTargetIpSet(ipWithoutUnderline)
-        }
-    };
+    const sourceIP = data!.sourceIPAddress as string
+    const targetIP = data!.targetIPAddress as string
+    const mask = data!.mask as string
 
     return (
-        <>
+        <
+
+        >
             <BaseEdge
                 path={edgePath}
-                      markerEnd={markerEnd} style={style} />
+                markerEnd={markerEnd}
+                style={style} />
+            <circle r="10" fill="#ff0073">
+                <animateMotion dur="2s" repeatCount="indefinite" path={edgePath} />
+            </circle>
             <EdgeLabelRenderer>
                 <div
                     style={{
                         position: 'absolute',
-                        transform: `translate(${sourceX}%, ${sourceY}%) translate(${sx}px,${sy}px)`,
+                        transform: `translate(${sourceX}%, ${sourceY}%) translate(${labelX}px,${labelY}px)`,
                         fontSize: 12,
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
                         pointerEvents: 'all',
                     }}
                 >
-                    <IpInput
-                        onChange={onSourceChange}
-                        handleInputBlur={handleSourceInputBlur}
-                    />
+                    {
+                        sourceNode?.data?.nodeType !== undefined &&
+                        sourceNode.data!.nodeType !== nodeTypes["SWITCH"] &&
+                        (<IpSetButton
+                            ipAddress={sourceIP}
+                            label={labelSource}
+                            mask={mask}
+                            showModal={ () => showModal(id, NodeEdgeTypes["SOURCE"], labelSource) }
+                        />)
+                    }
                 </div>
                 <div
                     style={{
@@ -150,26 +127,33 @@ export default function CustomEdge({
                     className="button-edge__label nodrag nopan"
                 >
 
-                    <button className="edgebutton" onClick={onEdgeClick}>
+                    <button
+                            className="edgebutton"
+                            onClick={onEdgeClick}
+                    >
                         ×
                     </button>
-
                 </div>
                 <div
                     style={{
                         position: 'absolute',
-                        transform: `translate(${targetX}%, ${targetY}%) translate(${tx}px,${ty}px)`,
-                        // transform: `translate(${inputCoordination2X}%, ${inputCoordination2Y}%) translate(${labelX}px,${labelY}px)`,
+                        transform: `translate(${targetX}%, ${targetY}%) translate(${labelX}px,${labelY}px)`,
                         fontSize: 12,
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
                         pointerEvents: 'all',
                     }}
                 >
-                    <IpInput
-                        onChange={onTargetChange}
-                        handleInputBlur={handleTargetInputBlur}
-                    />
+                    {
+                        targetNode?.data?.nodeType !== undefined &&
+                        targetNode.data.nodeType !== nodeTypes["SWITCH"] &&
+                        (<IpSetButton
+                            ipAddress={targetIP}
+                            label={labelTarget}
+                            mask={mask}
+                            showModal={ () => showModal(id, NodeEdgeTypes["TARGET"], labelTarget) }
+                        />)
+                    }
                 </div>
             </EdgeLabelRenderer>
         </>

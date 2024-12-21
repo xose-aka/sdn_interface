@@ -31,24 +31,26 @@ export default function NetworkNode({ id, data }: NodeProps) {
                      height: `${dimensions.height}px`,
                  }}
             >
-                {/*<img src={ data.icon  } alt={data.icon}/>*/}
                 {/* If handles are conditionally rendered and not present initially, you need to update the node internals https://reactflow.dev/docs/api/hooks/use-update-node-internals/ */}
                 {/* In this case we don't need to use useUpdateNodeInternals, since !isConnecting is true at the beginning and all handles are rendered initially. */}
                 { !connection.inProgress && (
-                    /*{{ !connection.inProgress && (}*/
                     <Handle
                         className="customHandle"
                         position={Position.Right}
                         type="source"
                         isConnectable={isThisNodeClicked}
+                        id={`handle-source-${id}`}
                     />
                 )}
                 {/* We want to disable the target handle, if the connection was started from this node */}
                 { (!connection.inProgress || isTarget) && (
                     <Handle
-                        className="customHandle" position={Position.Left}
+                        className="customHandle"
+                        position={Position.Left}
                         type="target"
-                        isConnectableStart={false} />
+                        isConnectableStart={false}
+                        id={`handle-target-${id}`}
+                    />
                 )}
             </div>
             <div className='node-label'>{ label }</div>

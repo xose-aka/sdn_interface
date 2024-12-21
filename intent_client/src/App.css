@@ -47,23 +47,6 @@ html,body, #root{
   text-wrap: nowrap;
 }
 
-/*.customNode:before {*/
-/*  content: '';*/
-/*  position: absolute;*/
-/*  top: -10px;*/
-/*  left: 50%;*/
-/*  height: 20px;*/
-/*  width: 40px;*/
-/*  transform: translate(-50%, 0);*/
-/*  background: #d6d5e6;*/
-/*  z-index: 1000;*/
-/*  line-height: 1;*/
-/*  border-radius: 4px;*/
-/*  color: #fff;*/
-/*  font-size: 9px;*/
-/*  border: 2px solid #222138;*/
-/*}*/
-
 div.customHandle {
   width: 100%;
   height: 100%;
@@ -75,6 +58,10 @@ div.customHandle {
   transform: none;
   border: none;
   opacity: 0;
+}
+
+.react-flow.cursor-progress .react-flow__pane {
+  cursor: pointer !important;
 }
 
 .cursor-pointer {

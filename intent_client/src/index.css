@@ -20,3 +20,13 @@ body {
   /*min-width: 320px;*/
   /*min-height: 100vh;*/
 }
+
+@media (max-width: 768px) {
+  .h-sm-70 {
+    height: 70%;
+  }
+
+  .h-sm-30 {
+    height: 30%;
+  }
+}

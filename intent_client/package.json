@@ -1,7 +1,7 @@
 {
   "name": "test_react18_graph",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,8 +22,8 @@
     "react-bootstrap": "^2.10.2",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
+    "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^18.2.0",
-    "react-text-mask": "^5.5.0",
     "reagraph": "^4.19.2",
     "sass": "^1.80.3",
     "uuidv4": "^6.2.13"

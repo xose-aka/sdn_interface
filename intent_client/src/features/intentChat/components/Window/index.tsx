@@ -2,19 +2,17 @@ import React, {useEffect, useRef, useState} from 'react';
 import Message from "../Message";
 import {createFocusTrap, FocusTrap} from "focus-trap";
 import './index.scss'
-import axios from "axios";
 import {IntentMessage, IntentMessageDTO} from "../../types";
 import {v4 as uuidv4} from "uuid";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faComments} from "@fortawesome/free-solid-svg-icons";
+import {faComments, faRotate, faXmark} from "@fortawesome/free-solid-svg-icons";
 import IntentAdditionTooltip from "../IntentAdditionTooltip";
 import {ChatWindowProps} from "./index.types.ts";
 import {prepareIntentMessage, prepareIntentMessageDTO} from "../../../topology/message.ts";
-import {API_CONFIG} from "../../../../config/api.ts";
 import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
-import CloseButton from "../CloseButton";
+import WindowButton from "../WindowButton";
 import {sendConfirmConversation, sendMessage} from "../../services/api.ts";
-import {alertTypes} from "../../../../constants/topology.ts";
+import {alertTypes} from "../../../../constants";
 
 
 function Index({
@@ -24,6 +22,7 @@ function Index({
                    isOpen,
                    handleClose,
                    title,
+                   token,
                    setIntentHighlightedNodes
 }: ChatWindowProps) {
 
@@ -33,7 +32,7 @@ function Index({
 
     const [focusTrap, setFocusTrap] = useState<FocusTrap | null>(null);
 
-    const [token, setToken] = useState<string | null>(null);
+    // const [token, setToken] = useState<string | null>(null);
     const [chatHistory, setChatHistory] = useState<Array<any>>([]);
 
     const [messages, setMessages] = useState<IntentMessage[]>([]);
@@ -54,6 +53,12 @@ function Index({
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setIntentMessage(event.target.value);
+    };
+
+
+
+    const handleConversationReset = () => {
+        if (confirm("Do you want to reset conversation")) setConversationId(uuidv4());
     };
 
     // const handleMouseDown = (e: React.MouseEvent) => {
@@ -151,18 +156,18 @@ function Index({
 
 
     // Function to request a token from the backend
-    const getToken = async () => {
-        try {
-            const response = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TOKEN}`);
-            const newToken = response.data.token;
-            setToken(newToken);
-            localStorage.setItem('chat_token', newToken); // Save token in localStorage
-            return response.status
-        } catch (error) {
-            console.error('Error generating token:', error);
-            return error
-        }
-    };
+    // const getToken = async () => {
+    //     try {
+    //         const response = await axios.get(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TOKEN}`);
+    //         const newToken = response.data.token;
+    //         setToken(newToken);
+    //         localStorage.setItem('chat_token', newToken); // Save token in localStorage
+    //         return response.status
+    //     } catch (error) {
+    //         console.error('Error generating token:', error);
+    //         return error
+    //     }
+    // };
 
     const submitMessage = () => {
 
@@ -205,7 +210,7 @@ function Index({
     const handleSendMessage = (intentMessageDTO: IntentMessageDTO) => {
         if (!token) {
             setShowAlert(true)
-            setAlertType(alertTypes.DANGER)
+            setAlertType(alertTypes.danger)
             setAlertMessage("No token set")
             return;
         }
@@ -217,9 +222,7 @@ function Index({
         //     return;
         // }
 
-        console.log(intentMessageDTO)
 
-        try {
             // Send message to the server
             sendMessage(token, intentMessageDTO)
                 .then((response) => {
@@ -239,7 +242,7 @@ function Index({
                                 ) {
                                     prevVal.isConfirmed = true
                                     prevVal.isConfirmationDone = true
-                                    prevVal.status = Statuses["RECEIVED"]
+                                    prevVal.status = Statuses["SENT"]
                                 }
 
                                 // server response loading update
@@ -254,10 +257,30 @@ function Index({
                         )
                     }
                 })
-        } catch (error) {
-            console.error('Error sending message:', error);
-            // Handle error, e.g., retry mechanism
-        }
+                .catch((error) => {
+                    setShowAlert(true)
+                    setAlertType(alertTypes.danger)
+                    setAlertMessage(error.message)
+
+                    setChatHistory(prevHistory =>
+                        prevHistory.map(msg =>
+                            msg.id === intentMessageDTO.intentId ? { ...msg, status: Statuses["ERROR"] } : msg
+                        )
+                    );
+
+                    setMessages(prevValues =>
+                        prevValues.map(prevVal => {
+                            if (
+                                prevVal.messageId === intentMessageDTO.intentId &&
+                                prevVal.sender === SenderTypes["USER"]
+                            )
+                                prevVal.status = Statuses["ERROR"]
+
+                            return prevVal;
+                        })
+                    )
+
+                })
     };
 
     const handleSendConfirmConversation = () => {
@@ -270,33 +293,69 @@ function Index({
             return;
         }
 
-        try {
-            sendConfirmConversation(token, conversationId)
-                .then((response) => {
+        sendConfirmConversation(token, conversationId)
+            .then((response) => {
 
-                    setConversationId(uuidv4())
+                setConversationId(uuidv4())
 
-                    setMessages(prevValues =>
-                        prevValues.map(prevVal => {
-                            if (
-                                prevVal.isConfirmationDone === false &&
-                                prevVal.sender === SenderTypes["SERVER"]
-                            ) {
-                                prevVal.isConfirmed = true
-                                prevVal.isConfirmationDone = true
-                            }
+                setMessages(prevValues =>
+                    prevValues.map(prevVal => {
+                        if (
+                            prevVal.isConfirmationDone === false &&
+                            prevVal.sender === SenderTypes["SERVER"]
+                        ) {
+                            prevVal.isConfirmed = true
+                            prevVal.status = Statuses["RECEIVED"]
+                            prevVal.isConfirmationDone = true
+                        }
 
-                            return prevVal;
-                        })
-                    )
-                    setShowAlert(true)
-                    setAlertType(alertTypes.SUCCESS)
-                    setAlertMessage("Path installed")
-                });
-        } catch (error) {
-            console.error('Error sending message:', error);
-            // Handle error, e.g., retry mechanism
-        }
+                        return prevVal;
+                    })
+                )
+                setShowAlert(true)
+                setAlertType(alertTypes.success)
+                setAlertMessage("Path installed")
+            })
+            .catch((error) => {
+                setShowAlert(true)
+                setAlertType(alertTypes.danger)
+                setAlertMessage(error.message)
+
+                setConversationId(uuidv4())
+                setMessages(prevValues =>
+                    prevValues.map(prevVal => {
+                        if (
+                            prevVal.isConfirmationDone === false &&
+                            prevVal.sender === SenderTypes["SERVER"]
+                        ) {
+                            prevVal.isConfirmed = false
+                            prevVal.status = Statuses["ERROR"]
+                            prevVal.isConfirmationDone = true
+                        }
+
+                        return prevVal;
+                    })
+                )
+
+                // setChatHistory(prevHistory =>
+                //     prevHistory.map(msg =>
+                //         msg.id === intentMessageDTO.intentId ? { ...msg, status: Statuses["ERROR"] } : msg
+                //     )
+                // );
+                //
+                // setMessages(prevValues =>
+                //     prevValues.map(prevVal => {
+                //         if (
+                //             prevVal.messageId === intentMessageDTO.intentId &&
+                //             prevVal.sender === SenderTypes["USER"]
+                //         )
+                //             prevVal.status = Statuses["ERROR"]
+                //
+                //         return prevVal;
+                //     })
+                // )
+
+            })
     };
 
     const handleSubmit = () => {
@@ -386,21 +445,21 @@ function Index({
     }, [JSON.stringify(pendingMessage)]);
 
     // Load token from localStorage or request a new one if not available
-    useEffect(() => {
-
-        if (isOpen) {
-            const savedToken = localStorage.getItem('chat_token');
-            if (savedToken) {
-                setToken(savedToken);
-            } else {
-                getToken()
-                    .then((returnMessage) => {
-                        console.log(returnMessage)
-                    }); // Generate new token if not found
-            }
-        }
-
-    }, [isOpen]);
+    // useEffect(() => {
+    //
+    //     if (isOpen) {
+    //         const savedToken = localStorage.getItem('chat_token');
+    //         if (savedToken) {
+    //             setToken(savedToken);
+    //         } else {
+    //             getToken()
+    //                 .then((returnMessage) => {
+    //                     console.log(returnMessage)
+    //                 }); // Generate new token if not found
+    //         }
+    //     }
+    //
+    // }, [isOpen]);
 
     return (
         <div
@@ -421,7 +480,10 @@ function Index({
             <div className="chat-window__header">
                 <FontAwesomeIcon icon={faComments} inverse />
                 <div className="chat-window__title">{title}</div>
-                <CloseButton onClose={handleClose}/>
+                <div className="d-flex justify-content-between">
+                    <WindowButton handler={handleConversationReset} icon={faRotate} />
+                    <WindowButton handler={handleClose} icon={faXmark}/>
+                </div>
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
                 {messages.map(intentMessage => (
@@ -442,6 +504,7 @@ function Index({
                     rows={1}
                     placeholder="Enter your intent..."
                     value={intentMessage}
+                    disabled={messages.some(message => message.isConfirmationDone === false && message.status === Statuses["RECEIVED"])}
                     onChange={handleChange}
                 />
                         <button
