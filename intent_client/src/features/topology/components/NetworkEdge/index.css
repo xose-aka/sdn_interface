@@ -22,6 +22,10 @@
     transform-origin: center;
 }
 
+.react-flow__pane {
+    cursor: pointer !important;
+}
+
 /*.button-edge__button:hover {*/
 /*    background-color: var(--xy-theme-hover);*/
 /*    color: #ffffff;*/

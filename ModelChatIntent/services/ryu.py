@@ -1,7 +1,3 @@
-import json
-import re
-
-import demjson3
 from langchain.utils.math import cosine_similarity
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -20,7 +16,7 @@ examples = [
         "question": "block traffic from 10.0.0.1 to 10.0.0.2 on switch 2",
         "answer": """{
           "goal": "blockTraffic",
-          "switch_id": 2,
+          "node_id": "switch 2",
           "ip_source": "10.0.0.1",
           "ip_dest": "10.0.0.2"
     }"""
@@ -29,7 +25,7 @@ examples = [
         "question": "on switch 3 set the weights 0.2 on port 3, 0.3 on port 2, 0.5 on port 1",
         "answer": """{
       "goal": "setWeights",
-      "switch_id": 3,
+      "node_id": "switch 3",
       "weights": {"3":0.2,"2":0.3,"1":0.5}
     }"""
     },
@@ -37,7 +33,7 @@ examples = [
         "question": "delete the rule that block traffic to 10.0.0.1 on switch 1",
         "answer": """{
       "goal": "deleteFlow",
-      "switch_id": 1,
+      "node_id": "switch 1",
       "ip_source": "any",
       "ip_dest": "10.0.0.1"
     }"""
@@ -46,7 +42,7 @@ examples = [
         "question": "block traffic from 10.1.1.1 to 10.1.1.2 on switch 4",
         "answer": """{
       "goal": "blockTraffic",
-      "switch_id": 4,
+      "node_id": "switch 4",
       "ip_source": "10.1.1.1",
       "ip_dest": "10.1.1.2"
     }"""
@@ -55,7 +51,7 @@ examples = [
         "question": "on switch 2 set the weights 0.1 on port 1, 0.4 on port 2, 0.5 on port 3",
         "answer": """{
       "goal": "setWeights",
-      "switch_id": 2,
+      "node_id": "switch 2",
       "weights": {"1":0.1,"2":0.4,"3":0.5}
     }"""
     },
@@ -63,7 +59,7 @@ examples = [
         "question": "delete the rule that blocks traffic to 10.2.2.2 on switch 3",
         "answer": """{
       "goal": "deleteFlow",
-      "switch_id": 3,
+      "node_id": "switch 3",
       "ip_source": "any",
       "ip_dest": "10.2.2.2"
     }"""
@@ -72,7 +68,7 @@ examples = [
         "question": "block traffic from 192.168.1.1 to 192.168.1.2 on switch 1",
         "answer": """{
       "goal": "blockTraffic",
-      "switch_id": 1,
+      "node_id": "switch 1",
       "ip_source": "192.168.1.1",
       "ip_dest": "192.168.1.2"
     }"""
@@ -81,7 +77,7 @@ examples = [
         "question": "on switch 4 set the weights 0.3 on port 1, 0.2 on port 2, 0.5 on port 3",
         "answer": """{
       "goal": "setWeights",
-      "switch_id": 4,
+      "node_id": "switch 4",
       "weights": {"1":0.3,"2":0.2,"3":0.5}
     }"""
     },
@@ -89,7 +85,7 @@ examples = [
         "question": "delete the rule that blocks traffic to 10.3.3.3 on switch 2",
         "answer": """{
       "goal": "deleteFlow",
-      "switch_id": 2,
+      "node_id": "switch 2",
       "ip_source": "any",
       "ip_dest": "10.3.3.3"
     }"""
@@ -98,7 +94,7 @@ examples = [
         "question": "block traffic from 172.16.0.1 to 172.16.0.2 on switch 3",
         "answer": """{
       "goal": "blockTraffic",
-      "switch_id": 3,
+      "node_id": "switch 3",
       "ip_source": "172.16.0.1",
       "ip_dest": "172.16.0.2"
     }"""
@@ -107,7 +103,7 @@ examples = [
         "question": "on switch 1 set the weights 0.4 on port 1, 0.4 on port 2, 0.2 on port 3",
         "answer": """{
       "goal": "setWeights",
-      "switch_id": 1,
+      "node_id": "switch 1",
       "weights": {"3":0.2,"2":0.3,"1":0.5}
     }"""
     },
@@ -115,7 +111,7 @@ examples = [
         "question": "delete the rule that blocks traffic to 10.4.4.4 on switch 4",
         "answer": """{
       "goal": "deleteFlow",
-      "switch_id": 4,
+      "node_id": "switch 4",
       "ip_source": "any",
       "ip_dest": "10.4.4.4"
     }"""
@@ -124,11 +120,63 @@ examples = [
         "question": "block traffic from 10.5.5.5 to 10.5.5.6 on switch 2",
         "answer": """{
       "goal": "blockTraffic",
-      "switch_id": 2,
+      "node_id": "switch 2",
       "ip_source": "10.5.5.5",
       "ip_dest": "10.5.5.6"
     }"""
-    }
+    },
+    {
+        "question": "block traffic from 10.5.5.5 to 10.5.5.6 on host 2",
+        "answer": """{
+      "goal": "blockTraffic",
+      "node_id": "host 2",
+      "ip_source": "10.5.5.5",
+      "ip_dest": "10.5.5.6"
+    }"""
+    },
+    {
+        "question": "delete the rule that blocks traffic to 10.4.4.4 on host 4",
+        "answer": """{
+      "goal": "deleteFlow",
+      "node_id": "host 4",
+      "ip_source": "any",
+      "ip_dest": "10.4.4.4"
+    }"""
+    },
+    {
+        "question": "on host 1 set the weights 0.4 on port 1, 0.4 on port 2, 0.2 on port 3",
+        "answer": """{
+      "goal": "setWeights",
+      "node_id": "host 1",
+      "weights": {"3":0.2,"2":0.3,"1":0.5}
+    }"""
+    },
+    {
+        "question": "block traffic from 10.5.5.5 to 10.5.5.6 on router 2",
+        "answer": """{
+      "goal": "blockTraffic",
+      "node_id": "router 2",
+      "ip_source": "10.5.5.5",
+      "ip_dest": "10.5.5.6"
+    }"""
+    },
+    {
+        "question": "delete the rule that blocks traffic to 10.4.4.4 on router 4",
+        "answer": """{
+      "goal": "deleteFlow",
+      "node_id": "router 4",
+      "ip_source": "any",
+      "ip_dest": "10.4.4.4"
+    }"""
+    },
+    {
+        "question": "on router 1 set the weights 0.4 on port 1, 0.4 on port 2, 0.2 on port 3",
+        "answer": """{
+      "goal": "setWeights",
+      "node_id": "router 1",
+      "weights": {"3":0.2,"2":0.3,"1":0.5}
+    }"""
+    },
 ]
 
 #prompt templates
@@ -268,21 +316,6 @@ def prompt_router(intent, fix):
 
     selected_examples = example_selector.select_examples({"question": intent})
 
-    print("selected", selected_examples)
-
-    # fixed_data = demjson3.decode(invalid_json)
-    # for i in range(len(selected_examples)):
-    #     corrected_json = re.sub(r'(\b\w+\b):', r'"\1":', selected_examples[i]['answer'])
-    #
-    #     parsed_json = json.loads(corrected_json)
-    #
-    #     parsed_json = demjson3.decode(str(parsed_json))
-    #
-    #     print("aa", parsed_json)
-    #
-    #
-    #     selected_examples[i]['answer'] = parsed_json
-
     prompt = PromptTemplate.from_template(most_similar,
                                           partial_variables={"format_instructions": parser.get_format_instructions(),
                                                              "examples": str(selected_examples), "fix": fix})
@@ -300,7 +333,7 @@ def prompt_router(intent, fix):
 def prepare_ryu_url_and_request_data(processed_intent):
     goal = processed_intent.get("goal")
 
-    dpid = processed_intent.get("switch_id")
+    dpid = processed_intent.get("node_id")
 
     if dpid is None:
         raise IntentFormatException(value="dpid not found no such switch")
