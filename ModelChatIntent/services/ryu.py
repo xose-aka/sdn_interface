@@ -19,15 +19,15 @@ examples = [
           "node_id": "switch 2",
           "ip_source": "10.0.0.1",
           "ip_dest": "10.0.0.2"
-    }"""
+        }"""
     },
     {
         "question": "on switch 3 set the weights 0.2 on port 3, 0.3 on port 2, 0.5 on port 1",
         "answer": """{
-      "goal": "setWeights",
-      "node_id": "switch 3",
-      "weights": {"3":0.2,"2":0.3,"1":0.5}
-    }"""
+          "goal": "setWeights",
+          "node_id": "switch 3",
+          "weights": {"3":0.2,"2":0.3,"1":0.5}
+        }"""
     },
     {
         "question": "delete the rule that block traffic to 10.0.0.1 on switch 1",

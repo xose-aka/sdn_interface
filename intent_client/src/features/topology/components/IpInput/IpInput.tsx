@@ -16,13 +16,13 @@ const IpInput: React.FC<IpInputProps> = (
         octets,
         handleOctetChange,
         handleMaskInput,
-        label
+        label,
     }
     ) => {
 
     return (
         <Row >
-            <Form.Group className="col-9" controlId={`exampleForm.${label}`}>
+            <Form.Group className="col-9">
                 <Form.Label className="required">IP Address</Form.Label>
                 <div className="d-flex justify-content-between">
                     {
@@ -34,10 +34,13 @@ const IpInput: React.FC<IpInputProps> = (
                                             type="text"
                                             maxLength={3}
                                             placeholder="0-255"
+                                            id={`ip_insert_id_${index}`}
                                             value={octet}
                                             autoComplete="off"
+                                            required
                                             onChange={(e) => handleOctetChange(index, e.target.value)}
                                             autoFocus={ index === 0 }
+                                            // isValid={ validateOctets[index] }
                                         />
                                     </div>
                                     {
@@ -54,7 +57,7 @@ const IpInput: React.FC<IpInputProps> = (
                     /
                 </div>
             </div>
-            <Form.Group className="col-2" controlId="exampleForm.ControlInput1">
+            <Form.Group className="col-2" controlId="IpForm.Mask">
                 <Form.Label className="required">Mask</Form.Label>
                 <Form.Control
                     type="text"
@@ -63,6 +66,8 @@ const IpInput: React.FC<IpInputProps> = (
                     value={maskValue}
                     autoComplete="off"
                     onChange={handleMaskInput}
+                    required
+                    // isValid={ maskValidate }
                 />
             </Form.Group>
         </Row>
