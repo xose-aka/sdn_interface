@@ -212,6 +212,14 @@ function Index({
             setShowAlert(true)
             setAlertType(alertTypes.danger)
             setAlertMessage("No token set")
+
+            setMessages((prevMessages) =>
+                prevMessages.filter((message) => !( message.conversationId === conversationId &&
+                        message.status === Statuses["PENDING"] &&
+                        message.sender === SenderTypes["SERVER"] )
+                )
+            );
+
             return;
         }
 
@@ -227,10 +235,12 @@ function Index({
             sendMessage(token, intentMessageDTO)
                 .then((response) => {
 
-                    if (response != undefined) {
+                    console.log(response)
+
+                    if (response.error) {
                         setChatHistory(prevHistory =>
                             prevHistory.map(msg =>
-                                msg.id === response.intentId ? { ...msg, status: 'received' } : msg
+                                msg.id  === response.intentId ? { ...msg, status: Statuses["RECEIVED"] } : msg
                             )
                         );
 
@@ -256,6 +266,8 @@ function Index({
                             })
                         )
                     }
+
+
                 })
                 .catch((error) => {
                     setShowAlert(true)

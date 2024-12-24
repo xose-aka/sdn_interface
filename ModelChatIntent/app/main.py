@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.v1.endpoints.message import router as message_endpoint
+from api.v1.endpoints.intent import router as intent_endpoint
 from api.v1.endpoints.auth import router as auth_endpoint
 from api.v1.endpoints.topo import router as topo_endpoint
 
@@ -14,7 +14,7 @@ app.add_middleware(
     allow_headers=["*"],  # Adjust this to specify allowed headers
 )
 
-app.include_router(message_endpoint, prefix="/api/v1/messages")
+app.include_router(intent_endpoint, prefix="/api/v1/intents")
 app.include_router(topo_endpoint, prefix="/api/v1/topo")
 app.include_router(auth_endpoint, prefix="/api/v1")
 

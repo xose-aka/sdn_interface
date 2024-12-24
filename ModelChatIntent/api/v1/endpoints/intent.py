@@ -9,7 +9,8 @@ from api.v1.dependencies import verify_token
 from exceptions.intent_format_exception import IntentFormatException
 from exceptions.intent_goal_service_not_available_exception import IntentGoalServiceNotAvailableException
 from schemas.chat import ConfirmConversation, IntentMessageRequest
-from services.ryu import prompt_router, make_request, prepare_ryu_url_and_request_data
+from services.intent_process import prompt_router
+from services.ryu import check_intent_nodes, prepare_ryu_url_and_request_data
 from utils.request import request_post_external_data
 
 router = APIRouter()
@@ -24,34 +25,45 @@ chat_response_history = []
 encoded_conversations = {}
 
 
-@router.post("/verify", response_model=IntentMessageRequest)
-async def verify(message: IntentMessageRequest, token: str = Depends(verify_token)):
+@router.post("/verify")
+async def verify(request: IntentMessageRequest, token: str = Depends(verify_token)):
     fix_prompt = ""
 
-    conversation_id = message.conversationId
+    conversation_id = request.conversationId
 
     if encoded_conversations.get(conversation_id) is None:
 
-        intent = message.intent
+        intent = request.intent
 
         try:
 
             chain = prompt_router(intent, fix_prompt)
 
-            result = chain.invoke(intent)
+            processed_intent = chain.invoke(intent)
+
+            check_intent_node_result = check_intent_nodes(processed_intent)
+
+            if check_intent_node_result["error"]:
+                return {
+                    "error": check_intent_node_result["error"],
+                    "data": check_intent_node_result["message"]
+                }
 
             encoded_conversations[conversation_id] = {
-                "processed_intent": result,
+                "processed_intent": processed_intent,
                 "intent": intent,
             }
 
             return {
-                "intentId": message.intentId,  # Generate unique ID for server message
-                "intent": str(result),
-                "sender": "server",
-                "conversationId": conversation_id,
-                "responseMessageId": message.responseMessageId,
-                "timestamp": datetime.now()
+                "error": 0,
+                "data": {
+                    "intentId": request.intentId,  # Generate unique ID for server message
+                    "intent": str(processed_intent),
+                    "sender": "server",
+                    "conversationId": conversation_id,
+                    "responseMessageId": request.responseMessageId,
+                    "timestamp": datetime.now()
+                }
             }
 
         except JSONDecodeError as e:
@@ -61,30 +73,30 @@ async def verify(message: IntentMessageRequest, token: str = Depends(verify_toke
 
         conversation_data = encoded_conversations[conversation_id]
         intent = conversation_data["intent"]
-        result = conversation_data["processed_intent"]
+        processed_intent = conversation_data["processed_intent"]
 
-        fix_intent = message.intent
+        fix_intent = request.intent
 
         # valid_json = pyjson5.loads(result)
 
         fix_prompt = ("""[FIXES]:Before you have generated this network configuration:"""
-                      + str(result).replace("'", '"')
+                      + str(processed_intent).replace("'", '"')
                       # + str(valid_json)
                       + "The user specify some fixes:" + fix_intent)
 
         try:
             chain = prompt_router(intent, fix_prompt)
 
-            result = chain.invoke(intent)
+            processed_intent = chain.invoke(intent)
 
-            print("result: ", str(result))
+            print("result: ", str(processed_intent))
 
             return {
-                "intentId": message.intentId,  # Generate unique ID for server message
-                "intent": str(result),
+                "intentId": request.intentId,  # Generate unique ID for server message
+                "intent": str(processed_intent),
                 "sender": "server",
                 "conversationId": conversation_id,
-                "responseMessageId": message.responseMessageId,
+                "responseMessageId": request.responseMessageId,
                 "timestamp": datetime.now()
             }
         except IntentGoalServiceNotAvailableException as e:
