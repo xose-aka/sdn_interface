@@ -16,6 +16,8 @@ export default function () {
 
     const [localMask, setLocalMask] = useState<string>("");
 
+    const [validated, setValidated] = useState(false);
+
     const onEdgeSourceIpSet = (ip: string, mask: string) => {
 
         setEdges((edges) => edges.map((edge) => {
@@ -43,24 +45,33 @@ export default function () {
         } ));
     };
 
-    const handleIPSet = () => {
+    const handleIPSet = (event: React.FormEvent<HTMLFormElement>) => {
 
-        if (octets.every(element => element.trim() !== "") && localMask.length > 0) {
+        event.preventDefault()
 
-            const ip = octets.join(".")
+        const form = event.currentTarget;
 
-            if (isValidIPv4(ip)) {
+        if (form.checkValidity() === false) {
+            event.stopPropagation();
+            setValidated(true)
+        } else {
+            if (octets.every(element => element.trim() !== "") && localMask.length > 0) {
 
-                switch (type) {
-                    case NodeEdgeTypes["SOURCE"]:
-                        onEdgeSourceIpSet(ip, localMask)
-                        break;
-                    case NodeEdgeTypes["TARGET"]:
-                        onEdgeTargetIpSet(ip, localMask)
-                        break;
+                const ip = octets.join(".")
+
+                if (isValidIPv4(ip)) {
+
+                    switch (type) {
+                        case NodeEdgeTypes["SOURCE"]:
+                            onEdgeSourceIpSet(ip, localMask)
+                            break;
+                        case NodeEdgeTypes["TARGET"]:
+                            onEdgeTargetIpSet(ip, localMask)
+                            break;
+                    }
+
+                    handleHideModal()
                 }
-
-                handleHideModal()
             }
         }
     };
@@ -117,29 +128,31 @@ export default function () {
     }, [isVisible]);
 
     return (
-        <Modal show={isVisible} onHide={handleHideModal}>
-            <Modal.Header closeButton>
-                <Modal.Title>{`Set IP for ${label}`}</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form>
-                     <IpInput
-                         maskValue={localMask}
-                         handleMaskInput={handleMaskInput}
-                         handleOctetChange={handleOctetChange}
-                         octets={octets}
-                         label={label}
-                     />
+            <Modal show={isVisible} onHide={handleHideModal} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{`Set IP for ${label}`}</Modal.Title>
+                </Modal.Header>
+                <Form noValidate validated={validated} onSubmit={handleIPSet}>
+
+                <Modal.Body>
+                         <IpInput
+                             maskValue={localMask}
+                             handleMaskInput={handleMaskInput}
+                             handleOctetChange={handleOctetChange}
+                             octets={octets}
+                             label={label}
+                         />
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" type="submit">
+                        Save
+                    </Button>
+                    <Button variant="secondary" onClick={handleHideModal}>
+                        Close
+                    </Button>
+                </Modal.Footer>
                 </Form>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="primary" onClick={handleIPSet}>
-                    Save
-                </Button>
-                <Button variant="secondary" onClick={handleHideModal}>
-                    Close
-                </Button>
-            </Modal.Footer>
-        </Modal>
+
+            </Modal>
     )
 }

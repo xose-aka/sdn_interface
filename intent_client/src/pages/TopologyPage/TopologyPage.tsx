@@ -54,7 +54,7 @@ const TopologyPage: React.FC = () => {
     const [alertMessage, setAlertMessage] = useState("");
     // const [token, setToken] = useState<string | null>(null);
 
-    const { token } = useToken()
+    const { token, setResetToken } = useToken()
 
     const nodeList = Object.values(nodeTypes)
 
@@ -136,6 +136,7 @@ const TopologyPage: React.FC = () => {
                     console.log(r)
                 })
         }
+
 
         console.log(topologyNodes)
     }

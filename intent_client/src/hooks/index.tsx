@@ -4,6 +4,7 @@ import {getToken} from "../services/api.ts";
 
 function useToken() {
     const [token, setToken] = useState<string | null>(null);
+    const [resetToken, setResetToken] = useState<boolean>(false);
 
     useEffect(() => {
 
@@ -20,9 +21,9 @@ function useToken() {
                     console.log(error)
                 });
         }
-    }, []);
+    }, [resetToken]);
 
-    return { token };
+    return { token, setResetToken };
 }
 
 export default useToken;
