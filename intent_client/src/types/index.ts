@@ -7,6 +7,7 @@ interface Coordinates {
 export interface TopoEntityDTO {
     id: string,
     neighbours: Neighbour[],
+    label: string,
     type: string
 }
 

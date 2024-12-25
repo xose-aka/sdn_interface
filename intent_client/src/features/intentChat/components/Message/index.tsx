@@ -12,7 +12,6 @@ function Index({ message, submitConfirmMessage }: MessageProps)
             <div className="chat-message__item__timestamp">{message.timestamp.toString()}</div>
             <div className="chat-message__item">
                 {
-                    // message.sender == SenderTypes["USER"] &&
                     (
                         <MessageStatus status={message.status}></MessageStatus>
                     )

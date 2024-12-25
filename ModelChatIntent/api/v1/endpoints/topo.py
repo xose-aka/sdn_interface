@@ -9,6 +9,7 @@ from mininet.log import setLogLevel, info
 from mininet.node import RemoteController
 from classes.MininetTopology import MininetTopology
 from mininet.cli import CLI
+from cache.general import cache_topology_nodes_and_ip_addresses
 
 from schemas.topo import TopoBuildRequest
 
@@ -16,7 +17,7 @@ router = APIRouter()
 
 
 @router.post("/build")
-async def build_topt(topo: TopoBuildRequest, token: str = Depends(verify_token)):
+async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_token)):
     my_topology = MininetTopology(topo.nodes)
 
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
@@ -25,8 +26,6 @@ async def build_topt(topo: TopoBuildRequest, token: str = Depends(verify_token))
     net.start()
 
     inserted_nodes_with_neighbours = my_topology.get_inserted_nodes()
-
-    print(inserted_nodes_with_neighbours)
 
     for host in net.hosts:
 

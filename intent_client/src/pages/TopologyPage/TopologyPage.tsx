@@ -123,6 +123,7 @@ const TopologyPage: React.FC = () => {
             const newTopologyNode = {
                 type: type,
                 id: node.id,
+                label: node.data.label as string,
                 neighbours: neighbours
             }
 

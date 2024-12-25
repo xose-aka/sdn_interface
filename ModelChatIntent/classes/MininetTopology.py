@@ -19,7 +19,8 @@ class MininetTopology(Topo):
         # add links for neighbours
         insert_links = self.__insert_links(topology_nodes, inserted_nodes)
 
-        cache_topology_nodes_and_ip_addresses['ip_addresses_with_mask'] = insert_links['inserted_ip_addresses_with_mask']
+        cache_topology_nodes_and_ip_addresses['ip_addresses_with_mask'] = insert_links[
+            'inserted_ip_addresses_with_mask']
 
         self.inserted_nodes = insert_links['inserted_nodes_and_neighbours']
 

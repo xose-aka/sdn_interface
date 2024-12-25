@@ -235,19 +235,21 @@ function Index({
             sendMessage(token, intentMessageDTO)
                 .then((response) => {
 
-                    console.log(response)
+                    const responseMessageStatus = response.error ? Statuses["ERROR"] : Statuses["RECEIVED"]
 
-                    if (response.error) {
+                    const responseData = response.data
+
+                    // if (response.error) {
                         setChatHistory(prevHistory =>
                             prevHistory.map(msg =>
-                                msg.id  === response.intentId ? { ...msg, status: Statuses["RECEIVED"] } : msg
+                                msg.id  === responseData.intentId ? { ...msg, status: Statuses["RECEIVED"] } : msg
                             )
                         );
 
                         setMessages(prevValues =>
                             prevValues.map(prevVal => {
                                 if (
-                                    prevVal.messageId === response.intentId &&
+                                    prevVal.messageId === responseData.intentId &&
                                     prevVal.sender === SenderTypes["USER"]
                                 ) {
                                     prevVal.isConfirmed = true
@@ -256,16 +258,16 @@ function Index({
                                 }
 
                                 // server response loading update
-                                if ( prevVal.messageId === response.responseMessageId ) {
+                                if ( prevVal.messageId === responseData.responseMessageId ) {
                                     // messageItem.serverId = response.data.message.clientId
-                                    prevVal.status = Statuses["RECEIVED"]
-                                    prevVal.text = response.intent
+                                    prevVal.status = responseMessageStatus
+                                    prevVal.text = responseData.message
                                 }
 
                                 return prevVal;
                             })
                         )
-                    }
+                    // }
 
 
                 })

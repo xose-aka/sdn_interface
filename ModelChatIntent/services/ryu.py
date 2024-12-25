@@ -5,9 +5,11 @@ from cache.general import cache_topology_nodes_and_ip_addresses
 
 
 def check_intent_nodes(processed_intent):
+    print("check ", cache_topology_nodes_and_ip_addresses)
     node_id = processed_intent.get("node_id")
+    node_id_without_space = str(node_id).replace(" ", "")
 
-    if node_id in cache_topology_nodes_and_ip_addresses['nodes']:
+    if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes']:
         return {
             "error": 0,
             "message": f"Node: {node_id} exists"
@@ -22,12 +24,15 @@ def check_intent_nodes(processed_intent):
 def prepare_ryu_url_and_request_data(processed_intent):
     goal = processed_intent.get("goal")
 
-    dpid = processed_intent.get("node_id")
+    node_id = processed_intent.get("node_id")
 
-    if dpid is None:
+    if node_id is None:
         raise IntentFormatException(value="dpid not found no such switch")
     else:
-        filled_dpid = format(dpid, "d").zfill(16)
+
+        dpid = "".join(char for char in node_id if char.isdigit())
+
+        filled_dpid = format(int(dpid), "d").zfill(16)
 
         if goal == "blockTraffic":
             ipv4_src = processed_intent.get("ip_source")
