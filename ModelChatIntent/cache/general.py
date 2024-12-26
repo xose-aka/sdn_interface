@@ -1,2 +1,2 @@
 # nodes and ip addresses, key for dictionary is user token
-cache_topology_nodes_and_ip_addresses = {'nodes': [], 'ip_addresses_with_mask': []}
+cache_topology_nodes_and_ip_addresses = {'nodes': [], 'ip_addresses_with_mask': [], 'nodes_dpid': {}}

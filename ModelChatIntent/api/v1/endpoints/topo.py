@@ -27,6 +27,11 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
 
     inserted_nodes_with_neighbours = my_topology.get_inserted_nodes()
 
+    for switch in net.switches:
+        node_id = str(switch)
+        dpid = switch.defaultDpid()
+        cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id] = dpid
+
     for host in net.hosts:
 
         node_id = host.name

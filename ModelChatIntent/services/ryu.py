@@ -25,14 +25,19 @@ def prepare_ryu_url_and_request_data(processed_intent):
     goal = processed_intent.get("goal")
 
     node_id = processed_intent.get("node_id")
+    node_id_without_space = str(node_id).replace(" ", "")
 
     if node_id is None:
         raise IntentFormatException(value="dpid not found no such switch")
+    elif node_id_without_space not in cache_topology_nodes_and_ip_addresses['nodes_dpid']:
+        raise IntentFormatException(value=f"Configuration is not applicable for this node: {node_id}")
     else:
 
-        dpid = "".join(char for char in node_id if char.isdigit())
+        # dpid = "".join(char for char in node_id if char.isdigit())
+        #
+        # filled_dpid = format(int(dpid), "d").zfill(16)
 
-        filled_dpid = format(int(dpid), "d").zfill(16)
+        dpid = cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id_without_space]
 
         if goal == "blockTraffic":
             ipv4_src = processed_intent.get("ip_source")
@@ -41,21 +46,21 @@ def prepare_ryu_url_and_request_data(processed_intent):
                 "ipv4_src": ipv4_src,
                 "ipv4_dst": ipv4_dst
             }
-            url = f"http://127.0.0.1:8080/simpleswitch/firewall/{filled_dpid}"
+            url = f"http://127.0.0.1:8080/simpleswitch/firewall/{dpid}"
         elif goal == "setWeights":
             weights = processed_intent.get("weights")
 
             request_data = {
                 "weights": weights
             }
-            url = f"http://127.0.0.1:8080/simpleswitch/weights/{filled_dpid}"
+            url = f"http://127.0.0.1:8080/simpleswitch/weights/{dpid}"
             # url = f"http://127.0.0.1:8080/simpleswitch/weights"
         elif goal == "setRate":
             rate = processed_intent.get("rate")
             request_data = {
                 "rate": rate
             }
-            url = f"http://127.0.0.1:8080/simpleswitch/meters/{filled_dpid}"
+            url = f"http://127.0.0.1:8080/simpleswitch/meters/{dpid}"
 
         elif goal == "deleteFlow":
             ipv4_src = processed_intent.get("ip_source")
@@ -64,7 +69,7 @@ def prepare_ryu_url_and_request_data(processed_intent):
                 "ipv4_src": ipv4_src,
                 "ipv4_dst": ipv4_dst
             }
-            url = f"http://127.0.0.1:8080/simpleswitch/rules/{filled_dpid}"
+            url = f"http://127.0.0.1:8080/simpleswitch/rules/{dpid}"
         else:
             raise IntentGoalServiceNotAvailableException(value=f"Ryu hasn't method for this goal:{goal}")
 

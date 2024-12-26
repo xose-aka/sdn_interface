@@ -41,6 +41,8 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
 
         fix_intent = request.intent
 
+        print(str(processed_intent).replace("'", '"'))
+
         fix_prompt = ("""[FIXES]:Before you have generated this network configuration:"""
                       + str(processed_intent).replace("'", '"')
                       + "The user specify some fixes:" + fix_intent)
@@ -79,7 +81,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             "error": check_intent_node_result["error"],
             "data": {
                 "intentId": request.intentId,  # Generate unique ID for server message
-                "message": str(processed_intent),
+                "message": str(processed_intent).replace("'", "\""),
                 "sender": "server",
                 "conversationId": conversation_id,
                 "responseMessageId": request.responseMessageId,
