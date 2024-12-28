@@ -19,8 +19,8 @@ class MininetTopology(Topo):
         # add links for neighbours
         insert_links = self.__insert_links(topology_nodes, inserted_nodes)
 
-        cache_topology_nodes_and_ip_addresses['ip_addresses_with_mask'] = insert_links[
-            'inserted_ip_addresses_with_mask']
+        cache_topology_nodes_and_ip_addresses['inserted_ip_addresses'] = insert_links[
+            'inserted_ip_addresses']
 
         self.inserted_nodes = insert_links['inserted_nodes_and_neighbours']
 
@@ -71,7 +71,14 @@ class MininetTopology(Topo):
 
             for neighbour in node_neighbours:
                 neighbour_node_id = neighbour.node
-                connection_ip = neighbour.connection_ip
+                connection_ip_with_mask = neighbour.connection_ip
+
+                connection_ip = ""
+                # print(connection_ip_with_mask, connection_ip_with_mask.split('/'))
+
+                connection_ip = str(connection_ip_with_mask).split('/')[0]
+
+                print("log ", connection_ip)
 
                 if neighbour_node_id in inserted_nodes and node_id in inserted_nodes:
                     inserted_neighbours_of_neighbour = inserted_nodes[neighbour_node_id]
@@ -81,28 +88,28 @@ class MininetTopology(Topo):
                             node_id in inserted_neighbours_of_neighbour and
                             neighbour_node_id in inserted_neighbors_of_node
                     ):
-                        inserted_nodes[node_id][neighbour_node_id] = connection_ip
+                        inserted_nodes[node_id][neighbour_node_id] = connection_ip_with_mask
                         inserted_ip_addresses.append(connection_ip)
 
-                        print(f"Node id: {node_id}'s ip:{connection_ip} has been set to "
+                        print(f"Node id: {node_id}'s ip:{connection_ip_with_mask} has been set to "
                               f"neighbour: {neighbour_node_id}.")
 
                     else:
                         self.addLink(node_id, neighbour_node_id, bw=100)
 
-                        inserted_nodes[node_id][neighbour_node_id] = connection_ip
+                        inserted_nodes[node_id][neighbour_node_id] = connection_ip_with_mask
                         inserted_nodes[neighbour_node_id][node_id] = None
 
                         inserted_ip_addresses.append(connection_ip)
 
-                        print(f"Node id: {node_id}'s ip:{connection_ip} and link has been set to "
+                        print(f"Node id: {node_id}'s ip:{connection_ip_with_mask} and link has been set to "
                               f"neighbour: {neighbour_node_id}.")
                 else:
                     print(f"Node: {node_id} or {neighbour_node_id} haven't been inserted yet!")
 
         return {
             "inserted_nodes_and_neighbours": inserted_nodes,
-            "inserted_ip_addresses_with_mask": inserted_ip_addresses
+            "inserted_ip_addresses": inserted_ip_addresses
         }
 
     def get_inserted_nodes(self):

@@ -56,8 +56,6 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
             else:
                 print(f"Node: {node_id} hasn't been inserted to mininet nodes list")
 
-    #
-    # dumpNodeConnections(net.hosts)
     net.pingAll()
     #
     # CLI(net)

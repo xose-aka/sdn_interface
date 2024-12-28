@@ -5,7 +5,6 @@ from cache.general import cache_topology_nodes_and_ip_addresses
 
 
 def check_intent_nodes(processed_intent):
-    print("check ", cache_topology_nodes_and_ip_addresses)
     node_id = processed_intent.get("node_id")
     node_id_without_space = str(node_id).replace(" ", "")
 
@@ -21,6 +20,27 @@ def check_intent_nodes(processed_intent):
         }
 
 
+def check_intent_ips(processed_intent):
+    ipv4_src = processed_intent.get("ip_source")
+    ipv4_dst = processed_intent.get("ip_dest")
+
+    if ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+        return {
+            "error": 1,
+            "message": f"IP address: {ipv4_src} doesn't exist"
+        }
+    elif ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+        return {
+            "error": 1,
+            "message": f"IP address: {ipv4_dst} doesn't exist"
+        }
+    else:
+        return {
+            "error": 0,
+            "message": f"IP addresses exist"
+        }
+
+
 def prepare_ryu_url_and_request_data(processed_intent):
     goal = processed_intent.get("goal")
 
@@ -32,11 +52,6 @@ def prepare_ryu_url_and_request_data(processed_intent):
     elif node_id_without_space not in cache_topology_nodes_and_ip_addresses['nodes_dpid']:
         raise IntentFormatException(value=f"Configuration is not applicable for this node: {node_id}")
     else:
-
-        # dpid = "".join(char for char in node_id if char.isdigit())
-        #
-        # filled_dpid = format(int(dpid), "d").zfill(16)
-
         dpid = cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id_without_space]
 
         if goal == "blockTraffic":

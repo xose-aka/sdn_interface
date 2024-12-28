@@ -521,14 +521,13 @@ function Index({
                     disabled={messages.some(message => message.isConfirmationDone === false && message.status === Statuses["RECEIVED"])}
                     onChange={handleChange}
                 />
-                        <button
-                            className="chat-window__send-btn"
-                            type="button"
-                            onClick={() => handleSubmit()}
-                            disabled={!intentMessage}
-                        >
-                            Send
-                        </button>
+                <button
+                    className="chat-window__send-btn"
+                    type="button"
+                    onClick={() => handleSubmit()}
+                    disabled={!intentMessage}>
+                    Send
+                </button>
             </div>
         </div>
     );
