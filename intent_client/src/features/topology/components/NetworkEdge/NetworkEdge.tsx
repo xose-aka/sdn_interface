@@ -129,8 +129,7 @@ export default function CustomEdge({
 
                     <button
                             className="edgebutton"
-                            onClick={onEdgeClick}
-                    >
+                            onClick={onEdgeClick}>
                         ×
                     </button>
                 </div>
@@ -142,8 +141,7 @@ export default function CustomEdge({
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
                         pointerEvents: 'all',
-                    }}
-                >
+                    }}>
                     {
                         targetNode?.data?.nodeType !== undefined &&
                         targetNode.data.nodeType !== nodeTypes["SWITCH"] &&

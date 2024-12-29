@@ -76,6 +76,14 @@ const TopologyPage: React.FC = () => {
     const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
 
     const resetNodeSelection = () => {
+
+        const newNodes = nodes.map((node) => {
+            node.data.isThisNodeClicked = false;
+            return node
+        })
+
+        setNodes(newNodes)
+
         setSelectedNode(null)
     }
 

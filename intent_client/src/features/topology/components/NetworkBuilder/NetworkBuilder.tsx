@@ -68,8 +68,6 @@ export default function NetworkBuilder(
             setEdges((eds) => addEdge(
                 { ...params, data: {} },
                 eds))
-
-            resetNodeSelection()
         },
         []
     );
@@ -148,13 +146,6 @@ export default function NetworkBuilder(
 
     const onPaneClick = (event: React.MouseEvent) => {
         resetNodeSelection()
-
-        const newNodes = nodes.map((node) => {
-            node.data.isThisNodeClicked = false;
-            return node
-        })
-
-        setNodes(newNodes)
     }
 
     // const handleMessageSent = message => {
