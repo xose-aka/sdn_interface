@@ -24,6 +24,11 @@ def check_intent_ips(processed_intent):
     ipv4_src = processed_intent.get("ip_source")
     ipv4_dst = processed_intent.get("ip_dest")
 
+    if ipv4_src is None or ipv4_dst is None:
+        return {
+            "error": 0,
+            "message": f"This check doesn't provided"
+        }
     if ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
         return {
             "error": 1,
@@ -38,6 +43,56 @@ def check_intent_ips(processed_intent):
         return {
             "error": 0,
             "message": f"IP addresses exist"
+        }
+
+
+def check_intent_node_ports(processed_intent):
+    goal = processed_intent.get("goal")
+
+    if goal == "setWeights":
+        weights = processed_intent.get("weights")
+
+        node_id = processed_intent.get("node_id")
+        node_id_without_space = str(node_id).replace(" ", "")
+
+
+        if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes_ports']:
+            intent_ports = weights.keys()
+            node_ports = cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id_without_space]
+
+            print("intetn ports ", intent_ports)
+            print("node ports ", node_ports)
+
+            not_exist_port = None
+
+            for intent_port in intent_ports:
+                if int(intent_port) not in node_ports:
+                    not_exist_port = intent_port
+
+            if not_exist_port is not None:
+                return {
+                    "error": 1,
+                    "message": f"Port {not_exist_port} doesn't exist"
+                }
+
+        return {
+            "error": 0,
+            "message": f"Ports exist"
+        }
+    # if ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+    #     return {
+    #         "error": 1,
+    #         "message": f"IP address: {ipv4_src} doesn't exist"
+    #     }
+    # elif ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+    #     return {
+    #         "error": 1,
+    #         "message": f"IP address: {ipv4_dst} doesn't exist"
+    #     }
+    else:
+        return {
+            "error": 0,
+            "message": f"Ports exist"
         }
 
 

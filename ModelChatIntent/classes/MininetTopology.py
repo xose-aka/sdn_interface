@@ -73,12 +73,7 @@ class MininetTopology(Topo):
                 neighbour_node_id = neighbour.node
                 connection_ip_with_mask = neighbour.connection_ip
 
-                connection_ip = ""
-                # print(connection_ip_with_mask, connection_ip_with_mask.split('/'))
-
                 connection_ip = str(connection_ip_with_mask).split('/')[0]
-
-                print("log ", connection_ip)
 
                 if neighbour_node_id in inserted_nodes and node_id in inserted_nodes:
                     inserted_neighbours_of_neighbour = inserted_nodes[neighbour_node_id]

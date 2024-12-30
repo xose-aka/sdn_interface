@@ -27,7 +27,6 @@ export default function CustomEdge({
 
     const { showModal } = useModal();
 
-
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
 
@@ -126,7 +125,6 @@ export default function CustomEdge({
                     }}
                     className="button-edge__label nodrag nopan"
                 >
-
                     <button
                             className="edgebutton"
                             onClick={onEdgeClick}>

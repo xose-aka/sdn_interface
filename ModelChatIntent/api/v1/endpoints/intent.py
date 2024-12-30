@@ -10,7 +10,7 @@ from exceptions.intent_format_exception import IntentFormatException
 from exceptions.intent_goal_service_not_available_exception import IntentGoalServiceNotAvailableException
 from schemas.chat import ConfirmConversation, IntentMessageRequest
 from services.intent_process import prompt_router
-from services.ryu import check_intent_nodes, prepare_ryu_url_and_request_data, check_intent_ips
+from services.ryu import check_intent_nodes, prepare_ryu_url_and_request_data, check_intent_ips, check_intent_node_ports
 from utils.request import request_post_external_data
 
 router = APIRouter()
@@ -74,6 +74,21 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             }
 
         check_intent_node_result = check_intent_ips(processed_intent)
+
+        if check_intent_node_result["error"]:
+            return {
+                "error": check_intent_node_result["error"],
+                "data": {
+                    "intentId": request.intentId,  # Generate unique ID for server message
+                    "message": check_intent_node_result["message"],
+                    "sender": "server",
+                    "conversationId": conversation_id,
+                    "responseMessageId": request.responseMessageId,
+                    "timestamp": datetime.now()
+                }
+            }
+
+        check_intent_node_result = check_intent_node_ports(processed_intent)
 
         if check_intent_node_result["error"]:
             return {

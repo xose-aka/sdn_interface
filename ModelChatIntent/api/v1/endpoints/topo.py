@@ -29,12 +29,17 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
 
     for switch in net.switches:
         node_id = str(switch)
+
+        cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id] = list(switch.ports.values())
+
         dpid = switch.defaultDpid()
         cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id] = dpid
 
     for host in net.hosts:
 
         node_id = host.name
+
+        cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id] =  list(host.ports.values())
 
         for intf in host.intfList():
 
@@ -56,7 +61,9 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
             else:
                 print(f"Node: {node_id} hasn't been inserted to mininet nodes list")
 
+    print(cache_topology_nodes_and_ip_addresses['nodes_ports'])
     net.pingAll()
     #
     # CLI(net)
     net.stop()
+
