@@ -122,6 +122,9 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
 
 @router.post('/conversation/confirm')
 async def confirm(confirm_conversation: ConfirmConversation, token: str = Depends(verify_token)):
+
+    conversation_id = confirm_conversation.conversationId
+
     encoded_conversation = encoded_conversations.get(confirm_conversation.conversationId)
 
     if encoded_conversation is None:
@@ -135,6 +138,9 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
             url = data["url"]
             req_data = data["data"]
 
+            node_id = processed_intent.get("node_id")
+            node_id_without_space = str(node_id).replace(" ", "")
+
             req_result = await request_post_external_data(url, req_data)
 
             response = "Success"
@@ -143,7 +149,13 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
                 response = req_result
 
             return {
-                "message": str(response)
+                "error": 0,
+                "data": {
+                    "message": str(processed_intent).replace("'", "\""),
+                    "conversationId": conversation_id,
+                    "nodeId": node_id_without_space,
+                    "timestamp": datetime.now()
+                }
             }
         except (IntentFormatException, IntentGoalServiceNotAvailableException) as e:
             return JSONResponse(content={"message": e.detail}, status_code=e.status_code)

@@ -8,6 +8,8 @@ def check_intent_nodes(processed_intent):
     node_id = processed_intent.get("node_id")
     node_id_without_space = str(node_id).replace(" ", "")
 
+    print("available nodes: ", cache_topology_nodes_and_ip_addresses['nodes'])
+
     if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes']:
         return {
             "error": 0,

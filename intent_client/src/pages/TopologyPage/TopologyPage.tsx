@@ -16,7 +16,7 @@ import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkE
 import {getReactDnDBackend} from "../../utils/helper.ts";
 import {sendTopo} from "../../services/api.ts";
 import useToken from "../../hooks";
-import {Neighbour, TopoEntityDTO} from "../../types";
+import {AppliedIntentResult, Neighbour, TopoEntityDTO} from "../../types";
 
 const  networkNodeTypes = {
     networkNode: NetworkNode
@@ -91,9 +91,42 @@ const TopologyPage: React.FC = () => {
 
     const [isShowIntentButton, setIsShowIntentButton] = useState(false);
 
+    const applyIntentToNode = (appliedIntentResult: AppliedIntentResult) => {
+        console.log("appliedIntentResult ", appliedIntentResult)
+        const nodeId = appliedIntentResult.nodeId
+
+        setNodes((prevNodes) => {
+
+            prevNodes.map((node) => {
+                console.log('ff')
+
+                console.log(node.id, nodeId)
+
+                if ( node.id == nodeId ) {
+                    console.log('aa')
+
+                    if (Array.isArray(node.data.appliedIntetns)) {
+                        console.log('haha')
+                        node.data.appliedIntetns.push(appliedIntentResult.message)
+                    }
+                    else {
+                        let newAppliedIntents: string[] = []
+                        newAppliedIntents.push(appliedIntentResult.message)
+                        node.data.appliedIntetns = newAppliedIntents
+                    }
+                }
+                return node
+            })
+
+            return prevNodes
+        })
+    }
+
     const buildTopology = () => {
 
         setIsOpen(!isOpen)
+
+        resetNodeSelection()
 
         let topologyNodes: TopoEntityDTO[] = []
 
@@ -242,6 +275,7 @@ const TopologyPage: React.FC = () => {
                                 token={token}
                                 title="Intent Window"
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
+                                applyIntentToNode={applyIntentToNode}
                             />
                         </Col>
                     </DndProvider>

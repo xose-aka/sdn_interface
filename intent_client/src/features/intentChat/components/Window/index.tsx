@@ -23,7 +23,8 @@ function Index({
                    handleClose,
                    title,
                    token,
-                   setIntentHighlightedNodes
+                   setIntentHighlightedNodes,
+                   applyIntentToNode
 }: ChatWindowProps) {
 
     const chatWindow = useRef<HTMLDivElement | null>(null);
@@ -309,6 +310,10 @@ function Index({
 
         sendConfirmConversation(token, conversationId)
             .then((response) => {
+
+                console.log("conversation ", response)
+
+                applyIntentToNode(response.data)
 
                 setConversationId(uuidv4())
 

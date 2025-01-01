@@ -11,6 +11,13 @@ export interface TopoEntityDTO {
     type: string
 }
 
+export interface AppliedIntentResult {
+    message: string,
+    conversationId: string,
+    nodeId: string,
+    timestamp: string
+}
+
 export interface Neighbour {
     node: string,
     connection_ip: string | null,

@@ -14,6 +14,8 @@ export default function NetworkNode({ id, data }: NodeProps) {
     let isThisNodeClicked = data.isThisNodeClicked as boolean
     let label = data.label as string
 
+    console.log('id:', id, " data:", data)
+
     useEffect(() => {
         const img: HTMLImageElement = new Image();
         img.src = data.icon as string;
