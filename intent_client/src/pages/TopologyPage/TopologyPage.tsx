@@ -108,8 +108,7 @@ const TopologyPage: React.FC = () => {
                     if (Array.isArray(node.data.appliedIntetns)) {
                         console.log('haha')
                         node.data.appliedIntetns.push(appliedIntentResult.message)
-                    }
-                    else {
+                    } else {
                         let newAppliedIntents: string[] = []
                         newAppliedIntents.push(appliedIntentResult.message)
                         node.data.appliedIntetns = newAppliedIntents

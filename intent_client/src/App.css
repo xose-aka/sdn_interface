@@ -19,20 +19,6 @@ html,body, #root{
   border: 3px solid dodgerblue;
 }
 
-.customNodeBody {
-  width: 75px;
-  height: 75px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover
-}
-
 /*.customNode {*/
 /*  display: flex;*/
 /*  flex-direction: column;*/
