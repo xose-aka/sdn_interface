@@ -5,11 +5,11 @@ html,body, #root{
   box-sizing: border-box;
 }
 
-.main-container {
-  height: 100%;
-  overflow-y: hidden; /* don't show content that exceeds my height */
-  display: flex;
-}
+/*.main-container {*/
+/*  height: 100%;*/
+/*  overflow-y: hidden; !* don't show content that exceeds my height *!*/
+/*  display: flex;*/
+/*}*/
 
 .react-flow__handle {
   position: relative;

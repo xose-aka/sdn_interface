@@ -356,24 +356,6 @@ function Index({
                     })
                 )
 
-                // setChatHistory(prevHistory =>
-                //     prevHistory.map(msg =>
-                //         msg.id === intentMessageDTO.intentId ? { ...msg, status: Statuses["ERROR"] } : msg
-                //     )
-                // );
-                //
-                // setMessages(prevValues =>
-                //     prevValues.map(prevVal => {
-                //         if (
-                //             prevVal.messageId === intentMessageDTO.intentId &&
-                //             prevVal.sender === SenderTypes["USER"]
-                //         )
-                //             prevVal.status = Statuses["ERROR"]
-                //
-                //         return prevVal;
-                //     })
-                // )
-
             })
     };
 
@@ -418,68 +400,6 @@ function Index({
 
     }, [isIntentAdditionTooltipOpen]);
 
-    useEffect(() => {
-
-
-
-        // sendMessage()
-        //     .then((response) => {
-        //
-        //         if (response != undefined) {
-        //             setChatHistory(prevHistory =>
-        //                 prevHistory.map(msg =>
-        //                     msg.id === pendingMessage?.intentId ? { ...msg, status: 'received' } : msg
-        //                 )
-        //             );
-        //
-        //             // setChatHistory(prevHistory => [...prevHistory, serverResponse]);
-        //             // setMessages(prevMessage => [...prevMessage, serverResponse]);
-        //
-        //             const updatedMessages = messages.map(messageItem => {
-        //                 // update client message send
-        //                 if (
-        //                     messageItem.messageId === pendingMessage?.intentId &&
-        //                     messageItem.sender === SenderTypes["USER"]
-        //                 ) {
-        //                     messageItem.isConfirmed = true
-        //                     messageItem.isConfirmationDone = true
-        //                     messageItem.status = Statuses["RECEIVED"]
-        //                 }
-        //
-        //                 // server response loading update
-        //                 if ( messageItem.messageId === response.data.responseMessageId ) {
-        //                     // messageItem.serverId = response.data.message.clientId
-        //                     messageItem.status = Statuses["RECEIVED"]
-        //                     messageItem.text = response.data.intent
-        //                 }
-        //
-        //                 return messageItem;
-        //             })
-        //
-        //             setMessages(updatedMessages)
-        //             setPendingMessage(null)
-        //         }
-        //     })
-
-    }, [JSON.stringify(pendingMessage)]);
-
-    // Load token from localStorage or request a new one if not available
-    // useEffect(() => {
-    //
-    //     if (isOpen) {
-    //         const savedToken = localStorage.getItem('chat_token');
-    //         if (savedToken) {
-    //             setToken(savedToken);
-    //         } else {
-    //             getToken()
-    //                 .then((returnMessage) => {
-    //                     console.log(returnMessage)
-    //                 }); // Generate new token if not found
-    //         }
-    //     }
-    //
-    // }, [isOpen]);
-
     return (
         <div
             ref={chatWindow}
@@ -505,14 +425,16 @@ function Index({
                 </div>
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
-                {messages.map(intentMessage => (
-                    <Message
-                        key={Math.random()}
-                        message={intentMessage}
-                        // pendingMessage={pendingMessage}
-                        submitConfirmMessage={submitConfirmMessage}
-                    />
-                ))}
+                {
+                    messages.map(intentMessage => (
+                        <Message
+                            key={Math.random()}
+                            message={intentMessage}
+                            // pendingMessage={pendingMessage}
+                            submitConfirmMessage={submitConfirmMessage}
+                        />
+                    ))
+                }
             </div>
             <div className="chat-window__footer">
                 <IntentAdditionTooltip message={'Enter additional intent'}

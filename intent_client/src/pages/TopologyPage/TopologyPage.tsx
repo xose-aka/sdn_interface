@@ -3,7 +3,7 @@ import {DndProvider} from "react-dnd";
 
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
 import React, {useEffect, useState} from "react";
-import ListNode from "../../features/topology/components/ListNodeSidebar/ListNode.tsx";
+import NodeList from "../../features/topology/components/SidebarNodeList/NodeList.tsx";
 import NetworkBuilder from "../../features/topology/components/NetworkBuilder/NetworkBuilder.tsx";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faComments} from "@fortawesome/free-solid-svg-icons";
@@ -17,6 +17,7 @@ import {getReactDnDBackend} from "../../utils/helper.ts";
 import {sendTopo} from "../../services/api.ts";
 import useToken from "../../hooks";
 import {AppliedIntentResult, Neighbour, TopoEntityDTO} from "../../types";
+import NodeIntentsWindow from "../../features/topology/components/NodeIntentsWindow/NodeIntentsWindow.tsx";
 
 const  networkNodeTypes = {
     networkNode: NetworkNode
@@ -28,31 +29,9 @@ const edgeTypes = {
 
 const TopologyPage: React.FC = () => {
 
-    /*
-     {
-       "nodes":
-               [
-                   {
-                        "id": "s1",
-                        "neighbors": [
-                                       {
-                                           "node_id":"s1",
-                                           "connection_ip": "ip mask"
-                                       },
-                                       {
-                                           "node_id":"s1",
-                                           "connection_ip": null
-                                       }
-                                      ],
-                       "type": "host"
-                      }
-                 ]
-     */
-
     const [showAlert, setShowAlert] = useState(false);
     const [alertType, setAlertType] = useState(alertTypes.primary);
     const [alertMessage, setAlertMessage] = useState("");
-    // const [token, setToken] = useState<string | null>(null);
 
     const { token, setResetToken } = useToken()
 
@@ -73,6 +52,8 @@ const TopologyPage: React.FC = () => {
 
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
 
+    const [selectedIntentHistoryNode, setSelectedIntentHistoryNode] = React.useState<Node | null>(null)
+
     const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
 
     const resetNodeSelection = () => {
@@ -87,26 +68,20 @@ const TopologyPage: React.FC = () => {
         setSelectedNode(null)
     }
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isIntentCommunicationOpen, setIsIntentCommunicationOpen] = useState(false);
+    const [isNodeIntentHistoryOpen, setIsNodeIntentHistoryOpen] = useState(false);
 
     const [isShowIntentButton, setIsShowIntentButton] = useState(false);
 
     const applyIntentToNode = (appliedIntentResult: AppliedIntentResult) => {
-        console.log("appliedIntentResult ", appliedIntentResult)
         const nodeId = appliedIntentResult.nodeId
 
         setNodes((prevNodes) => {
 
             prevNodes.map((node) => {
-                console.log('ff')
-
-                console.log(node.id, nodeId)
-
                 if ( node.id == nodeId ) {
-                    console.log('aa')
 
                     if (Array.isArray(node.data.appliedIntetns)) {
-                        console.log('haha')
                         node.data.appliedIntetns.push(appliedIntentResult.message)
                     } else {
                         let newAppliedIntents: string[] = []
@@ -121,9 +96,14 @@ const TopologyPage: React.FC = () => {
         })
     }
 
+    const handleOpenNodeIntentHistory = () => {
+        console.log('gg')
+        setIsNodeIntentHistoryOpen(!isNodeIntentHistoryOpen)
+    }
+
     const buildTopology = () => {
 
-        setIsOpen(!isOpen)
+        setIsIntentCommunicationOpen(!isIntentCommunicationOpen)
 
         resetNodeSelection()
 
@@ -131,7 +111,7 @@ const TopologyPage: React.FC = () => {
 
         nodes.forEach(node => {
 
-            let neighbours: Neighbour[] = []
+            let neighbours: Neighbour[]
 
             let type = ''
 
@@ -177,13 +157,14 @@ const TopologyPage: React.FC = () => {
                     console.log(r)
                 })
         }
-
-
-        console.log(topologyNodes)
     }
 
     const handleClose = () => {
-        setIsOpen(false);
+        setIsIntentCommunicationOpen(false);
+    };
+
+    const handleCloseNodeIntentHistory = () => {
+        setIsNodeIntentHistoryOpen(false);
     };
 
     useEffect(() => {
@@ -214,40 +195,75 @@ const TopologyPage: React.FC = () => {
 
     const backend = getReactDnDBackend()
 
+    useEffect(() => {
+        if (selectedNode) {
+            setSelectedIntentHistoryNode(selectedNode)
+        }
+    }, [selectedNode]);
+
     return (
-        <div className={'main-container'}>
-            {showAlert && (
-                <BootstrapAlert
-                    message={alertMessage}
-                    type={alertType}
-                    setShowAlert={setShowAlert}
-                />
-            )}
-            <Container fluid={true} >
-                <Row className={'vh-100'}>
+        // <div className={'main-container'}>
+
+            <Container
+                fluid={true}
+                className={'vh-100'}
+            >
+                {
+                    showAlert && (
+                        <BootstrapAlert
+                            message={alertMessage}
+                            type={alertType}
+                            setShowAlert={setShowAlert}
+                        />
+                    )
+                }
+                <Row
+                    className={'vh-100'}>
                     <DndProvider backend={ backend }
-                                 options={{ enableMouseEvents: true }}
-                    >
+                                 options={{ enableMouseEvents: true }}>
                         <Col
                             sm={12}
                             md={3}
                             xl={2}
                              className={'border-end bg-light "h-sm-30'}
-                             onClick={ () => resetNodeSelection() }>
-                            <ListNode
-                                nodeList={nodeList}
-                            />
+                             // onClick={ () => resetNodeSelection() }
+                        >
+                            <div className="d-flex flex-column vh-100">
+                                <div className="flex-md-grow-1">
+                                    <NodeList
+                                        nodeList={nodeList}
+                                    />
+                                </div>
+                                <div className="d-flex flex-column flex-md-grow-1">
+                                    {
+                                        nodes.length > 0 && (
+                                            <Button
+                                                variant="primary"
+                                                onClick={() => buildTopology()}
+                                                className="m-2 flex">
+                                                <FontAwesomeIcon icon={faComments} />
+                                                <span className="m-1">Input Intent </span>
+                                            </Button>
+                                        )
+                                    }
+                                    {
+                                        selectedNode !== null &&
+                                        selectedNode.data !== null &&
+                                        Array.isArray(selectedNode.data.appliedIntetns) &&
+                                        selectedNode.data.appliedIntetns.length > 0 &&
+                                        (
+                                            <Button
+                                                variant="secondary"
+                                                className="m-2"
+                                                onClick={() => handleOpenNodeIntentHistory()}
+                                            >Show history</Button>
+                                        )
+                                    }
+                                </div>
+                            </div>
+
                         </Col>
                         <Col className="h-sm-70">
-                            <Button  className="position-relative float-end z-3"
-                                style={{
-                                    top: "20px",
-                                    display: isShowIntentButton ? "block" : "none"
-                                }}
-                                variant="primary" onClick={() => buildTopology() }>
-                                <FontAwesomeIcon icon={faComments} />
-                                <span className="m-1">Input Intent </span>
-                            </Button>
                             <ReactFlowProvider>
                                 <NetworkBuilder
                                     nodeList={nodeList}
@@ -269,18 +285,24 @@ const TopologyPage: React.FC = () => {
                                 setShowAlert={setShowAlert}
                                 setAlertType={setAlertType}
                                 setAlertMessage={setAlertMessage}
-                                isOpen={isOpen}
+                                isOpen={isIntentCommunicationOpen}
                                 handleClose={handleClose}
                                 token={token}
                                 title="Intent Window"
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
                                 applyIntentToNode={applyIntentToNode}
                             />
+                            <NodeIntentsWindow
+                                isOpen={isNodeIntentHistoryOpen}
+                                handleClose={handleCloseNodeIntentHistory}
+                                selectedNode={selectedIntentHistoryNode}
+                            />
                         </Col>
                     </DndProvider>
                 </Row>
             </Container>
-        </div>
+
+        // </div>
     );
 };
 

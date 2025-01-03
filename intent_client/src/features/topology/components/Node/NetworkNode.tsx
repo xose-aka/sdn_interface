@@ -15,7 +15,7 @@ export default function NetworkNode({ id, data }: NodeProps) {
 
     const appliedIntents: string[] = data.appliedIntetns as string[]
 
-    console.log("appliedIntents", appliedIntents)
+    // console.log("appliedIntents", appliedIntents)
 
 
     const img: HTMLImageElement = new Image();
@@ -31,7 +31,8 @@ export default function NetworkNode({ id, data }: NodeProps) {
                      height: `${img.height}px`,
                  }}
             >
-                { appliedIntents !== undefined &&
+                {
+                    appliedIntents !== undefined &&
                     (
                         <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                             { appliedIntents.length }
