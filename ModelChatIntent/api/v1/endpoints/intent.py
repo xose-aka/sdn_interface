@@ -41,17 +41,18 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
 
         fix_intent = request.intent
 
+        processed_intent = str(processed_intent).replace("'", '"')
+
         fix_prompt = ("""[FIXES]:Before you have generated this network configuration:"""
-                      + str(processed_intent).replace("'", '"')
+                      + processed_intent
                       + "The user specify some fixes:" + fix_intent)
 
-        intent = str(processed_intent)
+        intent = processed_intent
 
     try:
         chain = prompt_router(intent, fix_prompt)
 
         processed_intent = chain.invoke(intent)
-        print("new intent ", str(processed_intent))
 
         encoded_conversations[conversation_id] = {
             "processed_intent": processed_intent,
@@ -59,6 +60,9 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
         }
 
         check_intent_node_result = check_intent_nodes(processed_intent)
+
+        now = datetime.now()
+        date = now.strftime("%d/%m/%Y %H:%M:%S")
 
         if check_intent_node_result["error"]:
             return {
@@ -69,7 +73,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
                     "sender": "server",
                     "conversationId": conversation_id,
                     "responseMessageId": request.responseMessageId,
-                    "timestamp": datetime.now()
+                    "timestamp": date
                 }
             }
 
@@ -84,7 +88,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
                     "sender": "server",
                     "conversationId": conversation_id,
                     "responseMessageId": request.responseMessageId,
-                    "timestamp": datetime.now()
+                    "timestamp": date
                 }
             }
 
@@ -99,7 +103,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
                     "sender": "server",
                     "conversationId": conversation_id,
                     "responseMessageId": request.responseMessageId,
-                    "timestamp": datetime.now()
+                    "timestamp": date
                 }
             }
 
@@ -111,7 +115,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
                 "sender": "server",
                 "conversationId": conversation_id,
                 "responseMessageId": request.responseMessageId,
-                "timestamp": datetime.now()
+                "timestamp": date
             }
         }
     except IntentGoalServiceNotAvailableException as e:
@@ -148,13 +152,15 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
             if req_result is not None:
                 response = req_result
 
+            now = datetime.now()
+
             return {
                 "error": 0,
                 "data": {
                     "message": str(processed_intent).replace("'", "\""),
                     "conversationId": conversation_id,
                     "nodeId": node_id_without_space,
-                    "timestamp": datetime.now()
+                    "timestamp": now.strftime("%d-%m-%Y %H:%M:%S")
                 }
             }
         except (IntentFormatException, IntentGoalServiceNotAvailableException) as e:

@@ -26,7 +26,7 @@ def check_intent_ips(processed_intent):
     ipv4_src = processed_intent.get("ip_source")
     ipv4_dst = processed_intent.get("ip_dest")
 
-    if ipv4_src is None or ipv4_dst is None:
+    if ipv4_src is None or ipv4_dst is None or ipv4_src == 'any' or ipv4_dst == 'any':
         return {
             "error": 0,
             "message": f"This check doesn't provided"

@@ -69,7 +69,7 @@ const TopologyPage: React.FC = () => {
     }
 
     const [isIntentCommunicationOpen, setIsIntentCommunicationOpen] = useState(false);
-    const [isNodeIntentHistoryOpen, setIsNodeIntentHistoryOpen] = useState(false);
+    const [isNodeIntentHistoryOpen, setIsNodeIntentHistoryOpen] = useState(true  );
 
     const [isShowIntentButton, setIsShowIntentButton] = useState(false);
 
@@ -82,10 +82,10 @@ const TopologyPage: React.FC = () => {
                 if ( node.id == nodeId ) {
 
                     if (Array.isArray(node.data.appliedIntetns)) {
-                        node.data.appliedIntetns.push(appliedIntentResult.message)
+                        node.data.appliedIntetns.push(appliedIntentResult)
                     } else {
-                        let newAppliedIntents: string[] = []
-                        newAppliedIntents.push(appliedIntentResult.message)
+                        let newAppliedIntents: AppliedIntentResult[] = []
+                        newAppliedIntents.push(appliedIntentResult)
                         node.data.appliedIntetns = newAppliedIntents
                     }
                 }
@@ -97,7 +97,6 @@ const TopologyPage: React.FC = () => {
     }
 
     const handleOpenNodeIntentHistory = () => {
-        console.log('gg')
         setIsNodeIntentHistoryOpen(!isNodeIntentHistoryOpen)
     }
 

@@ -1,0 +1,36 @@
+.history-message {
+
+  &__item {
+    display: flex;
+  }
+
+  &__loading {
+    display:inline-block;
+    font-family: monospace;
+    clip-path: inset(0 3ch 0 0);
+    animation: l 1s steps(4) infinite;
+  }
+
+  @keyframes l {
+    to {
+      clip-path: inset(0 -1ch 0 0)
+    }
+  }
+
+  &__item__timestamp {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 3px;
+  }
+
+  &__item__text {
+    background: #eee;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.2;
+    padding: 8px;
+    width: 100%;
+    position: relative;
+    z-index: 200;
+  }
+}

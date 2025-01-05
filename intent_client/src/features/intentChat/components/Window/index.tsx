@@ -45,9 +45,9 @@ function Index({
 
     const [intentMessage, setIntentMessage] = useState("");
 
-    // const [position, setPosition] = useState({ x: 0, y: 0 });
+    // const [position, setPosition] = useState({ x: 'auto', y: 'auto' });
     // const [size, setSize] = useState({ width: 500, height: 300 });
-    // const [isDragging, setIsDragging] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     // const [isResizing, setIsResizing] = useState(false);
     // const [resizeDir, setResizeDir] = useState<{ widthDir: number, heightDir: number } | null>(null);
 
@@ -62,11 +62,13 @@ function Index({
         if (confirm("Do you want to reset conversation")) setConversationId(uuidv4());
     };
 
-    // const handleMouseDown = (e: React.MouseEvent) => {
-    //     if (chatWindow.current && !isResizing) {
-    //         setIsDragging(true);
-    //     }
-    // };
+    const handleMouseDown = (e: React.MouseEvent) => {
+        // if (chatWindow.current && !isResizing) {
+        if (chatWindow.current ) {
+            console.log('gg')
+            setIsDragging(true);
+        }
+    };
     //
     // // Handle mouse down for resizing
     // const handleMouseDownResize = (e: React.MouseEvent, widthDir: number, heightDir: number) => {
@@ -76,39 +78,45 @@ function Index({
     // };
     //
     // // Handle mouse movement for both dragging and resizing
-    // const handleMouseMove = (e: MouseEvent) => {
-    //     if (isDragging) {
-    //         setPosition((prevPosition) => ({
-    //             x: prevPosition.x + e.movementX,
-    //             y: prevPosition.y + e.movementY,
-    //         }));
-    //     }
-    //
-    //     if (isResizing && resizeDir) {
-    //         setSize((prevSize) => ({
-    //             width: Math.max(100, prevSize.width + e.movementX * resizeDir.widthDir),
-    //             height: Math.max(100, prevSize.height + e.movementY * resizeDir.heightDir),
-    //         }));
-    //     }
-    // };
+    const handleMouseMove = (e: MouseEvent) => {
+        if (isDragging) {
+
+            // setPosition((prevPosition) => ({
+            //     // x: prevPosition.x + e.movementX,
+            //     x: e.movementX,
+            //     // y: prevPosition.y + e.movementY,
+            //     y: e.movementY,
+            // }));
+        }
+
+        // if (isResizing && resizeDir) {
+        //     setSize((prevSize) => ({
+        //         width: Math.max(100, prevSize.width + e.movementX * resizeDir.widthDir),
+        //         height: Math.max(100, prevSize.height + e.movementY * resizeDir.heightDir),
+        //     }));
+        // }
+    };
     //
     // // Stop dragging or resizing
-    // const handleMouseUp = () => {
-    //     setIsDragging(false);
-    //     setIsResizing(false);
-    //     setResizeDir(null);
-    // };
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        // setIsResizing(false);
+        // setResizeDir(null);
+    };
     //
     // // Add global mouse event listeners for dragging and resizing
-    // React.useEffect(() => {
-    //     window.addEventListener('mousemove', handleMouseMove);
-    //     window.addEventListener('mouseup', handleMouseUp);
-    //
-    //     return () => {
-    //         window.removeEventListener('mousemove', handleMouseMove);
-    //         window.removeEventListener('mouseup', handleMouseUp);
-    //     };
-    // }, [isDragging, isResizing, resizeDir]);
+    React.useEffect(() => {
+        // console.log('aa')
+        // window.addEventListener('mousemove', handleMouseMove);
+        // window.addEventListener('mouseup', handleMouseUp);
+        //
+        // return () => {
+        //     window.removeEventListener('mousemove', handleMouseMove);
+        //     window.removeEventListener('mouseup', handleMouseUp);
+        // };
+    }, [isDragging
+        // , isResizing, resizeDir
+    ]);
 
 
     const setChatWindowScrollPosition = () => {
@@ -404,16 +412,16 @@ function Index({
         <div
             ref={chatWindow}
             className={`chat-window ${isOpen ? 'is-open' : ''} chat-window--bottom-right`}
-            // style={{
-            //     left: position.x,
-            //     top: position.y,
-            //     width: size.width,
-            //     height: size.height,
-            //     position: 'absolute',
-            //     backgroundColor: '#f0f0f0',
-            //     border: '2px solid #333',
-            //     cursor: isDragging ? 'grabbing' : 'grab',
-            // }}
+            style={{
+                // left: position.x,
+                // top: position.y,
+                // width: size.width,
+                // height: size.height,
+                // position: 'absolute',
+                // backgroundColor: '#f0f0f0',
+                // border: '2px solid #333',
+                // cursor: isDragging ? 'grabbing' : 'grab',
+            }}
             // onMouseDown={handleMouseDown}
         >
             <div className="chat-window__header">
