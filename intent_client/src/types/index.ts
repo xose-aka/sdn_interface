@@ -7,7 +7,15 @@ interface Coordinates {
 export interface TopoEntityDTO {
     id: string,
     neighbours: Neighbour[],
+    label: string,
     type: string
+}
+
+export interface AppliedIntentResult {
+    message: string,
+    conversationId: string,
+    nodeId: string,
+    timestamp: string
 }
 
 export interface Neighbour {

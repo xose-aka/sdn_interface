@@ -1,9 +1,9 @@
 import { Nav } from "react-bootstrap";
 import React from "react";
-import NodeList from "../NodeList/NodeList.tsx";
+import SidebarNode from "../SidebarNode/SidebarNode.tsx";
 
 
-function ListNode({nodeList}: NodeListProps) {
+function NodeList({nodeList}: NodeListProps) {
 
     return (
         <div className="text-center">
@@ -15,7 +15,7 @@ function ListNode({nodeList}: NodeListProps) {
                         (node) => {
                             return (
                                 <Nav.Item as={"li"} key={node} className="my-md-4 my-sm-0 cursor-pointer">
-                                    <NodeList type={node} />
+                                    <SidebarNode type={node} />
                                 </Nav.Item>
                             )
                         }
@@ -26,4 +26,4 @@ function ListNode({nodeList}: NodeListProps) {
     )
 }
 
-export default ListNode
+export default NodeList

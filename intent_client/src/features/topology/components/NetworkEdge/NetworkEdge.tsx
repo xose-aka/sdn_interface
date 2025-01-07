@@ -27,7 +27,6 @@ export default function CustomEdge({
 
     const { showModal } = useModal();
 
-
     const sourceNode = useInternalNode(source);
     const targetNode = useInternalNode(target);
 
@@ -126,11 +125,9 @@ export default function CustomEdge({
                     }}
                     className="button-edge__label nodrag nopan"
                 >
-
                     <button
                             className="edgebutton"
-                            onClick={onEdgeClick}
-                    >
+                            onClick={onEdgeClick}>
                         ×
                     </button>
                 </div>
@@ -142,8 +139,7 @@ export default function CustomEdge({
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
                         pointerEvents: 'all',
-                    }}
-                >
+                    }}>
                     {
                         targetNode?.data?.nodeType !== undefined &&
                         targetNode.data.nodeType !== nodeTypes["SWITCH"] &&

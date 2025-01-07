@@ -1,0 +1,20 @@
+.applied-intent-node {
+    /*background-color: red;*/
+    border-radius:50%;
+    border:solid red 4px ;
+    padding:15px;
+}
+
+.custom-node-body {
+    width: 75px;
+    height: 75px;
+    position: relative;
+    /*overflow: hidden;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover
+}

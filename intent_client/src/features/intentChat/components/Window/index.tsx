@@ -23,7 +23,8 @@ function Index({
                    handleClose,
                    title,
                    token,
-                   setIntentHighlightedNodes
+                   setIntentHighlightedNodes,
+                   applyIntentToNode
 }: ChatWindowProps) {
 
     const chatWindow = useRef<HTMLDivElement | null>(null);
@@ -44,9 +45,9 @@ function Index({
 
     const [intentMessage, setIntentMessage] = useState("");
 
-    // const [position, setPosition] = useState({ x: 0, y: 0 });
+    // const [position, setPosition] = useState({ x: 'auto', y: 'auto' });
     // const [size, setSize] = useState({ width: 500, height: 300 });
-    // const [isDragging, setIsDragging] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     // const [isResizing, setIsResizing] = useState(false);
     // const [resizeDir, setResizeDir] = useState<{ widthDir: number, heightDir: number } | null>(null);
 
@@ -61,11 +62,13 @@ function Index({
         if (confirm("Do you want to reset conversation")) setConversationId(uuidv4());
     };
 
-    // const handleMouseDown = (e: React.MouseEvent) => {
-    //     if (chatWindow.current && !isResizing) {
-    //         setIsDragging(true);
-    //     }
-    // };
+    const handleMouseDown = (e: React.MouseEvent) => {
+        // if (chatWindow.current && !isResizing) {
+        if (chatWindow.current ) {
+            console.log('gg')
+            setIsDragging(true);
+        }
+    };
     //
     // // Handle mouse down for resizing
     // const handleMouseDownResize = (e: React.MouseEvent, widthDir: number, heightDir: number) => {
@@ -75,39 +78,45 @@ function Index({
     // };
     //
     // // Handle mouse movement for both dragging and resizing
-    // const handleMouseMove = (e: MouseEvent) => {
-    //     if (isDragging) {
-    //         setPosition((prevPosition) => ({
-    //             x: prevPosition.x + e.movementX,
-    //             y: prevPosition.y + e.movementY,
-    //         }));
-    //     }
-    //
-    //     if (isResizing && resizeDir) {
-    //         setSize((prevSize) => ({
-    //             width: Math.max(100, prevSize.width + e.movementX * resizeDir.widthDir),
-    //             height: Math.max(100, prevSize.height + e.movementY * resizeDir.heightDir),
-    //         }));
-    //     }
-    // };
+    const handleMouseMove = (e: MouseEvent) => {
+        if (isDragging) {
+
+            // setPosition((prevPosition) => ({
+            //     // x: prevPosition.x + e.movementX,
+            //     x: e.movementX,
+            //     // y: prevPosition.y + e.movementY,
+            //     y: e.movementY,
+            // }));
+        }
+
+        // if (isResizing && resizeDir) {
+        //     setSize((prevSize) => ({
+        //         width: Math.max(100, prevSize.width + e.movementX * resizeDir.widthDir),
+        //         height: Math.max(100, prevSize.height + e.movementY * resizeDir.heightDir),
+        //     }));
+        // }
+    };
     //
     // // Stop dragging or resizing
-    // const handleMouseUp = () => {
-    //     setIsDragging(false);
-    //     setIsResizing(false);
-    //     setResizeDir(null);
-    // };
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        // setIsResizing(false);
+        // setResizeDir(null);
+    };
     //
     // // Add global mouse event listeners for dragging and resizing
-    // React.useEffect(() => {
-    //     window.addEventListener('mousemove', handleMouseMove);
-    //     window.addEventListener('mouseup', handleMouseUp);
-    //
-    //     return () => {
-    //         window.removeEventListener('mousemove', handleMouseMove);
-    //         window.removeEventListener('mouseup', handleMouseUp);
-    //     };
-    // }, [isDragging, isResizing, resizeDir]);
+    React.useEffect(() => {
+        // console.log('aa')
+        // window.addEventListener('mousemove', handleMouseMove);
+        // window.addEventListener('mouseup', handleMouseUp);
+        //
+        // return () => {
+        //     window.removeEventListener('mousemove', handleMouseMove);
+        //     window.removeEventListener('mouseup', handleMouseUp);
+        // };
+    }, [isDragging
+        // , isResizing, resizeDir
+    ]);
 
 
     const setChatWindowScrollPosition = () => {
@@ -212,6 +221,14 @@ function Index({
             setShowAlert(true)
             setAlertType(alertTypes.danger)
             setAlertMessage("No token set")
+
+            setMessages((prevMessages) =>
+                prevMessages.filter((message) => !( message.conversationId === conversationId &&
+                        message.status === Statuses["PENDING"] &&
+                        message.sender === SenderTypes["SERVER"] )
+                )
+            );
+
             return;
         }
 
@@ -227,17 +244,21 @@ function Index({
             sendMessage(token, intentMessageDTO)
                 .then((response) => {
 
-                    if (response != undefined) {
+                    const responseMessageStatus = response.error ? Statuses["ERROR"] : Statuses["RECEIVED"]
+
+                    const responseData = response.data
+
+                    // if (response.error) {
                         setChatHistory(prevHistory =>
                             prevHistory.map(msg =>
-                                msg.id === response.intentId ? { ...msg, status: 'received' } : msg
+                                msg.id  === responseData.intentId ? { ...msg, status: Statuses["RECEIVED"] } : msg
                             )
                         );
 
                         setMessages(prevValues =>
                             prevValues.map(prevVal => {
                                 if (
-                                    prevVal.messageId === response.intentId &&
+                                    prevVal.messageId === responseData.intentId &&
                                     prevVal.sender === SenderTypes["USER"]
                                 ) {
                                     prevVal.isConfirmed = true
@@ -246,16 +267,18 @@ function Index({
                                 }
 
                                 // server response loading update
-                                if ( prevVal.messageId === response.responseMessageId ) {
+                                if ( prevVal.messageId === responseData.responseMessageId ) {
                                     // messageItem.serverId = response.data.message.clientId
-                                    prevVal.status = Statuses["RECEIVED"]
-                                    prevVal.text = response.intent
+                                    prevVal.status = responseMessageStatus
+                                    prevVal.text = responseData.message
                                 }
 
                                 return prevVal;
                             })
                         )
-                    }
+                    // }
+
+
                 })
                 .catch((error) => {
                     setShowAlert(true)
@@ -295,6 +318,10 @@ function Index({
 
         sendConfirmConversation(token, conversationId)
             .then((response) => {
+
+                console.log("conversation ", response)
+
+                applyIntentToNode(response.data)
 
                 setConversationId(uuidv4())
 
@@ -336,24 +363,6 @@ function Index({
                         return prevVal;
                     })
                 )
-
-                // setChatHistory(prevHistory =>
-                //     prevHistory.map(msg =>
-                //         msg.id === intentMessageDTO.intentId ? { ...msg, status: Statuses["ERROR"] } : msg
-                //     )
-                // );
-                //
-                // setMessages(prevValues =>
-                //     prevValues.map(prevVal => {
-                //         if (
-                //             prevVal.messageId === intentMessageDTO.intentId &&
-                //             prevVal.sender === SenderTypes["USER"]
-                //         )
-                //             prevVal.status = Statuses["ERROR"]
-                //
-                //         return prevVal;
-                //     })
-                // )
 
             })
     };
@@ -399,82 +408,20 @@ function Index({
 
     }, [isIntentAdditionTooltipOpen]);
 
-    useEffect(() => {
-
-
-
-        // sendMessage()
-        //     .then((response) => {
-        //
-        //         if (response != undefined) {
-        //             setChatHistory(prevHistory =>
-        //                 prevHistory.map(msg =>
-        //                     msg.id === pendingMessage?.intentId ? { ...msg, status: 'received' } : msg
-        //                 )
-        //             );
-        //
-        //             // setChatHistory(prevHistory => [...prevHistory, serverResponse]);
-        //             // setMessages(prevMessage => [...prevMessage, serverResponse]);
-        //
-        //             const updatedMessages = messages.map(messageItem => {
-        //                 // update client message send
-        //                 if (
-        //                     messageItem.messageId === pendingMessage?.intentId &&
-        //                     messageItem.sender === SenderTypes["USER"]
-        //                 ) {
-        //                     messageItem.isConfirmed = true
-        //                     messageItem.isConfirmationDone = true
-        //                     messageItem.status = Statuses["RECEIVED"]
-        //                 }
-        //
-        //                 // server response loading update
-        //                 if ( messageItem.messageId === response.data.responseMessageId ) {
-        //                     // messageItem.serverId = response.data.message.clientId
-        //                     messageItem.status = Statuses["RECEIVED"]
-        //                     messageItem.text = response.data.intent
-        //                 }
-        //
-        //                 return messageItem;
-        //             })
-        //
-        //             setMessages(updatedMessages)
-        //             setPendingMessage(null)
-        //         }
-        //     })
-
-    }, [JSON.stringify(pendingMessage)]);
-
-    // Load token from localStorage or request a new one if not available
-    // useEffect(() => {
-    //
-    //     if (isOpen) {
-    //         const savedToken = localStorage.getItem('chat_token');
-    //         if (savedToken) {
-    //             setToken(savedToken);
-    //         } else {
-    //             getToken()
-    //                 .then((returnMessage) => {
-    //                     console.log(returnMessage)
-    //                 }); // Generate new token if not found
-    //         }
-    //     }
-    //
-    // }, [isOpen]);
-
     return (
         <div
             ref={chatWindow}
             className={`chat-window ${isOpen ? 'is-open' : ''} chat-window--bottom-right`}
-            // style={{
-            //     left: position.x,
-            //     top: position.y,
-            //     width: size.width,
-            //     height: size.height,
-            //     position: 'absolute',
-            //     backgroundColor: '#f0f0f0',
-            //     border: '2px solid #333',
-            //     cursor: isDragging ? 'grabbing' : 'grab',
-            // }}
+            style={{
+                // left: position.x,
+                // top: position.y,
+                // width: size.width,
+                // height: size.height,
+                // position: 'absolute',
+                // backgroundColor: '#f0f0f0',
+                // border: '2px solid #333',
+                // cursor: isDragging ? 'grabbing' : 'grab',
+            }}
             // onMouseDown={handleMouseDown}
         >
             <div className="chat-window__header">
@@ -486,14 +433,16 @@ function Index({
                 </div>
             </div>
             <div ref={chatWindowBody} className="chat-window__body">
-                {messages.map(intentMessage => (
-                    <Message
-                        key={Math.random()}
-                        message={intentMessage}
-                        // pendingMessage={pendingMessage}
-                        submitConfirmMessage={submitConfirmMessage}
-                    />
-                ))}
+                {
+                    messages.map(intentMessage => (
+                        <Message
+                            key={Math.random()}
+                            message={intentMessage}
+                            // pendingMessage={pendingMessage}
+                            submitConfirmMessage={submitConfirmMessage}
+                        />
+                    ))
+                }
             </div>
             <div className="chat-window__footer">
                 <IntentAdditionTooltip message={'Enter additional intent'}
@@ -507,14 +456,13 @@ function Index({
                     disabled={messages.some(message => message.isConfirmationDone === false && message.status === Statuses["RECEIVED"])}
                     onChange={handleChange}
                 />
-                        <button
-                            className="chat-window__send-btn"
-                            type="button"
-                            onClick={() => handleSubmit()}
-                            disabled={!intentMessage}
-                        >
-                            Send
-                        </button>
+                <button
+                    className="chat-window__send-btn"
+                    type="button"
+                    onClick={() => handleSubmit()}
+                    disabled={!intentMessage}>
+                    Send
+                </button>
             </div>
         </div>
     );

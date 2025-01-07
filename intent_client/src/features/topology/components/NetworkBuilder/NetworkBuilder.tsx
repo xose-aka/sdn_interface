@@ -1,4 +1,4 @@
-import React, { useCallback} from "react";
+import React, {useCallback} from "react";
 import {useDrop} from "react-dnd";
 import {getNodeSvg} from "../../../../utils/node.ts";
 import {
@@ -48,16 +48,17 @@ export default function NetworkBuilder(
 
             if ( selectedNode !== null )
             {
-                if (confirm(`Do you want to really remove node ${selectedNode.data.lavel}`)) {
+                if (confirm(`Do you want to really remove node ${selectedNode.data.label}`)) {
                     const newEdges = edges.filter(edge => !( edge.source == selectedNode.id ||
                         edge.target == selectedNode.id))
+
                     setEdges(newEdges)
 
                     const newNodes = nodes.filter(node => node.id !== selectedNode.id)
+
                     setNodes(newNodes)
 
-                    // Perform your delete action here
-                    resetNodeSelection()
+                    setSelectedNode(null)
                 }
             }
         }
@@ -68,8 +69,6 @@ export default function NetworkBuilder(
             setEdges((eds) => addEdge(
                 { ...params, data: {} },
                 eds))
-
-            resetNodeSelection()
         },
         []
     );
@@ -148,13 +147,6 @@ export default function NetworkBuilder(
 
     const onPaneClick = (event: React.MouseEvent) => {
         resetNodeSelection()
-
-        const newNodes = nodes.map((node) => {
-            node.data.isThisNodeClicked = false;
-            return node
-        })
-
-        setNodes(newNodes)
     }
 
     // const handleMessageSent = message => {
@@ -166,17 +158,20 @@ export default function NetworkBuilder(
 
     // useEffect(() => {
     //     // Add the event listener
-    //     window.addEventListener('keydown', handleDeleteKeyPress);
-    //
-    //     // Clean up the event listener on component unmount
-    //     return () => {
-    //         window.removeEventListener('keydown', handleDeleteKeyPress);
-    //     };
-    // }, [selectedNode, selectedEdge]);
+    //     // window.addEventListener('keydown', handleDeleteKeyPress);
+    //     //
+    //     // // Clean up the event listener on component unmount
+    //     // return () => {
+    //     //     window.removeEventListener('keydown', handleDeleteKeyPress);
+    //     // };
+    //     resetNodeSelection()
+    // }, [nodes]);
 
 
     return (
-        <div className="graph-container h-100 position-relative cursor-progress" ref={drop} onKeyDown={handleDeleteKeyPress}>
+        <div className="graph-container h-100 position-relative cursor-progress"
+             ref={drop}
+             onKeyDown={handleDeleteKeyPress}>
             <SetIPModalProvider>
                 <ReactFlow
                     nodes={nodes}

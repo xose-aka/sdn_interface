@@ -2,7 +2,7 @@ import React from 'react';
 import {useDrag} from "react-dnd";
 import {getNodeSvg} from "../../../../utils/node.ts";
 
-function NodeList({type}: ListNodeProps) {
+function SidebarNode({type}: SidebarNodeProps) {
 
     const nodeSvg = getNodeSvg(type)
 
@@ -18,4 +18,4 @@ function NodeList({type}: ListNodeProps) {
     );
 }
 
-export default NodeList
+export default SidebarNode

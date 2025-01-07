@@ -5,11 +5,11 @@ html,body, #root{
   box-sizing: border-box;
 }
 
-.main-container {
-  height: 100%;
-  overflow-y: hidden; /* don't show content that exceeds my height */
-  display: flex;
-}
+/*.main-container {*/
+/*  height: 100%;*/
+/*  overflow-y: hidden; !* don't show content that exceeds my height *!*/
+/*  display: flex;*/
+/*}*/
 
 .react-flow__handle {
   position: relative;
@@ -17,20 +17,6 @@ html,body, #root{
 
 .highlight-node {
   border: 3px solid dodgerblue;
-}
-
-.customNodeBody {
-  width: 75px;
-  height: 75px;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover
 }
 
 /*.customNode {*/
