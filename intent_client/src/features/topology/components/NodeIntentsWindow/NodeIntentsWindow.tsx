@@ -113,7 +113,7 @@ function NodeIntentsWindow(
     return (
         <div
             ref={chatWindow}
-            className={`chat-window ${isOpen ? 'is-open' : ''} chat-window--bottom-right`}
+            className={`chat-window ${isOpen ? 'is-open' : ''} chat-window--bottom-left`}
             style={{
                 // left: position.x,
                 // top: position.y,

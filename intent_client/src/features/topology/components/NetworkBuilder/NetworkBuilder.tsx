@@ -173,6 +173,7 @@ export default function NetworkBuilder(
              ref={drop}
              onKeyDown={handleDeleteKeyPress}>
             <SetIPModalProvider>
+
                 <ReactFlow
                     nodes={nodes}
                     edges={edges}
@@ -190,7 +191,8 @@ export default function NetworkBuilder(
                 >
                     <Controls />
                 </ReactFlow>
-                <SetIPModal/>
+            <SetIPModal/>
+
             </SetIPModalProvider>
         </div>
     );

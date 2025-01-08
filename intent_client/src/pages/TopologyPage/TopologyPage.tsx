@@ -69,7 +69,7 @@ const TopologyPage: React.FC = () => {
     }
 
     const [isIntentCommunicationOpen, setIsIntentCommunicationOpen] = useState(false);
-    const [isNodeIntentHistoryOpen, setIsNodeIntentHistoryOpen] = useState(true  );
+    const [isNodeIntentHistoryOpen, setIsNodeIntentHistoryOpen] = useState(false  );
 
     const [isShowIntentButton, setIsShowIntentButton] = useState(false);
 
@@ -218,6 +218,7 @@ const TopologyPage: React.FC = () => {
                 }
                 <Row
                     className={'vh-100'}>
+
                     <DndProvider backend={ backend }
                                  options={{ enableMouseEvents: true }}>
                         <Col
@@ -255,7 +256,7 @@ const TopologyPage: React.FC = () => {
                                                 variant="secondary"
                                                 className="m-2"
                                                 onClick={() => handleOpenNodeIntentHistory()}
-                                            >Show history</Button>
+                                            >{`Display the history of ${selectedNode.data.label}`}</Button>
                                         )
                                     }
                                 </div>
@@ -263,23 +264,24 @@ const TopologyPage: React.FC = () => {
 
                         </Col>
                         <Col className="h-sm-70">
-                            <ReactFlowProvider>
-                                <NetworkBuilder
-                                    nodeList={nodeList}
-                                    selectedNode={selectedNode}
-                                    setSelectedNode={setSelectedNode}
-                                    nodes={nodes}
-                                    edges={edges}
-                                    setNodes={setNodes}
-                                    setEdges={setEdges}
-                                    onNodesChange={onNodesChange}
-                                    onEdgesChange={onEdgesChange}
-                                    resetNodeSelection={resetNodeSelection}
-                                    intentHighlightedNodes={intentHighlightedNodes}
-                                    networkNodeTypes={networkNodeTypes}
-                                    edgeTypes={edgeTypes}
-                                />
-                            </ReactFlowProvider>
+
+                                <ReactFlowProvider>
+                                    <NetworkBuilder
+                                        nodeList={nodeList}
+                                        selectedNode={selectedNode}
+                                        setSelectedNode={setSelectedNode}
+                                        nodes={nodes}
+                                        edges={edges}
+                                        setNodes={setNodes}
+                                        setEdges={setEdges}
+                                        onNodesChange={onNodesChange}
+                                        onEdgesChange={onEdgesChange}
+                                        resetNodeSelection={resetNodeSelection}
+                                        intentHighlightedNodes={intentHighlightedNodes}
+                                        networkNodeTypes={networkNodeTypes}
+                                        edgeTypes={edgeTypes}
+                                    />
+                                </ReactFlowProvider>
                             <IntentWindow
                                 setShowAlert={setShowAlert}
                                 setAlertType={setAlertType}
@@ -298,6 +300,8 @@ const TopologyPage: React.FC = () => {
                             />
                         </Col>
                     </DndProvider>
+
+
                 </Row>
             </Container>
 

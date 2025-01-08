@@ -2,7 +2,11 @@ import uvicorn
 from app.startup import setup_app
 
 # Apply startup configurations
-setup_app()
+result = setup_app()
+
+if result is False:
+    print("App setup went wrong.")
+    exit(1)
 
 
 if __name__ == "__main__":
