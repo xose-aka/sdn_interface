@@ -12,11 +12,14 @@ class SimpleSwitchController(ControllerBase):
         super(SimpleSwitchController, self).__init__(req, link, data, **config)
         self.simple_switch_app = data[simple_switch_instance_name]
 
-    # @route('simpleswitch', '/simpleswitch/firewall/{dpid}', methods=['POST'],requirements={'dpid': dpid_lib.DPID_PATTERN})
+    # @route('simpleswitch', '/simpleswitch/firewall/{dpid}', methods=['POST'],requirements={'dpid':
+    # dpid_lib.DPID_PATTERN})
     @route('simpleswitch', '/simpleswitch/firewall/{dpid}', methods=['POST'])
     def block_ip(self, req, **kwargs):
         simple_switch = self.simple_switch_app
         dpid = dpid_lib.str_to_dpid(kwargs['dpid'])
+
+        print("here good")
 
         try:
             new_entry = req.json if req.body else {}
@@ -25,7 +28,7 @@ class SimpleSwitchController(ControllerBase):
 
         try:
             simple_switch.block_ip_traffic(dpid, new_entry)
-
+            print("gg")
         except Exception as e:
             print("Errore:", str(e))
             return Response(status=500, text=str(e))

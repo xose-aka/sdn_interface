@@ -65,7 +65,7 @@ const IpInput: React.FC<IpInputProps> = (
                     placeholder="Mask"
                     value={maskValue}
                     autoComplete="off"
-                    onChange={handleMaskInput}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleMaskInput(e)}
                     required
                     // isValid={ maskValidate }
                 />

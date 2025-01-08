@@ -32,6 +32,8 @@ export default function () {
 
     };
 
+    console.log(localMask)
+
     const onEdgeTargetIpSet = (ip: string, mask: string) => {
 
         setEdges((edges) => edges.map((edge) => {
@@ -77,6 +79,7 @@ export default function () {
     };
 
     const handleHideModal = () => {
+        console.log('aa')
         setLocalMask("")
         hideModal();
     };
@@ -135,13 +138,13 @@ export default function () {
                 <Form noValidate validated={validated} onSubmit={handleIPSet}>
 
                 <Modal.Body>
-                         <IpInput
-                             maskValue={localMask}
-                             handleMaskInput={handleMaskInput}
-                             handleOctetChange={handleOctetChange}
-                             octets={octets}
-                             label={label}
-                         />
+                     <IpInput
+                         maskValue={localMask}
+                         handleMaskInput={handleMaskInput}
+                         handleOctetChange={handleOctetChange}
+                         octets={octets}
+                         label={label}
+                     />
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="primary" type="submit">

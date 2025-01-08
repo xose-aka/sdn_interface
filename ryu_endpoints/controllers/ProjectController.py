@@ -17,6 +17,7 @@ import random
 import time
 
 from SimpleSwitchController import SimpleSwitchController
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
@@ -34,6 +35,14 @@ REFERENCE_BW = 10000000
 DEFAULT_BW = 10000000
 
 MAX_PATHS = 4
+
+
+def list_routes(wsgi_app: WSGIApplication):
+    print("start")
+    for route in wsgi_app.mapper.matchlist:
+        print(f"Route: {route.routepath}")
+        print(f"  Conditions: {route.conditions}")
+        print(f"  Defaults: {route.defaults}\n")
 
 
 class ProjectController(app_manager.RyuApp):
@@ -90,26 +99,25 @@ class ProjectController(app_manager.RyuApp):
         )
         dp.send_msg(meter_mod)
 
-    ##########FUNCTIONS RELETED TO THE REST APIS#######################################################
-    #function to block ip traffic , it can block taffic on dirrent on src and dst, only src or only dst
-    #example of rest request : curl -X POST -d '{"ipv4_src" : "10.0.0.1","ipv4_dst" : "10.0.0.2"}' http://127.0.0.1:8080/simpleswitch/firewall/0000000000000001
+    # #########FUNCTIONS RELATED TO THE REST APIS####################################################### function to
+    # block ip traffic , it can block traffic on dirrent on src and dst, only src or only dst example of rest request
+    # : curl -X POST -d '{"ipv4_src" : "10.0.0.1","ipv4_dst" : "10.0.0.2"}'
+    # http://127.0.0.1:8080/simpleswitch/firewall/0000000000000001
     def block_ip_traffic(self, dpid, entry):
 
         computation_start = time.time()
         dp = self.datapath_list[dpid]
 
-        print(entry)
-
         ipv4_src = None
         ipv4_dst = None
 
-        #extract the addres from the entry
+        # extract the address from the entry
         if 'ipv4_src' in entry:
             ipv4_src = entry['ipv4_src']
         if 'ipv4_dst' in entry:
             ipv4_dst = entry['ipv4_dst']
 
-        #prepare the match for the flow
+        # prepare the match for the flow
         if dp is not None:
 
             parser = dp.ofproto_parser
@@ -137,6 +145,8 @@ class ProjectController(app_manager.RyuApp):
                     ipv4_src=ipv4_src
                 )
                 #print("ipv4_src", ipv4_src)
+            else:
+                raise Exception("Source and destination ip addresses are not indicated")
 
             actions = []  # Empty action list to drop the packets
 
@@ -149,8 +159,8 @@ class ProjectController(app_manager.RyuApp):
             print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
             #self.logger.info("Dropping ip flow : %s <---> %s ", ipv4_src, ipv4_dst)
 
-    #function to update the weights on the ports to make load profiling
-    #example of rest request : curl -X POST -d '{"weights" : [2,3,4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
+    # function to update the weights on the ports to make load profiling example of rest request : curl -X POST -d '{
+    # "weights" : [2,3,4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
     def set_weights(self, dpid, weights):
         data = self.multipath_group_ids
         dpid = dpid
@@ -213,8 +223,8 @@ class ProjectController(app_manager.RyuApp):
 
             self.add_flow(dp, 1, match_ip, actions, 0, 0)
 
-    #function to remove a flow given the match
-    #example of rest request : curl -X POST -d '{"weights" : [2,3,4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
+    # function to remove a flow given the match example of rest request : curl -X POST -d '{"weights" : [2,3,
+    # 4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
 
     def remove_flow(self, datapath, match, cookie):
 
@@ -261,7 +271,7 @@ class ProjectController(app_manager.RyuApp):
         dp = self.datapath_list[dpid]
         ofp = dp.ofproto
         ofp_parser = dp.ofproto_parser
-        #extract the rules on each port
+        # extract the rules on each port
         result_entries = [value for key, value in data.items() if key[0] == dpid]
 
         if result_entries:
@@ -577,7 +587,6 @@ class ProjectController(app_manager.RyuApp):
                     self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
 
         # print pkt
-        #print ("hosts:", self.hosts)
 
         actions = [parser.OFPActionOutput(out_port)]
 
@@ -607,12 +616,15 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
     def switch_leave_handler(self, ev):
-        print(ev)
+        print("switch_leave_handler ", ev)
         switch = ev.switch.dp.id
-        if switch in self.switches:
-            self.switches.remove(switch)
-            del self.datapath_list[switch]
-            del self.adjacency[switch]
+        # if switch in self.switches:
+        #     self.switches.remove(switch)
+        #     try:
+        #         del self.datapath_list[switch]
+        #         del self.adjacency[switch]
+        #     except KeyError:
+        #         pass
 
     @set_ev_cls(event.EventLinkAdd, MAIN_DISPATCHER)
     def link_add_handler(self, ev):
