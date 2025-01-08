@@ -7,7 +7,7 @@ This is the interface for a Software-Defined Network system, based on the model 
 ### System Requirements
 - **Operating System**: Ubuntu 20.04+ or any other distributions
 - **Python**: two python versions needed 3.9 and 3.10+
-- **Memory**: At least 2 GB RAM
+- **Memory**: At least 1 GB RAM
 - **Disk Space**: At least 1 GB free
 
 ## Dependencies
