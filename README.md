@@ -1,4 +1,15 @@
+<a href="https://www.polito.it/">
+    <img src="https://upload.wikimedia.org/wikipedia/it/archive/4/47/20210407201938%21Logo_PoliTo_dal_2021_blu.png" alt="Polito logo" title="Polito" align="right" height="60" />
+</a>
+
+
+
 # SDN Interface
+
+![Node Current](https://img.shields.io/node/v/react)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/langchain)
+[![language](https://img.shields.io/badge/react-%5E18.2.0-%6aa84f?logo=React)](https://react.dev/)
+[![language](https://shields.io/badge/TypeScript-3178C6?logo=TypeScript&logoColor=FFF&style=flat-square)](https://www.typescriptlang.org/)
 
 This is the interface for a Software-Defined Network system, based on the model developed by Politecnico di Torino University.
 
