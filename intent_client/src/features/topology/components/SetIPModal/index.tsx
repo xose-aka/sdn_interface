@@ -32,8 +32,6 @@ export default function () {
 
     };
 
-    console.log(localMask)
-
     const onEdgeTargetIpSet = (ip: string, mask: string) => {
 
         setEdges((edges) => edges.map((edge) => {
@@ -53,22 +51,28 @@ export default function () {
 
         const form = event.currentTarget;
 
+
         if (form.checkValidity() === false) {
             event.stopPropagation();
             setValidated(true)
         } else {
+
             if (octets.every(element => element.trim() !== "") && localMask.length > 0) {
 
-                const ip = octets.join(".")
+                const formattedIP = octets.map(str => str.replace(/^0+(?!$)/, ''));
+                const formattedLocalMask = localMask.replace(/^0+(?!$)/, '')
+
+                const ip = formattedIP.join(".")
+
 
                 if (isValidIPv4(ip)) {
 
                     switch (type) {
                         case NodeEdgeTypes["SOURCE"]:
-                            onEdgeSourceIpSet(ip, localMask)
+                            onEdgeSourceIpSet(ip, formattedLocalMask)
                             break;
                         case NodeEdgeTypes["TARGET"]:
-                            onEdgeTargetIpSet(ip, localMask)
+                            onEdgeTargetIpSet(ip, formattedLocalMask)
                             break;
                     }
 
@@ -79,7 +83,6 @@ export default function () {
     };
 
     const handleHideModal = () => {
-        console.log('aa')
         setLocalMask("")
         hideModal();
     };
@@ -96,6 +99,7 @@ export default function () {
     }
 
     const handleOctetChange = (index: number, value: string) => {
+
         if (/^\d*$/.test(value) && +value >= 0 && +value <= 255) {
             const newOctets = [...octets];
             newOctets[index] = value;

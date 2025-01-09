@@ -3,4 +3,5 @@ export const alertTypes = {
     secondary: "secondary",
     danger: "danger",
     success: "success",
+    warning: "warning",
 };

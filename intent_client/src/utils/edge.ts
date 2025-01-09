@@ -1,5 +1,6 @@
 import {InternalNode, Position} from "@xyflow/react";
 import {getNodeIntersection} from "./node.ts";
+import {Coordinates} from "../types";
 
 function getEdgePosition(node: InternalNode, intersectionPoint: Coordinates) {
     const n = { ...node.internals.positionAbsolute, ...node };

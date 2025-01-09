@@ -14,7 +14,7 @@ import {alertTypes} from "../../constants";
 import NetworkNode from "../../features/topology/components/Node/NetworkNode.tsx";
 import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkEdge.tsx";
 import {getReactDnDBackend} from "../../utils/helper.ts";
-import {sendTopo} from "../../services/api.ts";
+import {getToken, sendTopo} from "../../services/api.ts";
 import useToken from "../../hooks";
 import {AppliedIntentResult, Neighbour, TopoEntityDTO} from "../../types";
 import NodeIntentsWindow from "../../features/topology/components/NodeIntentsWindow/NodeIntentsWindow.tsx";
@@ -33,7 +33,7 @@ const TopologyPage: React.FC = () => {
     const [alertType, setAlertType] = useState(alertTypes.primary);
     const [alertMessage, setAlertMessage] = useState("");
 
-    const { token, setResetToken } = useToken()
+    const { token, setToken } = useToken()
 
     const nodeList = Object.values(nodeTypes)
 
@@ -155,6 +155,16 @@ const TopologyPage: React.FC = () => {
                 .then(r => {
                     console.log(r)
                 })
+        } else {
+            getToken()
+                .then(response => {
+                    setToken(response.data.token)
+                })
+                .catch(error => {
+                    setShowAlert(true)
+                    setAlertType(alertTypes.warning)
+                    setAlertMessage("Could not fetch token")
+                });
         }
     }
 
@@ -289,6 +299,7 @@ const TopologyPage: React.FC = () => {
                                 isOpen={isIntentCommunicationOpen}
                                 handleClose={handleClose}
                                 token={token}
+                                setToken={setToken}
                                 title="Intent Window"
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
                                 applyIntentToNode={applyIntentToNode}

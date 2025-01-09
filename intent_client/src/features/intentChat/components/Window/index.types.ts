@@ -8,6 +8,7 @@ export interface ChatWindowProps {
     setAlertMessage: Dispatch<SetStateAction<string>>,
     isOpen: boolean,
     token: string | null,
+    setToken: Dispatch<SetStateAction<string | null>>,
     handleClose: () => void,
     applyIntentToNode: (appliedIntentResult: AppliedIntentResult) => void,
     title: string,
