@@ -13,6 +13,7 @@ import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 import WindowButton from "../WindowButton";
 import {sendConfirmConversation, sendMessage} from "../../services/api.ts";
 import {alertTypes} from "../../../../constants";
+import {getToken} from "../../../../services/api.ts";
 
 
 function Index({
@@ -23,6 +24,7 @@ function Index({
                    handleClose,
                    title,
                    token,
+    setToken,
                    setIntentHighlightedNodes,
                    applyIntentToNode
 }: ChatWindowProps) {
@@ -219,8 +221,18 @@ function Index({
     const handleSendMessage = (intentMessageDTO: IntentMessageDTO) => {
         if (!token) {
             setShowAlert(true)
-            setAlertType(alertTypes.danger)
+            setAlertType(alertTypes.primary)
             setAlertMessage("No token set")
+
+            getToken()
+                .then(response => {
+                    setToken(response.data.token)
+                })
+                .catch(error => {
+                    setShowAlert(true)
+                    setAlertType(alertTypes.warning)
+                    setAlertMessage("Could not fetch token")
+                });
 
             setMessages((prevMessages) =>
                 prevMessages.filter((message) => !( message.conversationId === conversationId &&

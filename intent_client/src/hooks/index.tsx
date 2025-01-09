@@ -23,7 +23,7 @@ function useToken() {
         }
     }, [resetToken]);
 
-    return { token, setResetToken };
+    return { token, setResetToken, setToken };
 }
 
 export default useToken;

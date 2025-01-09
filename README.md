@@ -8,14 +8,22 @@ This is the interface for a Software-Defined Network system, based on the model 
 - **Operating System**: Ubuntu 20.04+ or any other distributions
 - **Python**: two python versions needed 3.9 and 3.10+
 - **Memory**: At least 1 GB RAM
-- **Disk Space**: At least 1 GB free
+- **Disk Space**: At least 2 GB free
+
 
 ## Dependencies
-Install the following system packages:
+Install the following system packages(python3.9 and python3.10+):
    ```bash
    sudo apt update
    sudo apt install -y python3.9 python3.9-venv python3.9-dev python3.10 python3.10-venv python3.10-dev git curl build-essential
    ```
+
+Install node 20 and npm to run vite react client:
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
+
 
 ## Installation
 
@@ -71,9 +79,10 @@ Install the following system packages:
 ### Setup ryu manager endpoints
 
 1. **Enter ryu manager endpoints folders**
-  ```bash
-  cd ../ryu_endpoints
-  ```
+  
+    ```bash
+     cd ../ryu_endpoints
+    ```
 
 2. **Setup venv**
 
@@ -101,3 +110,31 @@ Install the following system packages:
       ```bash
       sudo venv/bin/python run.py
       ```
+### Setup intent client
+
+1. **Go to repository root folder then enter intent client folder**
+  
+    ```bash
+     cd intent_client
+    ```
+
+2. **Setup packages**
+
+    ```bash
+     npm install
+    ```
+3. **Build project**
+
+    ```bash
+     npm run build
+    ```
+   
+4. **Run project**
+
+     ```bash
+      npx serve -s dist
+     ```
+
+5. **Enter the application**
+
+    Go to browser and open link ```http://localhost:3000 ```
