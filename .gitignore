@@ -1,4 +1,5 @@
 # Ignore IDE config folders (e.g., VSCode, PyCharm)
 .vscode/
 .idea/
-
+ryu_endpoints/venv
+intent_model_endpoints/venv
