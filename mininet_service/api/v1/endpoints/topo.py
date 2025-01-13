@@ -2,6 +2,7 @@ import threading
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi.encoders import jsonable_encoder
 
 from api.v1.dependencies import verify_token
 
@@ -19,27 +20,13 @@ router = APIRouter()
 
 
 @router.post("/build")
-async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_token)):
+async def build_topology(topo: TopoBuildRequest):
 
-    def run_thread():
-        run_mininet(topo.nodes)
-
-    mininet_thread = threading.Thread(target=run_thread)
-    mininet_thread.start()
-
-    return {
-        "error": 1,
-        "data": {
-            "message": "Success",
-        }
-    }
-
-
-def run_mininet(nodes):
-    my_topology = MininetTopology(nodes)
+    my_topology = MininetTopology(topo.nodes)
 
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
     net = Mininet(topo=my_topology, controller=None)
+
     net.addController(c)
     net.start()
 
@@ -79,8 +66,25 @@ def run_mininet(nodes):
             else:
                 print(f"Node: {node_id} hasn't been inserted to mininet nodes list")
 
-    print(cache_topology_nodes_and_ip_addresses['nodes_ports'])
-    net.pingAll()
+
+    # net.pingAll()
     #
+    # CLI(net)
+    # net.stop()
+
+    mininet_thread = threading.Thread(target=run_mininet, args=(net,))
+    mininet_thread.start()
+
+    # def run_thread():
+    #     run_mininet(topo.nodes)
+
+
+    return {
+        "error": 0,
+        "data": cache_topology_nodes_and_ip_addresses
+    }
+
+
+def run_mininet(net):
     CLI(net)
     net.stop()

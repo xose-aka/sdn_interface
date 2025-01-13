@@ -6,6 +6,7 @@ fastapi==0.115.6
 h11==0.14.0
 idna==3.10
 mininet==2.3.0.dev6
+python-dotenv==1.0.1
 pydantic==2.10.5
 pydantic_core==2.27.2
 setuptools==75.8.0

@@ -153,10 +153,6 @@ class ProjectController(app_manager.RyuApp):
                 if match is None:
                     raise Exception("Source and destination ip addresses are not indicated")
 
-                print("datapath.ofproto: ", dp.ofproto)
-                print("datapath.ofproto_parser: ", dp.ofproto_parser)
-                print("datapath.id: ", dp.id)
-
                 # Add a flow rule to block IP traffic
                 result_status = self.add_flow(dp, 2, match, actions, 0, 1)
                 print("result_status: ", result_status)
@@ -496,6 +492,8 @@ class ProjectController(app_manager.RyuApp):
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     match=match, instructions=inst, table_id=table_id, cookie=cookie)
 
+        print("mod:", mod)
+
         return datapath.send_msg(mod)
 
     def add_flow_meter(self, datapath, priority, match, actions, table_id, cookie, buffer_id=None):
@@ -538,21 +536,21 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
-        print("port_desc_stats_reply_handler is called")
+        # print("port_desc_stats_reply_handler is called")
 
         switch = ev.msg.datapath
 
-        print("switch ", str(switch))
-
-        print("port :", str(ev.msg.body))
-        print("bandwidths :", str(self.bandwidths))
+        # print("switch ", str(switch))
+        #
+        # print("port :", str(ev.msg.body))
+        # print("bandwidths :", str(self.bandwidths))
 
         for p in ev.msg.body:
             self.bandwidths[switch.id][p.port_no] = p.curr_speed
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        print("packet_in_handler is called")
+        # print("packet_in_handler is called")
 
         msg = ev.msg
         datapath = msg.datapath
@@ -571,7 +569,7 @@ class ProjectController(app_manager.RyuApp):
                 meter_id=datapath.id,
                 bands=[parser.OFPMeterBandDrop(rate=self.rate_limit)])
             status = datapath.send_msg(meter_mod)
-            print("Meter installed: ", status)
+            # print("Meter installed: ", status)
 
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocol(ethernet.ethernet)
@@ -581,13 +579,13 @@ class ProjectController(app_manager.RyuApp):
         if eth.ethertype == 35020:
             return
 
-        print("pkt.get_protocol(ipv6.ipv6)", pkt.get_protocol(ipv6.ipv6))
+        # print("pkt.get_protocol(ipv6.ipv6)", pkt.get_protocol(ipv6.ipv6))
 
         if pkt.get_protocol(ipv6.ipv6):  # Drop the IPV6 Packets.
             match = parser.OFPMatch(eth_type=eth.ethertype)
             actions = []
             status = self.add_flow(datapath, 1, match, actions, 0, 0)
-            print("IPv6 ether type: ", status)
+            # print("IPv6 ether type: ", status)
             return None
 
         dst = eth.dst
@@ -607,9 +605,9 @@ class ProjectController(app_manager.RyuApp):
                 self.arp_table[src_ip] = src
                 h1 = self.hosts[src]
                 h2 = self.hosts[dst]
-                print("sr rep", src_ip)
-                print("dst rep", dst_ip)
-                print("self.hosts: ", self.hosts)
+                # print("sr rep", src_ip)
+                # print("dst rep", dst_ip)
+                # print("self.hosts: ", self.hosts)
                 out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
                 self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
             elif arp_pkt.opcode == arp.ARP_REQUEST:
@@ -618,9 +616,9 @@ class ProjectController(app_manager.RyuApp):
                     dst_mac = self.arp_table[dst_ip]
                     h1 = self.hosts[src]
                     h2 = self.hosts[dst_mac]
-                    print("sr req", src_ip)
-                    print("dst req", dst_ip)
-                    print("self.hosts: ", self.hosts)
+                    # print("sr req", src_ip)
+                    # print("dst req", dst_ip)
+                    # print("self.hosts: ", self.hosts)
 
                     out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
                     self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
@@ -640,15 +638,15 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
-        print("switch_enter_handler is called")
+        # print("switch_enter_handler is called")
 
         switch = ev.switch.dp
         ofp_parser = switch.ofproto_parser
 
-        print("switch ", str(switch))
-        print("ofp_parser ", str(ofp_parser))
-        print("self.switches ", str(self.switches))
-        print("switch.id ", str(switch.id))
+        # print("switch ", str(switch))
+        # print("ofp_parser ", str(ofp_parser))
+        # print("self.switches ", str(self.switches))
+        # print("switch.id ", str(switch.id))
 
 
 
@@ -659,18 +657,18 @@ class ProjectController(app_manager.RyuApp):
             # Request port/link descriptions, useful for obtaining bandwidth
             req = ofp_parser.OFPPortDescStatsRequest(switch)
             status = switch.send_msg(req)
-            print("ports: ", len(switch.ports))
-            print("status: ", status)
+            # print("ports: ", len(switch.ports))
+            # print("status: ", status)
             self.add_ports(switch)
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
     def switch_leave_handler(self, ev):
-        print("switch_leave_handler ", ev)
+        # print("switch_leave_handler ", ev)
         switch = ev.switch.dp.id
-        print("switch_leave_handler switch: ", str(switch))
-        print("switches: ", str(self.switches))
-        print("datapath_list: ", str(self.datapath_list))
-        print("adjacency: ", str(self.adjacency))
+        # print("switch_leave_handler switch: ", str(switch))
+        # print("switches: ", str(self.switches))
+        # print("datapath_list: ", str(self.datapath_list))
+        # print("adjacency: ", str(self.adjacency))
         # if switch in self.switches:
         #     self.switches.remove(switch)
         #     try:
@@ -681,25 +679,25 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventLinkAdd, MAIN_DISPATCHER)
     def link_add_handler(self, ev):
-        print("link_add_handler is called")
+        # print("link_add_handler is called")
 
         s1 = ev.link.src
         s2 = ev.link.dst
 
-        print("s1:", str(s1), str(s1.dpid), str(s1.port_no))
-        print("s2:", str(s2), str(s2.dpid), str(s2.port_no))
+        # print("s1:", str(s1), str(s1.dpid), str(s1.port_no))
+        # print("s2:", str(s2), str(s2.dpid), str(s2.port_no))
 
         self.adjacency[s1.dpid][s2.dpid] = s1.port_no
         self.adjacency[s2.dpid][s1.dpid] = s2.port_no
 
     @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
     def link_delete_handler(self, ev):
-        print("link_delete_handler is called")
+        # print("link_delete_handler is called")
 
         s1 = ev.link.src
         s2 = ev.link.dst
 
-        print("delete links: ", str(s1), str(s2))
+        # print("delete links: ", str(s1), str(s2))
     #     # Exception handling if switch already deleted
     #     # try:
     #     #     del self.adjacency[s1.dpid][s2.dpid]

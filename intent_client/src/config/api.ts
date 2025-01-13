@@ -3,7 +3,7 @@ export const API_CONFIG = {
     ENDPOINTS: {
         MESSAGE_VERIFY: "/intents/verify",
         MESSAGE_CONFIRM: "/intents/conversation/confirm",
-        TOPO_BUILD: "/topo/build",
+        TOPOLOGY_BUILD: "/topology/build",
         TOKEN: "/generate-token",
     },
 };

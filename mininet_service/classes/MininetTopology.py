@@ -14,7 +14,7 @@ class MininetTopology(Topo):
 
         inserted_nodes = self.__insert_nodes(topology_nodes)
 
-        cache_topology_nodes_and_ip_addresses['nodes'] = inserted_nodes.keys()
+        cache_topology_nodes_and_ip_addresses['nodes'] = list(inserted_nodes.keys())
 
         # add links for neighbours
         insert_links = self.__insert_links(topology_nodes, inserted_nodes)
