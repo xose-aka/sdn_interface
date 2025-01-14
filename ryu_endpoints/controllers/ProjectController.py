@@ -3,7 +3,7 @@ import sys
 
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
@@ -155,12 +155,12 @@ class ProjectController(app_manager.RyuApp):
 
                 # Add a flow rule to block IP traffic
                 result_status = self.add_flow(dp, 2, match, actions, 0, 1)
-                print("result_status: ", result_status)
+
                 if result_status:
                     print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
                 else:
                     raise Exception("Path installment is not successful")
-                #self.logger.info("Dropping ip flow : %s <---> %s ", ipv4_src, ipv4_dst)
+                # self.logger.info("Dropping ip flow : %s <---> %s ", ipv4_src, ipv4_dst)
 
             else:
                 raise Exception(f"Bad dp for dpid: {dpid} in the available dpid list")
@@ -234,25 +234,65 @@ class ProjectController(app_manager.RyuApp):
     # function to remove a flow given the match example of rest request : curl -X POST -d '{"weights" : [2,3,
     # 4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
 
-    def remove_flow(self, datapath, match, cookie):
+    def remove_flow(self, dpid, new_entry, cookie):
 
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
+        computation_start = time.time()
 
-        # Constructing the flow deletion message based on the match criteria
-        mod = parser.OFPFlowMod(
-            datapath=datapath,
-            cookie=cookie,
-            match=match,
-            cookie_mask=0xFFFFFFFFFFFFFFFF,
-            table_id=ofproto.OFPTT_ALL,
-            command=ofproto.OFPFC_DELETE,
-            out_port=ofproto.OFPP_ANY,
-            out_group=ofproto.OFPG_ANY
-        )
+        if dpid in self.datapath_list:
+            datapath = self.datapath_list[dpid]
 
-        # Sending the flow deletion message
-        datapath.send_msg(mod)
+            ipv4_src = None
+            ipv4_dst = None
+
+            match = None
+
+            # extract the address from the entry
+            if 'ipv4_src' in new_entry:
+                ipv4_src = new_entry['ipv4_src']
+            if 'ipv4_dst' in new_entry:
+                ipv4_dst = new_entry['ipv4_dst']
+
+            parser = datapath.ofproto_parser
+
+            if ipv4_src != "any" and ipv4_dst != "any":
+                match = parser.OFPMatch(eth_type=0x0800, ipv4_src=ipv4_src, ipv4_dst=ipv4_dst)
+
+            elif ipv4_dst != "any":
+
+                match = parser.OFPMatch(eth_type=0x0800, ipv4_dst=ipv4_dst)
+
+            elif ipv4_src != "any":
+
+                match = parser.OFPMatch(eth_type=0x0800, ipv4_src=ipv4_src)
+
+            else:
+                raise Exception("Source and destination ip addresses are not indicated")
+
+            ofproto = datapath.ofproto
+            parser = datapath.ofproto_parser
+
+            # Constructing the flow deletion message based on the match criteria
+            mod = parser.OFPFlowMod(
+                datapath=datapath,
+                cookie=cookie,
+                match=match,
+                cookie_mask=0xFFFFFFFFFFFFFFFF,
+                table_id=ofproto.OFPTT_ALL,
+                command=ofproto.OFPFC_DELETE,
+                out_port=ofproto.OFPP_ANY,
+                out_group=ofproto.OFPG_ANY
+            )
+
+            # Sending the flow deletion message
+            result_status = datapath.send_msg(mod)
+
+            if result_status:
+                print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
+            else:
+                raise Exception("Path installment is not successful")
+
+        else:
+            raise Exception(f"dpid: {dpid} in the available dpid list")
 
     def add_ports(self, switch):
         # Fetch switch ports and populate the switch_port_count dictionary
@@ -493,6 +533,7 @@ class ProjectController(app_manager.RyuApp):
                                     match=match, instructions=inst, table_id=table_id, cookie=cookie)
 
         print("mod:", mod)
+        print("id:", datapath.id)
 
         return datapath.send_msg(mod)
 
@@ -519,7 +560,8 @@ class ProjectController(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        # print("datapath ", str(datapath))
+        print("datapath ", str(datapath))
+        print("id ", str(datapath.id))
         # print("ofproto ", str(ofproto))
         # print("parser ", str(parser))
 
@@ -533,6 +575,22 @@ class ProjectController(app_manager.RyuApp):
 
         print("switch_features_handler status: ", status)
 
+    @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
+    def state_change_handler(self, ev):
+        """Track state changes (e.g., disconnections)."""
+        datapath = ev.datapath
+        if ev.state == MAIN_DISPATCHER:
+            print("Datapath connect datapath.id")
+
+            if datapath.id not in self.datapath_list:
+                self.logger.info(f"Switch {datapath.id} connected.")
+                self.datapath_list[datapath.id] = datapath
+        elif ev.state == DEAD_DISPATCHER:
+            print("Datapath disconnect datapath.id")
+
+            if datapath.id in self.datapath_list:
+                self.logger.info(f"Switch {datapath.id} disconnected.")
+                del self.datapath_list[datapath.id]
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
@@ -550,7 +608,7 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        # print("packet_in_handler is called")
+        print("packet_in_handler is called")
 
         msg = ev.msg
         datapath = msg.datapath
@@ -568,8 +626,9 @@ class ProjectController(app_manager.RyuApp):
                 flags=ofproto.OFPMF_KBPS,
                 meter_id=datapath.id,
                 bands=[parser.OFPMeterBandDrop(rate=self.rate_limit)])
+
             status = datapath.send_msg(meter_mod)
-            # print("Meter installed: ", status)
+            print("_packet_in_handler Meter installed: ", status)
 
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocol(ethernet.ethernet)
@@ -579,13 +638,11 @@ class ProjectController(app_manager.RyuApp):
         if eth.ethertype == 35020:
             return
 
-        # print("pkt.get_protocol(ipv6.ipv6)", pkt.get_protocol(ipv6.ipv6))
-
         if pkt.get_protocol(ipv6.ipv6):  # Drop the IPV6 Packets.
             match = parser.OFPMatch(eth_type=eth.ethertype)
             actions = []
             status = self.add_flow(datapath, 1, match, actions, 0, 0)
-            # print("IPv6 ether type: ", status)
+            print("IPv6 ether type: ", status)
             return None
 
         dst = eth.dst
@@ -634,7 +691,9 @@ class ProjectController(app_manager.RyuApp):
         out = parser.OFPPacketOut(
             datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
             actions=actions, data=data)
-        datapath.send_msg(out)
+        # print("Meter installed: ", status)
+        status = datapath.send_msg(out)
+        print("Meter installed: ", status)
 
     @set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
@@ -648,17 +707,16 @@ class ProjectController(app_manager.RyuApp):
         # print("self.switches ", str(self.switches))
         # print("switch.id ", str(switch.id))
 
-
-
         if switch.id not in self.switches:
             self.switches.append(switch.id)
             self.datapath_list[switch.id] = switch
 
             # Request port/link descriptions, useful for obtaining bandwidth
             req = ofp_parser.OFPPortDescStatsRequest(switch)
+
             status = switch.send_msg(req)
-            # print("ports: ", len(switch.ports))
-            # print("status: ", status)
+
+            print("switch_enter_handler req status: ", status)
             self.add_ports(switch)
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)

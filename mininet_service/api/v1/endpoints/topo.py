@@ -6,7 +6,7 @@ from fastapi.encoders import jsonable_encoder
 
 from api.v1.dependencies import verify_token
 
-from mininet.node import CPULimitedHost
+from mininet.node import CPULimitedHost, OVSSwitch
 from mininet.net import Mininet
 from mininet.log import setLogLevel, info
 from mininet.node import RemoteController
@@ -22,10 +22,12 @@ router = APIRouter()
 @router.post("/build")
 async def build_topology(topo: TopoBuildRequest):
 
+    # OVSSwitch
+
     my_topology = MininetTopology(topo.nodes)
 
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
-    net = Mininet(topo=my_topology, controller=None)
+    net = Mininet(topo=my_topology, controller=None, switch=OVSSwitch)
 
     net.addController(c)
     net.start()
