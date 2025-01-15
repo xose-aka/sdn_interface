@@ -21,15 +21,12 @@ router = APIRouter()
 
 @router.post("/build")
 async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_token)):
-
-    global cache_topology_nodes_and_ip_addresses
+    # global cache_topology_nodes_and_ip_addresses
     # def run_thread():
     #     run_mininet(topo.nodes)
     #
     # mininet_thread = threading.Thread(target=run_thread)
     # mininet_thread.start()
-
-
 
     request_data = {
         'nodes': [model.dict() for model in topo.nodes],
@@ -37,21 +34,16 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
 
     response = requests.post(f"http://127.0.0.1:8002/api/v1/topology_builder/build", json=request_data)
 
-    print(response, response.json())
-
     response_result = response.json()
 
     cache_topology_nodes_and_ip_addresses.update(response_result['data'])
 
-    print("Result: ", cache_topology_nodes_and_ip_addresses)
-
     return {
         "error": 1,
         "data": {
-            "message": "Success",
+            "message": response_result,
         }
     }
-
 
 # def run_mininet(nodes):
 #     my_topology = MininetTopology(nodes)

@@ -1,12 +1,12 @@
-import {Button, Col, Container, Row} from "react-bootstrap";
+import {Button, Col, Container, Row, Spinner} from "react-bootstrap";
 import {DndProvider} from "react-dnd";
 
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
-import React, {useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import NodeList from "../../features/topology/components/SidebarNodeList/NodeList.tsx";
 import NetworkBuilder from "../../features/topology/components/NetworkBuilder/NetworkBuilder.tsx";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faComments} from "@fortawesome/free-solid-svg-icons";
+import {faCircleNodes, faComments} from "@fortawesome/free-solid-svg-icons";
 import IntentWindow from "../../features/intentChat/components/Window";
 import BootstrapAlert from "../../components/BootstrapAlert.tsx";
 import {nodeTypes} from "../../constants/topology.ts";
@@ -14,7 +14,7 @@ import {alertTypes} from "../../constants";
 import NetworkNode from "../../features/topology/components/Node/NetworkNode.tsx";
 import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkEdge.tsx";
 import {getReactDnDBackend} from "../../utils/helper.ts";
-import {getToken, sendTopo} from "../../services/api.ts";
+import {getToken, sendTopology} from "../../services/api.ts";
 import useToken from "../../hooks";
 import {AppliedIntentResult, Neighbour, TopoEntityDTO} from "../../types";
 import NodeIntentsWindow from "../../features/topology/components/NodeIntentsWindow/NodeIntentsWindow.tsx";
@@ -50,11 +50,16 @@ const TopologyPage: React.FC = () => {
         ]
     )
 
+    const [prevEdges, setPrevEdges] = useState<Edge[]>([])
+
+    const prevNodes = useRef<Node[]>([]);
+
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
 
     const [selectedIntentHistoryNode, setSelectedIntentHistoryNode] = React.useState<Node | null>(null)
 
     const [intentHighlightedNodes, setIntentHighlightedNodes] = React.useState<Node[]>([])
+    const [isUploadingTopology, setIsUploadingTopology] = React.useState<boolean>(false)
 
     const resetNodeSelection = () => {
 
@@ -71,7 +76,7 @@ const TopologyPage: React.FC = () => {
     const [isIntentCommunicationOpen, setIsIntentCommunicationOpen] = useState(false);
     const [isNodeIntentHistoryOpen, setIsNodeIntentHistoryOpen] = useState(false  );
 
-    const [isShowIntentButton, setIsShowIntentButton] = useState(false);
+    const [isTopologyChanged, setIsTopologyChanged] = useState(true);
 
     const applyIntentToNode = (appliedIntentResult: AppliedIntentResult) => {
         const nodeId = appliedIntentResult.nodeId
@@ -100,11 +105,15 @@ const TopologyPage: React.FC = () => {
         setIsNodeIntentHistoryOpen(!isNodeIntentHistoryOpen)
     }
 
-    const buildTopology = () => {
+    const showAlertHandler = (type: string, message: string) => {
+        setShowAlert(true)
+        setAlertType(type)
+        setAlertMessage(message)
+    }
 
-        setIsIntentCommunicationOpen(!isIntentCommunicationOpen)
+    const updateTopology = () => {
 
-        resetNodeSelection()
+        setIsUploadingTopology(true)
 
         let topologyNodes: TopoEntityDTO[] = []
 
@@ -151,19 +160,48 @@ const TopologyPage: React.FC = () => {
         })
 
         if (token) {
-            sendTopo(token, topologyNodes)
-                .then(r => {
-                    console.log(r)
+            sendTopology(token, topologyNodes)
+                .then(result => {
+                    showAlertHandler(alertTypes.success, `Topology updated`)
+                    setIsUploadingTopology(false)
+                    setIsTopologyChanged(false)
+                    console.log(result)
+                    setPrevEdges( JSON.parse(JSON.stringify(edges)) )
                 })
         } else {
             getToken()
                 .then(response => {
                     setToken(response.data.token)
+
+                    sendTopology(response.data.token, topologyNodes)
+                        .then(result => {
+                            showAlertHandler(alertTypes.success, `Topology updated`)
+                            setIsUploadingTopology(false)
+                            setIsTopologyChanged(false)
+                            console.log(result)
+                            setPrevEdges( JSON.parse(JSON.stringify(edges)) )
+                        })
                 })
                 .catch(error => {
-                    setShowAlert(true)
-                    setAlertType(alertTypes.warning)
-                    setAlertMessage("Could not fetch token")
+                    showAlertHandler(alertTypes.warning, `Could not fetch token, error: ${error}`)
+                });
+        }
+    }
+
+    const openIntentCommunication = () => {
+
+        if (token) {
+            setIsIntentCommunicationOpen(!isIntentCommunicationOpen)
+            resetNodeSelection()
+        } else {
+            getToken()
+                .then(response => {
+                    setToken(response.data.token)
+                    setIsIntentCommunicationOpen(!isIntentCommunicationOpen)
+                    resetNodeSelection()
+                })
+                .catch(error => {
+                    showAlertHandler(alertTypes.warning, `Could not fetch token, error: ${error}`)
                 });
         }
     }
@@ -182,11 +220,36 @@ const TopologyPage: React.FC = () => {
 
     useEffect(() => {
         if ( nodes.length > 0 ) {
-            setIsShowIntentButton(true)
-        } else {
-            setIsShowIntentButton(false)
+            setIsTopologyChanged(true)
         }
-    }, [JSON.stringify(nodes)]);
+    }, [nodes.length]);
+
+    useEffect(() => {
+        if (edges.length > 0 ) {
+
+            const prevEdgesString = JSON.stringify(prevEdges, (key, value) => {
+                // Exclude the 'selected' field
+                if (key === 'selected') {
+                    return undefined; // Returning `undefined` will skip the field
+                }
+                return value; // Return other fields as usual
+            });
+
+            const edgesString = JSON.stringify(edges, (key, value) => {
+                // Exclude the 'selected' field
+                if (key === 'selected') {
+                    return undefined; // Returning `undefined` will skip the field
+                }
+                return value; // Return other fields as usual
+            });
+
+            const hasChanged = edgesString !== prevEdgesString
+
+            if (hasChanged) {
+                setIsTopologyChanged(true)
+            }
+        }
+    }, [edges]);
 
     useEffect(() => {
         let timeoutId = 0
@@ -248,11 +311,34 @@ const TopologyPage: React.FC = () => {
                                     {
                                         nodes.length > 0 && (
                                             <Button
+                                                variant="success"
+                                                onClick={() => updateTopology()}
+                                                disabled={isUploadingTopology || !isTopologyChanged}
+                                                className="m-2 flex">
+                                                {
+                                                    isUploadingTopology &&
+                                                    (
+                                                        <Spinner size={"sm"}/>
+                                                    )
+                                                }
+                                                {
+                                                    !isUploadingTopology &&
+                                                    (
+                                                        <FontAwesomeIcon icon={faCircleNodes} />
+                                                    )
+                                                }
+                                                <span className="m-1">Update topology</span>
+                                            </Button>
+                                        )
+                                    }
+                                    {
+                                        nodes.length > 0 && (
+                                            <Button
                                                 variant="primary"
-                                                onClick={() => buildTopology()}
+                                                onClick={() => openIntentCommunication()}
                                                 className="m-2 flex">
                                                 <FontAwesomeIcon icon={faComments} />
-                                                <span className="m-1">Input Intent </span>
+                                                <span className="m-1">Input Intent</span>
                                             </Button>
                                         )
                                     }
@@ -293,9 +379,7 @@ const TopologyPage: React.FC = () => {
                                     />
                                 </ReactFlowProvider>
                             <IntentWindow
-                                setShowAlert={setShowAlert}
-                                setAlertType={setAlertType}
-                                setAlertMessage={setAlertMessage}
+                                showAlertHandler={showAlertHandler}
                                 isOpen={isIntentCommunicationOpen}
                                 handleClose={handleClose}
                                 token={token}
@@ -303,6 +387,7 @@ const TopologyPage: React.FC = () => {
                                 title="Intent Window"
                                 setIntentHighlightedNodes={setIntentHighlightedNodes}
                                 applyIntentToNode={applyIntentToNode}
+                                isTopologyChanged={isTopologyChanged}
                             />
                             <NodeIntentsWindow
                                 isOpen={isNodeIntentHistoryOpen}

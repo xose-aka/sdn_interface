@@ -244,7 +244,7 @@ class ProjectController(app_manager.RyuApp):
             ipv4_src = None
             ipv4_dst = None
 
-            match = None
+            match2 = None
 
             # extract the address from the entry
             if 'ipv4_src' in new_entry:
@@ -260,10 +260,12 @@ class ProjectController(app_manager.RyuApp):
             elif ipv4_dst != "any":
 
                 match = parser.OFPMatch(eth_type=0x0800, ipv4_dst=ipv4_dst)
+                match2 = parser.OFPMatch(eth_type=0x0800, ipv4_src=ipv4_dst)
 
             elif ipv4_src != "any":
 
                 match = parser.OFPMatch(eth_type=0x0800, ipv4_src=ipv4_src)
+                match2 = parser.OFPMatch(eth_type=0x0800, ipv4_dst=ipv4_src)
 
             else:
                 raise Exception("Source and destination ip addresses are not indicated")
@@ -287,9 +289,28 @@ class ProjectController(app_manager.RyuApp):
             result_status = datapath.send_msg(mod)
 
             if result_status:
-                print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
+                print("Path remove finished in", (time.time() - computation_start) * 1000, "milliseconds")
+
+                if match2 is not None:
+                    mod = parser.OFPFlowMod(
+                        datapath=datapath,
+                        cookie=cookie,
+                        match=match2,
+                        cookie_mask=0xFFFFFFFFFFFFFFFF,
+                        table_id=ofproto.OFPTT_ALL,
+                        command=ofproto.OFPFC_DELETE,
+                        out_port=ofproto.OFPP_ANY,
+                        out_group=ofproto.OFPG_ANY
+                    )
+
+                    result_status = datapath.send_msg(mod)
+
+                    if result_status:
+                        print("Path 2 remove finished in", (time.time() - computation_start) * 1000, "milliseconds")
+                    else:
+                        raise Exception("Path 2 remove is not successful")
             else:
-                raise Exception("Path installment is not successful")
+                raise Exception("Path remove is not successful")
 
         else:
             raise Exception(f"dpid: {dpid} in the available dpid list")

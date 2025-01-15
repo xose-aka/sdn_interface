@@ -3,7 +3,7 @@ import {API_CONFIG} from "../config/api.ts";
 import axios from "axios";
 import {TopoEntityDTO} from "../types";
 
-export const sendTopo = async (token: string, topologyDTO: TopoEntityDTO[]): Promise<any> => {
+export const sendTopology = async (token: string, topologyDTO: TopoEntityDTO[]): Promise<any> => {
     const response = await axios.post<TopoEntityDTO[]>(
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.TOPOLOGY_BUILD}`,
         {

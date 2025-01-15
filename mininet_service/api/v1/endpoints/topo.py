@@ -18,9 +18,13 @@ from schemas.topo import TopoBuildRequest
 
 router = APIRouter()
 
+stop_thread = threading.Event()
+mininet_thread = None
+
 
 @router.post("/build")
 async def build_topology(topo: TopoBuildRequest):
+    global mininet_thread, stop_thread
 
     # OVSSwitch
 
@@ -68,18 +72,28 @@ async def build_topology(topo: TopoBuildRequest):
             else:
                 print(f"Node: {node_id} hasn't been inserted to mininet nodes list")
 
-
     # net.pingAll()
     #
     # CLI(net)
     # net.stop()
 
+    # Stop the previous thread if it's still running
+    if mininet_thread and mininet_thread.is_alive():
+        print("Stopping the previous Mininet thread...")
+        stop_thread.set()  # Signal the thread to stop
+        mininet_thread.join()  # Wait for the thread to terminate
+        print("Previous Mininet thread stopped.")
+
+    # Reset the stop flag for the new thread
+    stop_thread.clear()
+
+    # Start a new thread
+    print("Starting a new Mininet thread...")
     mininet_thread = threading.Thread(target=run_mininet, args=(net,))
     mininet_thread.start()
 
     # def run_thread():
     #     run_mininet(topo.nodes)
-
 
     return {
         "error": 0,

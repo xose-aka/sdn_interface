@@ -17,16 +17,15 @@ import {getToken} from "../../../../services/api.ts";
 
 
 function Index({
-                   setShowAlert,
-                   setAlertType,
-                   setAlertMessage,
+                   showAlertHandler,
                    isOpen,
                    handleClose,
                    title,
                    token,
-    setToken,
+                   setToken,
                    setIntentHighlightedNodes,
-                   applyIntentToNode
+                   applyIntentToNode,
+                   isTopologyChanged
 }: ChatWindowProps) {
 
     const chatWindow = useRef<HTMLDivElement | null>(null);
@@ -55,7 +54,12 @@ function Index({
 
 
     const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setIntentMessage(event.target.value);
+
+        if (isTopologyChanged) {
+            showAlertHandler(alertTypes.warning, "Please update topology! By clicking \"Update topology\" button.")
+        } else {
+            setIntentMessage(event.target.value);
+        }
     };
 
 
@@ -220,18 +224,14 @@ function Index({
     // Function to send a chat message to the server
     const handleSendMessage = (intentMessageDTO: IntentMessageDTO) => {
         if (!token) {
-            setShowAlert(true)
-            setAlertType(alertTypes.primary)
-            setAlertMessage("No token set")
+            showAlertHandler(alertTypes.primary, "No token set")
 
             getToken()
                 .then(response => {
                     setToken(response.data.token)
                 })
                 .catch(error => {
-                    setShowAlert(true)
-                    setAlertType(alertTypes.warning)
-                    setAlertMessage("Could not fetch token")
+                    showAlertHandler(alertTypes.warning, `Could not fetch token, error:${error}`)
                 });
 
             setMessages((prevMessages) =>
@@ -293,9 +293,7 @@ function Index({
 
                 })
                 .catch((error) => {
-                    setShowAlert(true)
-                    setAlertType(alertTypes.danger)
-                    setAlertMessage(error.message)
+                    showAlertHandler(alertTypes.danger, `Could not fetch token, error:${error.message}`)
 
                     setChatHistory(prevHistory =>
                         prevHistory.map(msg =>
@@ -351,14 +349,11 @@ function Index({
                         return prevVal;
                     })
                 )
-                setShowAlert(true)
-                setAlertType(alertTypes.success)
-                setAlertMessage("Path installed")
+
+                showAlertHandler(alertTypes.success, `Path installed`)
             })
             .catch((error) => {
-                setShowAlert(true)
-                setAlertType(alertTypes.danger)
-                setAlertMessage(error.message)
+                showAlertHandler(alertTypes.danger, error.message)
 
                 setConversationId(uuidv4())
                 setMessages(prevValues =>
