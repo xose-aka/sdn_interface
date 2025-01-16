@@ -56,17 +56,16 @@ class SimpleSwitchController(ControllerBase):
         try:
             new_entry = req.json if req.body else {}
         except ValueError:
-            raise Response(status=400)
-        print("here")
+            return Response(status="400 Bad Request")
+
         weights = new_entry['weights']
-        print(weights)
 
         try:
             simple_switch.set_weights(dpid, weights)
 
         except Exception as e:
             print("Errore:", e)
-            return Response(status=500)
+            return Response(status="500 Internal Server Error", body=str(e))
 
     @route('simpleswitch', '/simpleswitch/meters/{dpid}', methods=['POST'],
            requirements={'dpid': dpid_lib.DPID_PATTERN})
@@ -76,16 +75,20 @@ class SimpleSwitchController(ControllerBase):
         try:
             new_entry = req.json if req.body else {}
         except ValueError:
-            raise Response(status=400)
+            return Response(status="400 Bad Request")
 
         rate = new_entry['rate']
+
+        rate = int(rate)
+
+        print("rate: ", type(rate))
 
         try:
             simple_switch.set_rate(dpid, rate)
 
         except Exception as e:
             print("Errore:", e)
-            return Response(status=500)
+            return Response(status="500 Internal Server Error", body=str(e))
 
     @route('simpleswitch', '/simpleswitch/hosts', methods=['GET'])
     def get_ip_hosts(self, req, **kwargs):

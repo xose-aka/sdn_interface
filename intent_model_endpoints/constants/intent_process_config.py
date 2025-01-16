@@ -164,6 +164,22 @@ intent_examples_and_response_structure = [
       "weights": {"3":0.2,"2":0.3,"1":0.5}
     }"""
     },
+    {
+        "question": "set limit 2kb/s for switch 1",
+        "answer": """{
+      "goal": "setRate",
+      "node_id": "switch 1",
+      "rate": "2"
+    }"""
+    },
+    {
+        "question": "set limit 40kb/s for switch 3",
+        "answer": """{
+      "goal": "setRate",
+      "node_id": "switch 3",
+      "rate": "40"
+    }"""
+    },
 ]
 
 # prompt templates

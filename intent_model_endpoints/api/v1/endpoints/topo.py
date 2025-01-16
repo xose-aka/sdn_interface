@@ -32,18 +32,29 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
         'nodes': [model.dict() for model in topo.nodes],
     }
 
+    print("request_data", request_data)
+
     response = requests.post(f"http://127.0.0.1:8002/api/v1/topology_builder/build", json=request_data)
 
-    response_result = response.json()
+    try:
 
-    cache_topology_nodes_and_ip_addresses.update(response_result['data'])
+        response_result = response.json()
 
-    return {
-        "error": 1,
-        "data": {
-            "message": response_result,
+        cache_topology_nodes_and_ip_addresses.update(response_result['data'])
+
+        return {
+            "error": 0,
+            "data": {
+                "message": response_result['data'],
+            }
         }
-    }
+    except requests.exceptions.JSONDecodeError:
+        return {
+            "error": 1,
+            "data": {
+                "message": response.text,
+            }
+        }
 
 # def run_mininet(nodes):
 #     my_topology = MininetTopology(nodes)

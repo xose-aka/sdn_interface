@@ -2,11 +2,11 @@ import {Button, Col, Container, Row, Spinner} from "react-bootstrap";
 import {DndProvider} from "react-dnd";
 
 import {Edge, Node, ReactFlowProvider, useEdgesState, useNodesState} from "@xyflow/react";
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, { useEffect, useState} from "react";
 import NodeList from "../../features/topology/components/SidebarNodeList/NodeList.tsx";
 import NetworkBuilder from "../../features/topology/components/NetworkBuilder/NetworkBuilder.tsx";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCircleNodes, faComments} from "@fortawesome/free-solid-svg-icons";
+import {faCircleNodes, faComments, faXmark} from "@fortawesome/free-solid-svg-icons";
 import IntentWindow from "../../features/intentChat/components/Window";
 import BootstrapAlert from "../../components/BootstrapAlert.tsx";
 import {nodeTypes} from "../../constants/topology.ts";
@@ -52,7 +52,6 @@ const TopologyPage: React.FC = () => {
 
     const [prevEdges, setPrevEdges] = useState<Edge[]>([])
 
-    const prevNodes = useRef<Node[]>([]);
 
     const [selectedNode, setSelectedNode] = React.useState<Node | null>(null)
 
@@ -206,6 +205,10 @@ const TopologyPage: React.FC = () => {
         }
     }
 
+    const cancelUpdateTopology = () => {
+        setIsUploadingTopology(false);
+    };
+
     const handleClose = () => {
         setIsIntentCommunicationOpen(false);
     };
@@ -328,6 +331,17 @@ const TopologyPage: React.FC = () => {
                                                     )
                                                 }
                                                 <span className="m-1">Update topology</span>
+                                            </Button>
+                                        )
+                                    }
+                                    {
+                                        isUploadingTopology && (
+                                            <Button
+                                                variant="danger"
+                                                onClick={() => cancelUpdateTopology()}
+                                                className="m-2 flex">
+                                                <FontAwesomeIcon icon={faXmark} />
+                                                <span className="m-1">Cancel update topology</span>
                                             </Button>
                                         )
                                     }

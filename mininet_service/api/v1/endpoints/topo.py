@@ -26,8 +26,6 @@ mininet_thread = None
 async def build_topology(topo: TopoBuildRequest):
     global mininet_thread, stop_thread
 
-    # OVSSwitch
-
     my_topology = MininetTopology(topo.nodes)
 
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
@@ -46,6 +44,19 @@ async def build_topology(topo: TopoBuildRequest):
         dpid = switch.defaultDpid()
         cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id] = dpid
 
+        for intf in switch.intfList():
+            print("Switch intf", intf)
+
+            if intf.link is not None:
+
+                switch_intf = str(intf.link.intf1)
+
+                neighbour_intf = str(intf.link.intf2)
+
+                # set interface pair in order to use configuring ports in sdn interface client
+                if switch_intf not in cache_topology_nodes_and_ip_addresses['nodes_interfaces']:
+                    cache_topology_nodes_and_ip_addresses['nodes_interfaces'].update({switch_intf: neighbour_intf})
+
     for host in net.hosts:
 
         node_id = host.name
@@ -58,9 +69,9 @@ async def build_topology(topo: TopoBuildRequest):
 
                 node_neighbours = inserted_nodes_with_neighbours[node_id]
 
-                host_intf = str(intf.link.intf2)
+                host_intf = str(intf.link.intf1)
 
-                neighbour_intf = str(intf.link.intf1)
+                neighbour_intf = str(intf.link.intf2)
 
                 neighbour_intf_split = neighbour_intf.split("-")
 
@@ -68,7 +79,12 @@ async def build_topology(topo: TopoBuildRequest):
 
                 if neighbour_node_id in node_neighbours:
                     host_ip_for_connection = node_neighbours[neighbour_node_id]
+
                     host.cmd(f'ifconfig {host_intf} {host_ip_for_connection} up')
+
+                # set interface pair in order to use configuring ports in sdn interface client
+                if host_intf not in cache_topology_nodes_and_ip_addresses['nodes_interfaces']:
+                    cache_topology_nodes_and_ip_addresses['nodes_interfaces'].update({host_intf: neighbour_intf})
             else:
                 print(f"Node: {node_id} hasn't been inserted to mininet nodes list")
 
@@ -102,5 +118,5 @@ async def build_topology(topo: TopoBuildRequest):
 
 
 def run_mininet(net):
-    CLI(net)
+    # CLI(net)
     net.stop()
