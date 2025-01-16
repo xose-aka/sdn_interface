@@ -3,9 +3,7 @@ import {Node} from "@xyflow/react";
 import {AppliedIntentResult} from "../../../../types";
 
 export interface ChatWindowProps {
-    setShowAlert: Dispatch<SetStateAction<boolean>>,
-    setAlertType: Dispatch<SetStateAction<string>>,
-    setAlertMessage: Dispatch<SetStateAction<string>>,
+    showAlertHandler: (type: string, message: string) => void,
     isOpen: boolean,
     token: string | null,
     setToken: Dispatch<SetStateAction<string | null>>,
@@ -13,4 +11,5 @@ export interface ChatWindowProps {
     applyIntentToNode: (appliedIntentResult: AppliedIntentResult) => void,
     title: string,
     setIntentHighlightedNodes: Dispatch<SetStateAction<Node[]>>,
+    isTopologyChanged: boolean,
 }

@@ -164,12 +164,28 @@ intent_examples_and_response_structure = [
       "weights": {"3":0.2,"2":0.3,"1":0.5}
     }"""
     },
+    {
+        "question": "set limit 2kb/s for switch 1",
+        "answer": """{
+      "goal": "setRate",
+      "node_id": "switch 1",
+      "rate": "2"
+    }"""
+    },
+    {
+        "question": "set limit 40kb/s for switch 3",
+        "answer": """{
+      "goal": "setRate",
+      "node_id": "switch 3",
+      "rate": "40"
+    }"""
+    },
 ]
 
 # prompt templates
-weights_template = """You are a very good and performant system to parse human intent to JSON resultect. Your duty is to
- parse a human intent into JSON resultect to set weights on ports in order to distribute traffic over the network \
-[CONSTRAINTS]
+weights_template = """You are a very good and performant system to parse human intent to JSON result ect. Your duty 
+is to parse a human intent into JSON result ect to set weights on ports in order to distribute traffic over the 
+network [CONSTRAINTS]
 
 1. If the intent is not really related to setting weights, set the goal to "noGoal"
 2. If the intent is really related to set weights, set the goal to "setWeights"
@@ -194,8 +210,8 @@ additional comments:
 Here is the intent:
 {query}"""
 
-rate_template = """You are a very good and performant system to parse human intent to JSON resultect. Your duty is to 
-parse a human intent into JSON resultect to set a rate limiter on a specified switch in order to rate limit all the 
+rate_template = """You are a very good and performant system to parse human intent to JSON result ect. Your duty is to 
+parse a human intent into JSON result ect to set a rate limiter on a specified switch in order to rate limit all the 
 incoming traffic on that switch [CONSTRAINTS]
 
 1. If the intent is not really related to set a rate limiter, set the goal to "noGoal" 2. If the intent is really 
@@ -219,8 +235,8 @@ following schema definition without additional comments:
 Here is the intent:
 {query}"""
 
-block_template = """You are a very good and performant system to parse human intent to JSON resultect. Your duty is 
-to parse a human intent into JSON resultect to block network traffic. \
+block_template = """You are a very good and performant system to parse human intent to JSON result ect. Your duty is 
+to parse a human intent into JSON result ect to block network traffic. \
 
 [CONSTRAINTS]
 
@@ -244,8 +260,8 @@ should be returned in json format based on the following schema definition witho
 Here is the intent:
 {query}"""
 
-delete_template = """You are a very good and performant system to parse human intent to JSON resultect. Your duty is 
-to parse a human intent into JSON resultect to delete a rule that block traffic. \
+delete_template = """You are a very good and performant system to parse human intent to JSON result ect. Your duty is 
+to parse a human intent into JSON result ect to delete a rule that block traffic. \
 
 [CONSTRAINTS]
 

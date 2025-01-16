@@ -57,7 +57,6 @@ def check_intent_node_ports(processed_intent):
         node_id = processed_intent.get("node_id")
         node_id_without_space = str(node_id).replace(" ", "")
 
-
         if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes_ports']:
             intent_ports = weights.keys()
             node_ports = cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id_without_space]

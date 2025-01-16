@@ -3,7 +3,7 @@ import subprocess
 
 def run_ryu_manager(file_name):
     # Define the Ryu Manager command and the script name
-    command = ["ryu-manager", "--observe-links", file_name]
+    command = ["ryu-manager", "--observe-links", "--verbose", file_name]
 
     try:
         # Run the command
