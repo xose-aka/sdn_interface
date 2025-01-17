@@ -10,16 +10,22 @@ function useToken() {
 
         const savedToken = localStorage.getItem('token');
 
-        if (savedToken) {
-            setToken(savedToken)
-        } else {
-            getToken()
-                .then(response => {
-                    setToken(response.data.token)
-                })
-                .catch(error => {
-                    console.log(error)
-                });
+
+
+        if (!token) {
+
+            if (savedToken) {
+                setToken(savedToken)
+            } else {
+                getToken()
+                    .then(response => {
+                        setToken(response.data.token)
+                        localStorage.setItem('token', response.data.token);
+                    })
+                    .catch(error => {
+                        console.log(error)
+                    });
+            }
         }
     }, [resetToken]);
 

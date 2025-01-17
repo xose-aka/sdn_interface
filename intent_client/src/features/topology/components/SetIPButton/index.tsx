@@ -6,6 +6,7 @@ export default function IpSetButton(
         mask,
         showModal,
         ipAddress,
+        port,
         label
     }: IpSetButtonProps) {
 
@@ -34,6 +35,21 @@ export default function IpSetButton(
                     left: "10px"
                 }}
             > {label}</Badge>
+
+            {
+                port &&
+                (
+                    <Badge
+                        bg="primary"
+                        style={{
+                            position: "absolute",
+                            top: "-10px",
+                            right: "10px"
+                        }}
+                    > {port}</Badge>
+                )
+            }
+
             {IPAddressLabel}
         </Button>
     )

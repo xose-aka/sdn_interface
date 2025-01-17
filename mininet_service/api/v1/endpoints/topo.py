@@ -1,4 +1,5 @@
 import threading
+from builtins import print
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -69,13 +70,17 @@ async def build_topology(topo: TopoBuildRequest):
 
                 node_neighbours = inserted_nodes_with_neighbours[node_id]
 
-                host_intf = str(intf.link.intf1)
+                host_intf = str(intf.link.intf2)
 
-                neighbour_intf = str(intf.link.intf2)
+                neighbour_intf = str(intf.link.intf1)
+
+                print("Links:", host_intf, neighbour_intf)
 
                 neighbour_intf_split = neighbour_intf.split("-")
 
                 neighbour_node_id = neighbour_intf_split[0]
+
+                print("Intf:", neighbour_node_id, node_neighbours)
 
                 if neighbour_node_id in node_neighbours:
                     host_ip_for_connection = node_neighbours[neighbour_node_id]
