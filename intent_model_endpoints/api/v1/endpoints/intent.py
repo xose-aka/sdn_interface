@@ -36,7 +36,6 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
     else:
 
         conversation_data = encoded_conversations[conversation_id]
-        intent = conversation_data["intent"]
         processed_intent = conversation_data["processed_intent"]
 
         fix_intent = request.intent
@@ -64,54 +63,40 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
         now = datetime.now()
         date = now.strftime("%d/%m/%Y %H:%M:%S")
 
+        is_error = False
+        error_counter = 0
+        message = ""
+
         if check_intent_node_result["error"]:
-            return {
-                "error": check_intent_node_result["error"],
-                "data": {
-                    "intentId": request.intentId,  # Generate unique ID for server message
-                    "message": check_intent_node_result["message"],
-                    "sender": "server",
-                    "conversationId": conversation_id,
-                    "responseMessageId": request.responseMessageId,
-                    "timestamp": date
-                }
-            }
+            is_error = check_intent_node_result["error"]
+            error_counter += 1
+
+            message += f"\n{error_counter})" + check_intent_node_result["message"]
 
         check_intent_node_result = check_intent_ips(processed_intent)
 
         if check_intent_node_result["error"]:
-            return {
-                "error": check_intent_node_result["error"],
-                "data": {
-                    "intentId": request.intentId,  # Generate unique ID for server message
-                    "message": check_intent_node_result["message"],
-                    "sender": "server",
-                    "conversationId": conversation_id,
-                    "responseMessageId": request.responseMessageId,
-                    "timestamp": date
-                }
-            }
+            is_error = check_intent_node_result["error"]
+            error_counter += 1
+
+            message += f"\n{error_counter})" + check_intent_node_result["message"]
 
         check_intent_node_result = check_intent_node_ports(processed_intent)
 
         if check_intent_node_result["error"]:
-            return {
-                "error": check_intent_node_result["error"],
-                "data": {
-                    "intentId": request.intentId,  # Generate unique ID for server message
-                    "message": check_intent_node_result["message"],
-                    "sender": "server",
-                    "conversationId": conversation_id,
-                    "responseMessageId": request.responseMessageId,
-                    "timestamp": date
-                }
-            }
+            is_error = check_intent_node_result["error"]
+            error_counter += 1
+
+            message += f"\n{error_counter})" + check_intent_node_result["message"]
+
+        if is_error is False:
+            message = str(processed_intent).replace("'", "\"")
 
         return {
-            "error": check_intent_node_result["error"],
+            "error": is_error,
             "data": {
                 "intentId": request.intentId,  # Generate unique ID for server message
-                "message": str(processed_intent).replace("'", "\""),
+                "message": message,
                 "sender": "server",
                 "conversationId": conversation_id,
                 "responseMessageId": request.responseMessageId,
@@ -126,7 +111,6 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
 
 @router.post('/conversation/confirm')
 async def confirm(confirm_conversation: ConfirmConversation, token: str = Depends(verify_token)):
-
     conversation_id = confirm_conversation.conversationId
 
     encoded_conversation = encoded_conversations.get(confirm_conversation.conversationId)
