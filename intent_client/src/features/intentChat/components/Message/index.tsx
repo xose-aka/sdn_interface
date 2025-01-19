@@ -7,6 +7,9 @@ import {SenderTypes, Statuses} from "../../constants/intentMessage.ts";
 
 function Index({ message, submitConfirmMessage }: MessageProps)
 {
+
+    const text = message.text
+
     return (
         <div className={`chat-message ${message.sender == SenderTypes["USER"] ? 'is-same-origin' : ''}`}>
             <div className="chat-message__item__timestamp">{message.timestamp.toString()}</div>
@@ -18,8 +21,9 @@ function Index({ message, submitConfirmMessage }: MessageProps)
                 }
                 <span className="chat-message__item__text">
                     <span className={ message.sender === SenderTypes["SERVER"] &&
-                                      message.status === Statuses["PENDING"] ? "chat-message__loading": "" }>
-                        {message.text}
+                                      message.status === Statuses["PENDING"] ? "chat-message__loading": "" }
+                    style={{whiteSpace: "pre-line"}}>
+                        {text}
                     </span>
                 </span>
             </div>

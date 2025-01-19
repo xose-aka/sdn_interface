@@ -26,26 +26,73 @@ def check_intent_ips(processed_intent):
     ipv4_src = processed_intent.get("ip_source")
     ipv4_dst = processed_intent.get("ip_dest")
 
-    if ipv4_src is None or ipv4_dst is None or ipv4_src == 'any' or ipv4_dst == 'any':
+    if any([
+        all([
+            ipv4_src is None,
+            ipv4_dst is None
+        ]),
+        all([
+            ipv4_src is 'any',
+            ipv4_dst is 'any'
+        ])
+    ]):
         return {
             "error": 0,
-            "message": f"This check doesn't provided"
+            "message": f"IP check is not required"
         }
-    if ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+
+    if all([
+        any([
+            ipv4_dst is None,
+            ipv4_dst == 'any'
+        ]),
+        ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
         return {
             "error": 1,
             "message": f"IP address: {ipv4_src} doesn't exist"
         }
-    elif ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+
+    if all([
+        any([
+            ipv4_src is None,
+            ipv4_src == 'any'
+        ]),
+        ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
         return {
             "error": 1,
             "message": f"IP address: {ipv4_dst} doesn't exist"
         }
-    else:
+
+    if all([
+        ipv4_src is not None,
+        ipv4_dst is not None,
+        ipv4_src == 'any',
+        ipv4_dst == 'any',
+        ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
         return {
-            "error": 0,
-            "message": f"IP addresses exist"
+            "error": 1,
+            "message": f"IP address: {ipv4_dst} doesn't exist"
         }
+
+    if all(
+            [ipv4_src is not None]
+            [ipv4_dst is not None]
+            [ipv4_src == 'any']
+            [ipv4_dst == 'any']
+            [ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']]
+    ):
+        return {
+            "error": 1,
+            "message": f"IP address: {ipv4_src} doesn't exist"
+        }
+
+    return {
+        "error": 0,
+        "message": f"IP addresses exist"
+    }
 
 
 def check_intent_node_ports(processed_intent):
