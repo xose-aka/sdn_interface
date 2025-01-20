@@ -27,6 +27,8 @@ mininet_thread = None
 async def build_topology(topo: TopoBuildRequest):
     global mininet_thread, stop_thread
 
+    print("topo.nodes: ", topo.nodes)
+
     my_topology = MininetTopology(topo.nodes)
 
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
@@ -37,6 +39,8 @@ async def build_topology(topo: TopoBuildRequest):
 
     inserted_nodes_with_neighbours = my_topology.get_inserted_nodes()
 
+    print("inderted nodes: ", inserted_nodes_with_neighbours)
+
     for switch in net.switches:
         node_id = str(switch)
 
@@ -46,7 +50,6 @@ async def build_topology(topo: TopoBuildRequest):
         cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id] = dpid
 
         for intf in switch.intfList():
-            print("Switch intf", intf)
 
             if intf.link is not None:
 
@@ -74,13 +77,9 @@ async def build_topology(topo: TopoBuildRequest):
 
                 neighbour_intf = str(intf.link.intf1)
 
-                print("Links:", host_intf, neighbour_intf)
-
                 neighbour_intf_split = neighbour_intf.split("-")
 
                 neighbour_node_id = neighbour_intf_split[0]
-
-                print("Intf:", neighbour_node_id, node_neighbours)
 
                 if neighbour_node_id in node_neighbours:
                     host_ip_for_connection = node_neighbours[neighbour_node_id]

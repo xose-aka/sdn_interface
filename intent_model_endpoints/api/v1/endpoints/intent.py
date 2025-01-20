@@ -71,7 +71,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             is_error = check_intent_node_result["error"]
             error_counter += 1
 
-            message += f"\n{error_counter})" + check_intent_node_result["message"]
+            message += f"{error_counter})" + check_intent_node_result["message"]
 
         check_intent_node_result = check_intent_ips(processed_intent)
 
@@ -79,7 +79,10 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             is_error = check_intent_node_result["error"]
             error_counter += 1
 
-            message += f"\n{error_counter})" + check_intent_node_result["message"]
+            if error_counter > 1:
+                message += "\n"
+
+            message += f"{error_counter})" + check_intent_node_result["message"]
 
         check_intent_node_result = check_intent_node_ports(processed_intent)
 
@@ -87,7 +90,10 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             is_error = check_intent_node_result["error"]
             error_counter += 1
 
-            message += f"\n{error_counter})" + check_intent_node_result["message"]
+            if error_counter > 1:
+                message += "\n"
+
+            message += f"{error_counter})" + check_intent_node_result["message"]
 
         if is_error is False:
             message = str(processed_intent).replace("'", "\"")

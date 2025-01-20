@@ -22,7 +22,7 @@ function Index({ message, submitConfirmMessage }: MessageProps)
                 <span className="chat-message__item__text">
                     <span className={ message.sender === SenderTypes["SERVER"] &&
                                       message.status === Statuses["PENDING"] ? "chat-message__loading": "" }
-                    style={{whiteSpace: "pre-line"}}>
+                            style={{whiteSpace: "pre-line"}}>
                         {text}
                     </span>
                 </span>
