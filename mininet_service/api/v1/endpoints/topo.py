@@ -2,10 +2,7 @@ import threading
 from builtins import print
 
 from fastapi import APIRouter
-from fastapi import Depends
-from fastapi.encoders import jsonable_encoder
-
-from api.v1.dependencies import verify_token
+from mininet.clean import cleanup
 
 from mininet.node import CPULimitedHost, OVSSwitch
 from mininet.net import Mininet
@@ -16,6 +13,7 @@ from mininet.cli import CLI
 from cache.general import cache_topology_nodes_and_ip_addresses
 
 from schemas.topo import TopoBuildRequest
+from services.topology import configure_all_nodes
 
 router = APIRouter()
 
@@ -27,7 +25,7 @@ mininet_thread = None
 async def build_topology(topo: TopoBuildRequest):
     global mininet_thread, stop_thread
 
-    print("topo.nodes: ", topo.nodes)
+    cleanup()
 
     my_topology = MininetTopology(topo.nodes)
 
@@ -41,56 +39,7 @@ async def build_topology(topo: TopoBuildRequest):
 
     print("inderted nodes: ", inserted_nodes_with_neighbours)
 
-    for switch in net.switches:
-        node_id = str(switch)
-
-        cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id] = list(switch.ports.values())
-
-        dpid = switch.defaultDpid()
-        cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id] = dpid
-
-        for intf in switch.intfList():
-
-            if intf.link is not None:
-
-                switch_intf = str(intf.link.intf1)
-
-                neighbour_intf = str(intf.link.intf2)
-
-                # set interface pair in order to use configuring ports in sdn interface client
-                if switch_intf not in cache_topology_nodes_and_ip_addresses['nodes_interfaces']:
-                    cache_topology_nodes_and_ip_addresses['nodes_interfaces'].update({switch_intf: neighbour_intf})
-
-    for host in net.hosts:
-
-        node_id = host.name
-
-        cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id] = list(host.ports.values())
-
-        for intf in host.intfList():
-
-            if node_id in inserted_nodes_with_neighbours:
-
-                node_neighbours = inserted_nodes_with_neighbours[node_id]
-
-                host_intf = str(intf.link.intf2)
-
-                neighbour_intf = str(intf.link.intf1)
-
-                neighbour_intf_split = neighbour_intf.split("-")
-
-                neighbour_node_id = neighbour_intf_split[0]
-
-                if neighbour_node_id in node_neighbours:
-                    host_ip_for_connection = node_neighbours[neighbour_node_id]
-
-                    host.cmd(f'ifconfig {host_intf} {host_ip_for_connection} up')
-
-                # set interface pair in order to use configuring ports in sdn interface client
-                if host_intf not in cache_topology_nodes_and_ip_addresses['nodes_interfaces']:
-                    cache_topology_nodes_and_ip_addresses['nodes_interfaces'].update({host_intf: neighbour_intf})
-            else:
-                print(f"Node: {node_id} hasn't been inserted to mininet nodes list")
+    configure_all_nodes(net, inserted_nodes_with_neighbours)
 
     # net.pingAll()
     #
@@ -122,5 +71,5 @@ async def build_topology(topo: TopoBuildRequest):
 
 
 def run_mininet(net):
-    # CLI(net)
+    CLI(net)
     net.stop()

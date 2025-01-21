@@ -1,7 +1,6 @@
 from mininet.topo import Topo
 from cache.general import cache_topology_nodes_and_ip_addresses
 from constants.general import NodeTypes
-from mininet.examples.linuxrouter import LinuxRouter
 
 
 class MininetTopology(Topo):
@@ -38,17 +37,17 @@ class MininetTopology(Topo):
 
             if node_type == NodeTypes.HOST:
                 inserted_node_id = self.addHost(node_id)
-                inserted_nodes[inserted_node_id] = {}
+                inserted_nodes[inserted_node_id] = {"type": node_type}
                 host_counter += 1
 
             elif node_type == NodeTypes.SWITCH:
                 inserted_node_id = self.addSwitch(node_id, opts=opts)
-                inserted_nodes[inserted_node_id] = {}
+                inserted_nodes[inserted_node_id] = {"type": node_type}
                 switch_counter += 1
 
             elif node_type == NodeTypes.ROUTER:
-                inserted_node_id = self.addNode(node_id, cls=LinuxRouter)
-                inserted_nodes[inserted_node_id] = {}
+                inserted_node_id = self.addSwitch(node_id, opts=opts)
+                inserted_nodes[inserted_node_id] = {"type": node_type}
                 router_counter += 1
 
             else:
@@ -79,15 +78,15 @@ class MininetTopology(Topo):
                     inserted_neighbours_of_neighbour = inserted_nodes[neighbour_node_id]
                     inserted_neighbors_of_node = inserted_nodes[node_id]
 
-                    if (
-                            node_id in inserted_neighbours_of_neighbour and
-                            neighbour_node_id in inserted_neighbors_of_node
-                    ):
+                    print(f"node_id: {node_id}, inserted_neighbours_of_neighbour: {inserted_neighbours_of_neighbour}"
+                          f"neighbour_node_id:{neighbour_node_id}, inserted_neighbors_of_node:{inserted_neighbors_of_node}")
+
+                    if all([
+                        node_id in inserted_neighbours_of_neighbour,
+                        neighbour_node_id in inserted_neighbors_of_node
+                    ]):
                         inserted_nodes[node_id][neighbour_node_id] = connection_ip_with_mask
                         inserted_ip_addresses.append(connection_ip)
-
-                        print(f"Node id: {node_id}'s ip:{connection_ip_with_mask} has been set to "
-                              f"neighbour: {neighbour_node_id}.")
 
                     else:
                         self.addLink(node_id, neighbour_node_id, bw=100)
@@ -96,9 +95,6 @@ class MininetTopology(Topo):
                         inserted_nodes[neighbour_node_id][node_id] = None
 
                         inserted_ip_addresses.append(connection_ip)
-
-                        print(f"Node id: {node_id}'s ip:{connection_ip_with_mask} and link has been set to "
-                              f"neighbour: {neighbour_node_id}.")
                 else:
                     print(f"Node: {node_id} or {neighbour_node_id} haven't been inserted yet!")
 
