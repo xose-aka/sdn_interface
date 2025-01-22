@@ -78,9 +78,6 @@ class MininetTopology(Topo):
                     inserted_neighbours_of_neighbour = inserted_nodes[neighbour_node_id]
                     inserted_neighbors_of_node = inserted_nodes[node_id]
 
-                    print(f"node_id: {node_id}, inserted_neighbours_of_neighbour: {inserted_neighbours_of_neighbour}"
-                          f"neighbour_node_id:{neighbour_node_id}, inserted_neighbors_of_node:{inserted_neighbors_of_node}")
-
                     if all([
                         node_id in inserted_neighbours_of_neighbour,
                         neighbour_node_id in inserted_neighbors_of_node

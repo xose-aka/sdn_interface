@@ -34,22 +34,21 @@ def configure_each_node(node: Node, inserted_nodes_with_neighbours: dict) -> Non
 
                 node_type = inserted_node_type_and_neighbours['type']
 
-                if node_type == NodeTypes.HOST:
+                intf1 = str(intf.link.intf1)
 
-                    node_intf = str(intf.link.intf1)
+                intf2 = str(intf.link.intf2)
 
-                    neighbour_intf = str(intf.link.intf2)
-
-                elif node_type == NodeTypes.ROUTER:
-
-                    node_intf = str(intf.link.intf2)
-
-                    neighbour_intf = str(intf.link.intf1)
-
-                    node.cmd("sysctl -w net.ipv4.ip_forward=1")
-
+                if node_id in intf1:
+                    node_intf = intf1
+                    neighbour_intf = intf2
+                elif node_id in intf2:
+                    node_intf = intf2
+                    neighbour_intf = intf1
                 else:
                     continue
+
+                if node_type == NodeTypes.ROUTER:
+                    node.cmd("sysctl -w net.ipv4.ip_forward=1")
 
                 neighbour_intf_split = neighbour_intf.split("-")
 

@@ -25,7 +25,7 @@ mininet_thread = None
 async def build_topology(topo: TopoBuildRequest):
     global mininet_thread, stop_thread
 
-    cleanup()
+    # cleanup()
 
     my_topology = MininetTopology(topo.nodes)
 
@@ -37,14 +37,7 @@ async def build_topology(topo: TopoBuildRequest):
 
     inserted_nodes_with_neighbours = my_topology.get_inserted_nodes()
 
-    print("inderted nodes: ", inserted_nodes_with_neighbours)
-
     configure_all_nodes(net, inserted_nodes_with_neighbours)
-
-    # net.pingAll()
-    #
-    # CLI(net)
-    # net.stop()
 
     # Stop the previous thread if it's still running
     if mininet_thread and mininet_thread.is_alive():
@@ -61,9 +54,6 @@ async def build_topology(topo: TopoBuildRequest):
     mininet_thread = threading.Thread(target=run_mininet, args=(net,))
     mininet_thread.start()
 
-    # def run_thread():
-    #     run_mininet(topo.nodes)
-
     return {
         "error": 0,
         "data": cache_topology_nodes_and_ip_addresses
@@ -71,5 +61,5 @@ async def build_topology(topo: TopoBuildRequest):
 
 
 def run_mininet(net):
-    CLI(net)
+    # CLI(net)
     net.stop()

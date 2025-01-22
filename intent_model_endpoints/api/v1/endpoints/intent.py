@@ -10,7 +10,8 @@ from exceptions.intent_format_exception import IntentFormatException
 from exceptions.intent_goal_service_not_available_exception import IntentGoalServiceNotAvailableException
 from schemas.chat import ConfirmConversation, IntentMessageRequest
 from services.intent_process import prompt_router
-from services.ryu import check_intent_nodes, prepare_ryu_url_and_request_data, check_intent_ips, check_intent_node_ports
+from services.ryu import check_intent_nodes, prepare_ryu_url_and_request_data, check_intent_ips, \
+    check_intent_node_ports, check_if_node_dpid_exists
 from utils.request import request_post_external_data
 
 router = APIRouter()
@@ -58,14 +59,14 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             "intent": intent,
         }
 
-        check_intent_node_result = check_intent_nodes(processed_intent)
-
         now = datetime.now()
         date = now.strftime("%d/%m/%Y %H:%M:%S")
 
         is_error = False
         error_counter = 0
         message = ""
+
+        check_intent_node_result = check_intent_nodes(processed_intent)
 
         if check_intent_node_result["error"]:
             is_error = check_intent_node_result["error"]
@@ -85,6 +86,17 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
             message += f"{error_counter})" + check_intent_node_result["message"]
 
         check_intent_node_result = check_intent_node_ports(processed_intent)
+
+        if check_intent_node_result["error"]:
+            is_error = check_intent_node_result["error"]
+            error_counter += 1
+
+            if error_counter > 1:
+                message += "\n"
+
+            message += f"{error_counter})" + check_intent_node_result["message"]
+
+        check_intent_node_result = check_if_node_dpid_exists(processed_intent)
 
         if check_intent_node_result["error"]:
             is_error = check_intent_node_result["error"]

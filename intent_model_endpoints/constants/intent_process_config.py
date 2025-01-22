@@ -26,10 +26,10 @@ intent_examples_and_response_structure = [
     }"""
     },
     {
-        "question": "block traffic from 10.1.1.1 to 10.1.1.2 on switch 4",
+        "question": "block traffic from 10.1.1.1 to 10.1.1.2 on host 4",
         "answer": """{
       "goal": "blockTraffic",
-      "node_id": "switch 4",
+      "node_id": "host 4",
       "ip_source": "10.1.1.1",
       "ip_dest": "10.1.1.2"
     }"""
@@ -52,10 +52,10 @@ intent_examples_and_response_structure = [
     }"""
     },
     {
-        "question": "block traffic from 192.168.1.1 to 192.168.1.2 on switch 1",
+        "question": "block traffic from 192.168.1.1 to 192.168.1.2 on router 1",
         "answer": """{
       "goal": "blockTraffic",
-      "node_id": "switch 1",
+      "node_id": "router 1",
       "ip_source": "192.168.1.1",
       "ip_dest": "192.168.1.2"
     }"""
