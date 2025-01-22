@@ -14,6 +14,7 @@ import IpSetButton from "../SetIPButton";
 import {NodeEdgeTypes} from "../../constants.ts";
 import {useModal} from "../SetIPModalProvider/useModal.ts";
 import {nodeTypes} from "../../../../constants/topology.ts";
+import {Badge} from "react-bootstrap";
 
 export default function CustomEdge({
                                        id,
@@ -81,12 +82,14 @@ export default function CustomEdge({
 
     const sourceIP = data!.sourceIPAddress as string
     const targetIP = data!.targetIPAddress as string
+
+    const sourcePort = data!.sourcePort as string
+    const targetPort = data!.targetPort as string
+
     const mask = data!.mask as string
 
     return (
-        <
-
-        >
+        <>
             <BaseEdge
                 path={edgePath}
                 markerEnd={markerEnd}
@@ -104,6 +107,7 @@ export default function CustomEdge({
                         // if you have an interactive element, set pointer-events: all
                         pointerEvents: 'all',
                     }}
+                    className="nodrag nopan"
                 >
                     {
                         sourceNode?.data?.nodeType !== undefined &&
@@ -111,9 +115,19 @@ export default function CustomEdge({
                         (<IpSetButton
                             ipAddress={sourceIP}
                             label={labelSource}
+                            port={sourcePort}
                             mask={mask}
                             showModal={ () => showModal(id, NodeEdgeTypes["SOURCE"], labelSource) }
                         />)
+                    }
+                    {
+                        sourceNode?.data?.nodeType !== undefined &&
+                        sourceNode.data.nodeType == nodeTypes["SWITCH"] &&
+                        (
+                            <Badge
+                                bg="primary"
+                            > {sourcePort}</Badge>
+                        )
                     }
                 </div>
                 <div
@@ -139,7 +153,10 @@ export default function CustomEdge({
                         // everything inside EdgeLabelRenderer has no pointer events by default
                         // if you have an interactive element, set pointer-events: all
                         pointerEvents: 'all',
-                    }}>
+                    }}
+                    className="nodrag nopan"
+
+                >
                     {
                         targetNode?.data?.nodeType !== undefined &&
                         targetNode.data.nodeType !== nodeTypes["SWITCH"] &&
@@ -147,8 +164,18 @@ export default function CustomEdge({
                             ipAddress={targetIP}
                             label={labelTarget}
                             mask={mask}
+                            port={targetPort}
                             showModal={ () => showModal(id, NodeEdgeTypes["TARGET"], labelTarget) }
                         />)
+                    }
+                    {
+                        targetNode?.data?.nodeType !== undefined &&
+                        targetNode.data.nodeType == nodeTypes["SWITCH"] &&
+                        (
+                            <Badge
+                                bg="primary"
+                            > {targetPort}</Badge>
+                        )
                     }
                 </div>
             </EdgeLabelRenderer>

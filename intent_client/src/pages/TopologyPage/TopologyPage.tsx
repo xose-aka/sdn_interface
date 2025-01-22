@@ -16,7 +16,7 @@ import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkE
 import {getReactDnDBackend} from "../../utils/helper.ts";
 import {getToken, sendTopology} from "../../services/api.ts";
 import useToken from "../../hooks";
-import {AppliedIntentResult, Neighbour, TopoEntityDTO} from "../../types";
+import {AppliedIntentResult, Neighbour, TopoEntityDTO, UpdateTopologyResponse} from "../../types";
 import NodeIntentsWindow from "../../features/topology/components/NodeIntentsWindow/NodeIntentsWindow.tsx";
 
 const  networkNodeTypes = {
@@ -161,11 +161,7 @@ const TopologyPage: React.FC = () => {
         if (token) {
             sendTopology(token, topologyNodes)
                 .then(result => {
-                    showAlertHandler(alertTypes.success, `Topology updated`)
-                    setIsUploadingTopology(false)
-                    setIsTopologyChanged(false)
-                    console.log(result)
-                    setPrevEdges( JSON.parse(JSON.stringify(edges)) )
+                    topologyUpdateResponse(result)
                 })
         } else {
             getToken()
@@ -174,16 +170,83 @@ const TopologyPage: React.FC = () => {
 
                     sendTopology(response.data.token, topologyNodes)
                         .then(result => {
-                            showAlertHandler(alertTypes.success, `Topology updated`)
-                            setIsUploadingTopology(false)
-                            setIsTopologyChanged(false)
-                            console.log(result)
-                            setPrevEdges( JSON.parse(JSON.stringify(edges)) )
+                            topologyUpdateResponse(result)
                         })
                 })
                 .catch(error => {
                     showAlertHandler(alertTypes.warning, `Could not fetch token, error: ${error}`)
                 });
+        }
+    }
+
+    const topologyUpdateResponse = (result: UpdateTopologyResponse) => {
+
+        if (result.error) {
+            showAlertHandler(alertTypes.success, `Topology updated`)
+            setIsUploadingTopology(false)
+            // setIsTopologyChanged(false)
+            setPrevEdges( JSON.parse(JSON.stringify(edges)) )
+        } else {
+            showAlertHandler(alertTypes.success, `Topology updated`)
+            setIsUploadingTopology(false)
+            setIsTopologyChanged(false)
+            setPrevEdges( JSON.parse(JSON.stringify(edges)) )
+
+            let preparedNodeInterfaces: { [key: string]: { [key: string]: string } } = {}
+
+
+            for( const node_interface in result.data.nodes_interfaces) {
+                const neighbour_node_interface = result.data.nodes_interfaces[node_interface]
+
+                const [nodeId, interfaceId] = node_interface.split("-");
+                const [neighbourNodeId, neighbourInterfaceId] = neighbour_node_interface.split("-");
+
+                if ( !( nodeId in preparedNodeInterfaces) ) {
+                    preparedNodeInterfaces[nodeId] = {}
+                }
+
+                preparedNodeInterfaces[nodeId][interfaceId] = neighbourNodeId
+
+            }
+            
+            setEdges((prevEdges) => {
+
+                prevEdges.map((edge) => {
+                    if ( edge.source in preparedNodeInterfaces ) {
+
+
+                        for( const node_interface in preparedNodeInterfaces[edge.source]) {
+
+                            const neighbourNodeId = preparedNodeInterfaces[edge.source][node_interface]
+
+                            if (neighbourNodeId == edge.target) {
+                                edge.data = edge.data ?? {};
+                                edge.data.sourcePort = `Port ${node_interface.toString().replace(/\D/g, '')}`
+                            }
+
+                        }
+                    }
+
+                    if ( edge.target in preparedNodeInterfaces ) {
+
+
+                        for( const node_interface in preparedNodeInterfaces[edge.target]) {
+
+                            const neighbourNodeId = preparedNodeInterfaces[edge.target][node_interface]
+
+                            if (neighbourNodeId == edge.source) {
+                                edge.data = edge.data ?? {};
+                                edge.data.targetPort = `Port ${node_interface.toString().replace(/\D/g, '')}`
+                            }
+
+                        }
+                    }
+
+                    return edge
+                })
+
+                return prevEdges
+            })
         }
     }
 

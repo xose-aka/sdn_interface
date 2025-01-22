@@ -6,4 +6,5 @@ interface IpSetButtonProps {
     showModal: () => void
     ipAddress: string
     label: string
+    port: string
 }

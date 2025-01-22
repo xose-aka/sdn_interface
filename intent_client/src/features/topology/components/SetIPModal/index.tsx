@@ -83,6 +83,7 @@ export default function () {
     };
 
     const handleHideModal = () => {
+        setValidated(false)
         setLocalMask("")
         hideModal();
     };

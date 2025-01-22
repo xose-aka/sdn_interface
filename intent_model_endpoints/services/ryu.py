@@ -6,9 +6,14 @@ from cache.general import cache_topology_nodes_and_ip_addresses
 
 def check_intent_nodes(processed_intent):
     node_id = processed_intent.get("node_id")
-    node_id_without_space = str(node_id).replace(" ", "")
 
-    print("available nodes: ", cache_topology_nodes_and_ip_addresses['nodes'])
+    if node_id is None:
+        return {
+            "error": 1,
+            "message": f"Intent for this node is not applicable"
+        }
+
+    node_id_without_space = str(node_id).replace(" ", "")
 
     if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes']:
         return {
@@ -26,30 +31,81 @@ def check_intent_ips(processed_intent):
     ipv4_src = processed_intent.get("ip_source")
     ipv4_dst = processed_intent.get("ip_dest")
 
-    if ipv4_src is None or ipv4_dst is None or ipv4_src == 'any' or ipv4_dst == 'any':
+    if any([
+        all([
+            ipv4_src is None,
+            ipv4_dst is None
+        ]),
+        all([
+            ipv4_src == 'any',
+            ipv4_dst == 'any'
+        ])
+    ]):
         return {
             "error": 0,
-            "message": f"This check doesn't provided"
+            "message": f"IP check is not required"
         }
-    if ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+
+    if all([
+        any([
+            ipv4_dst is None,
+            ipv4_dst == 'any'
+        ]),
+        ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
         return {
             "error": 1,
             "message": f"IP address: {ipv4_src} doesn't exist"
         }
-    elif ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']:
+
+    if all([
+        any([
+            ipv4_src is None,
+            ipv4_src == 'any'
+        ]),
+        ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
         return {
             "error": 1,
             "message": f"IP address: {ipv4_dst} doesn't exist"
         }
-    else:
-        return {
-            "error": 0,
-            "message": f"IP addresses exist"
-        }
+
+    is_error = 0
+    message = ""
+
+    if all([
+        ipv4_src is not None,
+        ipv4_dst is not None,
+        ipv4_src != 'any',
+        ipv4_dst != 'any',
+        ipv4_dst not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
+        is_error = 1
+        message += f"IP address: {ipv4_dst} doesn't exist."
+
+    if all([
+        ipv4_src is not None,
+        ipv4_dst is not None,
+        ipv4_src != 'any',
+        ipv4_dst != 'any',
+        ipv4_src not in cache_topology_nodes_and_ip_addresses['inserted_ip_addresses']
+    ]):
+        is_error = 1
+        message += f"IP address: {ipv4_src} doesn't exist."
+
+    if is_error is 0:
+        message = "IP addresses exist"
+
+    return {
+        "error": is_error,
+        "message": message
+    }
 
 
 def check_intent_node_ports(processed_intent):
     goal = processed_intent.get("goal")
+
+    print(f"goal {goal}")
 
     if goal == "setWeights":
         weights = processed_intent.get("weights")
@@ -60,9 +116,6 @@ def check_intent_node_ports(processed_intent):
         if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes_ports']:
             intent_ports = weights.keys()
             node_ports = cache_topology_nodes_and_ip_addresses['nodes_ports'][node_id_without_space]
-
-            print("intetn ports ", intent_ports)
-            print("node ports ", node_ports)
 
             not_exist_port = None
 
@@ -94,6 +147,22 @@ def check_intent_node_ports(processed_intent):
         return {
             "error": 0,
             "message": f"Ports exist"
+        }
+
+
+def check_if_node_dpid_exists(processed_intent):
+    node_id = processed_intent.get("node_id")
+    node_id_without_space = str(node_id).replace(" ", "")
+
+    if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes_dpid']:
+        return {
+            "error": 0,
+            "message": f"Node: {node_id} datapath exists"
+        }
+    else:
+        return {
+            "error": 1,
+            "message": f"Node: {node_id} datapath doesn't exist. Intent is not applicable to this node."
         }
 
 

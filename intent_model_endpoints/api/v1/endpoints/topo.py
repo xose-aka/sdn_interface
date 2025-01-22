@@ -44,16 +44,12 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
 
         return {
             "error": 0,
-            "data": {
-                "message": response_result['data'],
-            }
+            "data": response_result['data']
         }
     except requests.exceptions.JSONDecodeError:
         return {
             "error": 1,
-            "data": {
-                "message": response.text,
-            }
+            "data": response.text
         }
 
 # def run_mininet(nodes):

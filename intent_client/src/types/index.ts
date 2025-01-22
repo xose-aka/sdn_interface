@@ -23,3 +23,14 @@ export interface Neighbour {
     connection_ip: string | null,
 }
 
+export interface UpdateTopologyResponse {
+    error: number,
+    data: {
+        inserted_ip_addresses: string[],
+        nodes: string[],
+        nodes_dpid: object,
+        nodes_interfaces: { [key: string]: string },
+        nodes_ports: object,
+    }
+}
+
