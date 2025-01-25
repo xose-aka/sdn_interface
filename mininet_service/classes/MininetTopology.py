@@ -41,12 +41,14 @@ class MininetTopology(Topo):
                 host_counter += 1
 
             elif node_type == NodeTypes.SWITCH:
-                inserted_node_id = self.addSwitch(node_id, opts=opts)
+                dpid = self.__generate_dpid(node_id)
+                inserted_node_id = self.addSwitch(node_id, dpid=dpid, opts=opts)
                 inserted_nodes[inserted_node_id] = {"type": node_type}
                 switch_counter += 1
 
             elif node_type == NodeTypes.ROUTER:
-                inserted_node_id = self.addSwitch(node_id, opts=opts)
+                dpid = self.__generate_dpid(node_id)
+                inserted_node_id = self.addSwitch(node_id, dpid=dpid, opts=opts)
                 inserted_nodes[inserted_node_id] = {"type": node_type}
                 router_counter += 1
 
@@ -99,6 +101,11 @@ class MininetTopology(Topo):
             "inserted_nodes_and_neighbours": inserted_nodes,
             "inserted_ip_addresses": inserted_ip_addresses
         }
+
+    def __generate_dpid(self, name):
+        # Generate DPID by converting the switch name to an integer hash
+        dpid = int(hash(name)) & 0xFFFFFFFFFFFF  # Use 48 bits for the hash
+        return f'{dpid:016x}'  # Convert to 16-character hex string
 
     def get_inserted_nodes(self):
         return self.inserted_nodes
