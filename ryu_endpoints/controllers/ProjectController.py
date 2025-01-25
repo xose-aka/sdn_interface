@@ -596,30 +596,28 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _switch_features_handler(self, ev):
-        print("switch_features_handler is called")
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        print("datapath ", str(datapath))
-        print("id ", str(datapath.id))
-        # print("ofproto ", str(ofproto))
-        # print("parser ", str(parser))
-
         match = parser.OFPMatch()
-        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
-                                          ofproto.OFPCML_NO_BUFFER)]
+        # actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+        #                                   ofproto.OFPCML_NO_BUFFER)]
+        actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]  # Forward to all ports
 
-        # print("match ", str(match))
-        # print("actions ", str(actions))
         status = self.add_flow(datapath, 0, match, actions, 0, 0)
 
-        print("switch_features_handler status: ", status)
+        print(f"switch_features_handler status: {status}, datapath: {datapath.id}")
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def state_change_handler(self, ev):
         """Track state changes (e.g., disconnections)."""
         datapath = ev.datapath
+
+        if not datapath:
+            print("Invalid datapath")
+            return
+
         if ev.state == MAIN_DISPATCHER:
             print("Datapath connect datapath.id")
 
@@ -635,7 +633,7 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
-        # print("port_desc_stats_reply_handler is called")
+        print("port_desc_stats_reply_handler is called")
 
         switch = ev.msg.datapath
 
@@ -647,98 +645,98 @@ class ProjectController(app_manager.RyuApp):
         for p in ev.msg.body:
             self.bandwidths[switch.id][p.port_no] = p.curr_speed
 
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        print("packet_in_handler is called")
-
-        msg = ev.msg
-        datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        in_port = msg.match['in_port']
-
-        if datapath.id not in self.meter_installed:
-            self.meter_installed[datapath.id] = False
-
-            # Install meter_mod only if it has not been installed before for this switch
-            meter_mod = parser.OFPMeterMod(
-                datapath=datapath,
-                command=ofproto.OFPFC_ADD,
-                flags=ofproto.OFPMF_KBPS,
-                meter_id=datapath.id,
-                bands=[parser.OFPMeterBandDrop(rate=self.rate_limit)])
-
-            status = datapath.send_msg(meter_mod)
-            print("_packet_in_handler Meter installed: ", status)
-
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocol(ethernet.ethernet)
-        arp_pkt = pkt.get_protocol(arp.arp)
-
-        # avoid broadcast from LLDP
-        if eth.ethertype == 35020:
-            return
-
-        if pkt.get_protocol(ipv6.ipv6):  # Drop the IPV6 Packets.
-            match = parser.OFPMatch(eth_type=eth.ethertype)
-            actions = []
-            status = self.add_flow(datapath, 1, match, actions, 0, 0)
-            print("IPv6 ether type: ", status)
-            return None
-
-        dst = eth.dst
-        src = eth.src
-        dpid = datapath.id
-
-        if src not in self.hosts:
-            self.hosts[src] = (dpid, in_port)
-
-        out_port = ofproto.OFPP_FLOOD
-
-        if arp_pkt:
-            #print (dpid, pkt)
-            src_ip = arp_pkt.src_ip
-            dst_ip = arp_pkt.dst_ip
-            if arp_pkt.opcode == arp.ARP_REPLY:
-                self.arp_table[src_ip] = src
-                h1 = self.hosts[src]
-                h2 = self.hosts[dst]
-                # print("sr rep", src_ip)
-                # print("dst rep", dst_ip)
-                # print("self.hosts: ", self.hosts)
-                out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
-                self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
-            elif arp_pkt.opcode == arp.ARP_REQUEST:
-                if dst_ip in self.arp_table:
-                    self.arp_table[src_ip] = src
-                    dst_mac = self.arp_table[dst_ip]
-                    h1 = self.hosts[src]
-                    h2 = self.hosts[dst_mac]
-                    # print("sr req", src_ip)
-                    # print("dst req", dst_ip)
-                    # print("self.hosts: ", self.hosts)
-
-                    out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
-                    self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
-
-        # print pkt
-
-        actions = [parser.OFPActionOutput(out_port)]
-
-        data = None
-        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-            data = msg.data
-
-        out = parser.OFPPacketOut(
-            datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
-            actions=actions, data=data)
-        # print("Meter installed: ", status)
-        status = datapath.send_msg(out)
-        print("Meter installed: ", status)
+    # @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    # def _packet_in_handler(self, ev):
+    #     print("packet_in_handler is called")
+    #
+    #     msg = ev.msg
+    #     datapath = msg.datapath
+    #     ofproto = datapath.ofproto
+    #     parser = datapath.ofproto_parser
+    #     in_port = msg.match['in_port']
+    #
+    #     if datapath.id not in self.meter_installed:
+    #         self.meter_installed[datapath.id] = False
+    #
+    #         # Install meter_mod only if it has not been installed before for this switch
+    #         meter_mod = parser.OFPMeterMod(
+    #             datapath=datapath,
+    #             command=ofproto.OFPFC_ADD,
+    #             flags=ofproto.OFPMF_KBPS,
+    #             meter_id=datapath.id,
+    #             bands=[parser.OFPMeterBandDrop(rate=self.rate_limit)])
+    #
+    #         status = datapath.send_msg(meter_mod)
+    #         print("_packet_in_handler Meter installed: ", status)
+    #
+    #     pkt = packet.Packet(msg.data)
+    #     eth = pkt.get_protocol(ethernet.ethernet)
+    #     arp_pkt = pkt.get_protocol(arp.arp)
+    #
+    #     # avoid broadcast from LLDP
+    #     if eth.ethertype == 35020:
+    #         return
+    #
+    #     if pkt.get_protocol(ipv6.ipv6):  # Drop the IPV6 Packets.
+    #         match = parser.OFPMatch(eth_type=eth.ethertype)
+    #         actions = []
+    #         status = self.add_flow(datapath, 1, match, actions, 0, 0)
+    #         print("IPv6 ether type: ", status)
+    #         return None
+    #
+    #     dst = eth.dst
+    #     src = eth.src
+    #     dpid = datapath.id
+    #
+    #     if src not in self.hosts:
+    #         self.hosts[src] = (dpid, in_port)
+    #
+    #     out_port = ofproto.OFPP_FLOOD
+    #
+    #     if arp_pkt:
+    #         #print (dpid, pkt)
+    #         src_ip = arp_pkt.src_ip
+    #         dst_ip = arp_pkt.dst_ip
+    #         if arp_pkt.opcode == arp.ARP_REPLY:
+    #             self.arp_table[src_ip] = src
+    #             h1 = self.hosts[src]
+    #             h2 = self.hosts[dst]
+    #             # print("sr rep", src_ip)
+    #             # print("dst rep", dst_ip)
+    #             # print("self.hosts: ", self.hosts)
+    #             out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
+    #             self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
+    #         elif arp_pkt.opcode == arp.ARP_REQUEST:
+    #             if dst_ip in self.arp_table:
+    #                 self.arp_table[src_ip] = src
+    #                 dst_mac = self.arp_table[dst_ip]
+    #                 h1 = self.hosts[src]
+    #                 h2 = self.hosts[dst_mac]
+    #                 # print("sr req", src_ip)
+    #                 # print("dst req", dst_ip)
+    #                 # print("self.hosts: ", self.hosts)
+    #
+    #                 out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
+    #                 self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
+    #
+    #     # print pkt
+    #
+    #     actions = [parser.OFPActionOutput(out_port)]
+    #
+    #     data = None
+    #     if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+    #         data = msg.data
+    #
+    #     out = parser.OFPPacketOut(
+    #         datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
+    #         actions=actions, data=data)
+    #     # print("Meter installed: ", status)
+    #     status = datapath.send_msg(out)
+    #     print("Meter installed: ", status)
 
     @set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
-        # print("switch_enter_handler is called")
+        print("switch_enter_handler is called")
 
         switch = ev.switch.dp
         ofp_parser = switch.ofproto_parser
@@ -762,7 +760,7 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
     def switch_leave_handler(self, ev):
-        # print("switch_leave_handler ", ev)
+        print("switch_leave_handler ", ev)
         switch = ev.switch.dp.id
         # print("switch_leave_handler switch: ", str(switch))
         # print("switches: ", str(self.switches))
@@ -778,7 +776,7 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventLinkAdd, MAIN_DISPATCHER)
     def link_add_handler(self, ev):
-        # print("link_add_handler is called")
+        print("link_add_handler is called")
 
         s1 = ev.link.src
         s2 = ev.link.dst
@@ -791,7 +789,7 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
     def link_delete_handler(self, ev):
-        # print("link_delete_handler is called")
+        print("link_delete_handler is called")
 
         s1 = ev.link.src
         s2 = ev.link.dst
