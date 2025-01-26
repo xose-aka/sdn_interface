@@ -26,7 +26,6 @@ class SimpleSwitchController(ControllerBase):
 
         try:
             simple_switch.block_ip_traffic(dpid, new_entry)
-            print("block_ip_traffic has done")
         except Exception as e:
             return Response(status="500 Internal Server Error", text=str(e))
 

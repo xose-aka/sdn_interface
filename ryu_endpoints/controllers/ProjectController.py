@@ -59,6 +59,7 @@ class ProjectController(app_manager.RyuApp):
         self.mac_to_port = {}
         self.topology_api_app = self
         self.datapath_list = {}
+        self.datapath_applied_flows = {}
         self.arp_table = {}
         self.switches = []
         self.hosts = {}
@@ -161,7 +162,7 @@ class ProjectController(app_manager.RyuApp):
                     raise Exception("Source and destination ip addresses are not indicated")
 
                 # Add a flow rule to block IP traffic
-                result_status = self.add_flow(dp, 2, match, actions, 0, 1)
+                result_status = self.add_flow(dp, 2, match, actions, 0, 1, None, True)
 
                 if result_status:
                     print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
@@ -312,6 +313,10 @@ class ProjectController(app_manager.RyuApp):
             if result_status:
                 print("Path remove finished in", (time.time() - computation_start) * 1000, "milliseconds")
 
+                if datapath.id in self.datapath_applied_flows:
+
+                    self.datapath_applied_flows[datapath.id].append(mod)
+
                 if match2 is not None:
                     mod = parser.OFPFlowMod(
                         datapath=datapath,
@@ -328,6 +333,8 @@ class ProjectController(app_manager.RyuApp):
 
                     if result_status:
                         print("Path 2 remove finished in", (time.time() - computation_start) * 1000, "milliseconds")
+
+                        self.datapath_applied_flows[datapath.id].append(mod)
                     else:
                         raise Exception("Path 2 remove is not successful")
             else:
@@ -339,7 +346,6 @@ class ProjectController(app_manager.RyuApp):
     def add_ports(self, switch):
         # Fetch switch ports and populate the switch_port_count dictionary
         self.switch_port_count[switch.id] = len(switch.ports)
-        print("switch_port_count: ", self.switch_port_count)
 
     def get_hosts(self):
 
@@ -454,16 +460,16 @@ class ProjectController(app_manager.RyuApp):
         return paths_p
 
     def generate_openflow_gid(self):
-        '''
+        """
         Returns a random OpenFlow group id
-        '''
+        """
         n = random.randint(0, 2 ** 32)
         while n in self.group_ids:
             n = random.randint(0, 2 ** 32)
         return n
 
     def install_paths(self, src, first_port, dst, last_port, ip_src, ip_dst):
-        #computation_start = time.time()
+        # computation_start = time.time()
         paths = self.get_optimal_paths(src, dst)
         pw = []
         for path in paths:
@@ -478,7 +484,6 @@ class ProjectController(app_manager.RyuApp):
             dp = self.datapath_list[node]
             ofp = dp.ofproto
             ofp_parser = dp.ofproto_parser
-            #print(dp.id)
 
             ports = defaultdict(list)
             actions = []
@@ -518,7 +523,7 @@ class ProjectController(app_manager.RyuApp):
                     group_id = self.multipath_group_ids[node, src, dst][0]
 
                     buckets = []
-                    #print ("node at ",node," out ports : ",out_ports)
+                    # print ("node at ",node," out ports : ",out_ports)
                     for port, weight in out_ports:
                         bucket_weight = 7
                         bucket_action = [ofp_parser.OFPActionOutput(port)]
@@ -555,11 +560,11 @@ class ProjectController(app_manager.RyuApp):
 
                     self.add_flow_meter(dp, 1, match_ip, actions, 0, 0)
                     self.add_flow(dp, 1, match_arp, actions, 0, 0)
-        #print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
+        # print("Path installation finished in", (time.time() - computation_start) * 1000, "milliseconds")
 
         return paths_with_ports[0][src][1]
 
-    def add_flow(self, datapath, priority, match, actions, table_id, cookie, buffer_id=None):
+    def add_flow(self, datapath, priority, match, actions, table_id, cookie, buffer_id=None, is_save_flow=False):
         # print "Adding flow ", match, actions
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -574,9 +579,14 @@ class ProjectController(app_manager.RyuApp):
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     match=match, instructions=inst, table_id=table_id, cookie=cookie)
 
-        print("mod:", mod)
+        status = datapath.send_msg(mod)
 
-        return datapath.send_msg(mod)
+        if status is True and is_save_flow is True:
+            if datapath.id in self.datapath_applied_flows:
+
+                self.datapath_applied_flows[datapath.id].append(mod)
+
+        return status
 
     def add_flow_meter(self, datapath, priority, match, actions, table_id, cookie, buffer_id=None):
         # print "Adding flow ", match, actions
@@ -592,7 +602,7 @@ class ProjectController(app_manager.RyuApp):
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     match=match, instructions=inst, table_id=table_id, cookie=cookie)
-        datapath.send_msg(mod)
+        return datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _switch_features_handler(self, ev):
@@ -736,27 +746,30 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):
-        print("switch_enter_handler is called")
 
-        switch = ev.switch.dp
-        ofp_parser = switch.ofproto_parser
+        datapath = ev.switch.dp
+        ofp_parser = datapath.ofproto_parser
+        switch_dp_id = datapath.id
 
-        # print("switch ", str(switch))
-        # print("ofp_parser ", str(ofp_parser))
-        # print("self.switches ", str(self.switches))
-        # print("switch.id ", str(switch.id))
+        if switch_dp_id in self.switches:
 
-        if switch.id not in self.switches:
-            self.switches.append(switch.id)
-            self.datapath_list[switch.id] = switch
+            flows = self.datapath_applied_flows[switch_dp_id]
+            for index, flow in enumerate(flows):
+                status = datapath.send_msg(flow)
+                print(f"Flow: {index}, applied status: {status}")
+
+        else:
+            self.switches.append(switch_dp_id)
+            self.datapath_list[switch_dp_id] = datapath
+            self.datapath_applied_flows[switch_dp_id] = []
 
             # Request port/link descriptions, useful for obtaining bandwidth
-            req = ofp_parser.OFPPortDescStatsRequest(switch)
+            req = ofp_parser.OFPPortDescStatsRequest(datapath)
 
-            status = switch.send_msg(req)
+            status = datapath.send_msg(req)
 
-            print("switch_enter_handler req status: ", status)
-            self.add_ports(switch)
+            if status is True:
+                self.add_ports(datapath)
 
     @set_ev_cls(event.EventSwitchLeave, MAIN_DISPATCHER)
     def switch_leave_handler(self, ev):

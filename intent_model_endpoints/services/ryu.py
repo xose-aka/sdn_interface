@@ -93,7 +93,7 @@ def check_intent_ips(processed_intent):
         is_error = 1
         message += f"IP address: {ipv4_src} doesn't exist."
 
-    if is_error is 0:
+    if is_error == 0:
         message = "IP addresses exist"
 
     return {
