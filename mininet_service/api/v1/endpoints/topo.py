@@ -19,13 +19,19 @@ router = APIRouter()
 
 stop_thread = threading.Event()
 mininet_thread = None
+net = None
 
 
 @router.post("/build")
 async def build_topology(topo: TopoBuildRequest):
-    global mininet_thread, stop_thread
+    global mininet_thread, stop_thread, net
 
     # cleanup()
+
+    if net is not None:
+        print("Stopping the existing network...")
+        net.stop()
+        net = None
 
     my_topology = MininetTopology(topo.nodes)
 
@@ -60,6 +66,7 @@ async def build_topology(topo: TopoBuildRequest):
     }
 
 
-def run_mininet(net):
+def run_mininet(network):
+    print("run cli")
     # CLI(net)
-    net.stop()
+    # network.stop()

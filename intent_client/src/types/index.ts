@@ -26,11 +26,14 @@ export interface Neighbour {
 export interface UpdateTopologyResponse {
     error: number,
     data: {
-        inserted_ip_addresses: string[],
-        nodes: string[],
-        nodes_dpid: object,
-        nodes_interfaces: { [key: string]: string },
-        nodes_ports: object,
+        topology_interfaces: {
+            inserted_ip_addresses: string[],
+            nodes: string[],
+            nodes_dpid: object,
+            nodes_interfaces: { [key: string]: string },
+            nodes_ports: object,
+        },
+        nodes_intents: object
     }
 }
 

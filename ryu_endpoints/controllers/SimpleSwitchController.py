@@ -27,6 +27,7 @@ class SimpleSwitchController(ControllerBase):
         try:
             simple_switch.block_ip_traffic(dpid, new_entry)
         except Exception as e:
+            print(f"Error: {e}")
             return Response(status="500 Internal Server Error", text=str(e))
 
     @route('simpleswitch', '/simpleswitch/rules/{dpid}', methods=['POST'], requirements={'dpid': dpid_lib.DPID_PATTERN})

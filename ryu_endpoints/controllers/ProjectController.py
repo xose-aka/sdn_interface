@@ -619,27 +619,27 @@ class ProjectController(app_manager.RyuApp):
 
         print(f"switch_features_handler status: {status}, datapath: {datapath.id}")
 
-    @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
-    def state_change_handler(self, ev):
-        """Track state changes (e.g., disconnections)."""
-        datapath = ev.datapath
-
-        if not datapath:
-            print("Invalid datapath")
-            return
-
-        if ev.state == MAIN_DISPATCHER:
-            print("Datapath connect datapath.id")
-
-            if datapath.id not in self.datapath_list:
-                self.logger.info(f"Switch {datapath.id} connected.")
-                self.datapath_list[datapath.id] = datapath
-        elif ev.state == DEAD_DISPATCHER:
-            print("Datapath disconnect datapath.id")
-
-            if datapath.id in self.datapath_list:
-                self.logger.info(f"Switch {datapath.id} disconnected.")
-                del self.datapath_list[datapath.id]
+    # @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
+    # def state_change_handler(self, ev):
+    #     """Track state changes (e.g., disconnections)."""
+    #     datapath = ev.datapath
+    #
+    #     if not datapath:
+    #         print("Invalid datapath")
+    #         return
+    #
+    #     if ev.state == MAIN_DISPATCHER:
+    #         print("Datapath connect datapath.id")
+    #
+    #         if datapath.id not in self.datapath_list:
+    #             self.logger.info(f"Switch {datapath.id} connected.")
+    #             self.datapath_list[datapath.id] = datapath
+        # elif ev.state == DEAD_DISPATCHER:
+        #     print("Datapath disconnect datapath.id")
+        #
+        #     if datapath.id in self.datapath_list:
+        #         self.logger.info(f"Switch {datapath.id} disconnected.")
+        #         del self.datapath_list[datapath.id]
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):

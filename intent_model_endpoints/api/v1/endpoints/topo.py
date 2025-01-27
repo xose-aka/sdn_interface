@@ -40,11 +40,17 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
 
         response_result = response.json()
 
-        cache_topology_nodes_and_ip_addresses.update(response_result['data'])
+        cache_topology_nodes_and_ip_addresses['nodes'] = response_result['data'].get('nodes', [])
+        cache_topology_nodes_and_ip_addresses['inserted_ip_addresses'] = response_result['data'].get('inserted_ip_addresses', [])
+        cache_topology_nodes_and_ip_addresses['nodes_dpid'] = response_result['data'].get('nodes_dpid', {})
+        cache_topology_nodes_and_ip_addresses['nodes_ports'] = response_result['data'].get('nodes_ports', {})
 
         return {
             "error": 0,
-            "data": response_result['data']
+            "data": {
+                "topology_interfaces": response_result['data'],
+                "nodes_intents": cache_topology_nodes_and_ip_addresses["nodes_intents"]
+            }
         }
     except requests.exceptions.JSONDecodeError:
         return {

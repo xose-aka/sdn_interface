@@ -195,8 +195,8 @@ const TopologyPage: React.FC = () => {
             let preparedNodeInterfaces: { [key: string]: { [key: string]: string } } = {}
 
 
-            for( const node_interface in result.data.nodes_interfaces) {
-                const neighbour_node_interface = result.data.nodes_interfaces[node_interface]
+            for( const node_interface in result.data.topology_interfaces.nodes_interfaces) {
+                const neighbour_node_interface = result.data.topology_interfaces.nodes_interfaces[node_interface]
 
                 const [nodeId, interfaceId] = node_interface.split("-");
                 const [neighbourNodeId, neighbourInterfaceId] = neighbour_node_interface.split("-");
