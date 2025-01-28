@@ -129,7 +129,7 @@ class ProjectController(app_manager.RyuApp):
                 ipv4_dst = entry['ipv4_dst']
 
             # prepare the match for the flow
-            if dp is not None:
+            if dp is not None and dp.id:
 
                 parser = dp.ofproto_parser
 
@@ -751,8 +751,9 @@ class ProjectController(app_manager.RyuApp):
         ofp_parser = datapath.ofproto_parser
         switch_dp_id = datapath.id
 
-        if switch_dp_id in self.switches:
+        self.datapath_list[switch_dp_id] = datapath
 
+        if switch_dp_id in self.switches:
             flows = self.datapath_applied_flows[switch_dp_id]
             for index, flow in enumerate(flows):
                 status = datapath.send_msg(flow)
@@ -760,7 +761,6 @@ class ProjectController(app_manager.RyuApp):
 
         else:
             self.switches.append(switch_dp_id)
-            self.datapath_list[switch_dp_id] = datapath
             self.datapath_applied_flows[switch_dp_id] = []
 
             # Request port/link descriptions, useful for obtaining bandwidth

@@ -45,6 +45,7 @@ class SimpleSwitchController(ControllerBase):
             print("remove flow has done")
 
         except Exception as e:
+            print(f'Exception" {str(e)}')
             return Response(status="500 Internal Server Error", body=str(e))
 
     @route('simpleswitch', '/simpleswitch/weights/{dpid}', methods=['POST'],

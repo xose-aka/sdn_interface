@@ -328,51 +328,59 @@ function Index({
 
         sendConfirmConversation(token, conversationId)
             .then((response) => {
-
                 console.log("conversation ", response)
 
-                applyIntentToNode(response.data)
+                if( response.error === 1 ) {
+                    showAlertHandler(alertTypes.danger, response.data.message)
 
-                setConversationId(uuidv4())
+                    updateMessagesIfError()
+                } else {
+                    applyIntentToNode(response.data)
 
-                setMessages(prevValues =>
-                    prevValues.map(prevVal => {
-                        if (
-                            prevVal.isConfirmationDone === false &&
-                            prevVal.sender === SenderTypes["SERVER"]
-                        ) {
-                            prevVal.isConfirmed = true
-                            prevVal.status = Statuses["RECEIVED"]
-                            prevVal.isConfirmationDone = true
-                        }
+                    setMessages(prevValues =>
+                        prevValues.map(prevVal => {
+                            if (
+                                prevVal.isConfirmationDone === false &&
+                                prevVal.sender === SenderTypes["SERVER"]
+                            ) {
+                                prevVal.isConfirmed = true
+                                prevVal.status = Statuses["RECEIVED"]
+                                prevVal.isConfirmationDone = true
+                            }
 
-                        return prevVal;
-                    })
-                )
+                            return prevVal;
+                        })
+                    )
 
-                showAlertHandler(alertTypes.success, `Path installed`)
+                    showAlertHandler(alertTypes.success, `Path installed`)
+                }
             })
             .catch((error) => {
                 showAlertHandler(alertTypes.danger, error.message)
 
+                updateMessagesIfError()
+            })
+            .finally(() => {
                 setConversationId(uuidv4())
-                setMessages(prevValues =>
-                    prevValues.map(prevVal => {
-                        if (
-                            prevVal.isConfirmationDone === false &&
-                            prevVal.sender === SenderTypes["SERVER"]
-                        ) {
-                            prevVal.isConfirmed = false
-                            prevVal.status = Statuses["ERROR"]
-                            prevVal.isConfirmationDone = true
-                        }
-
-                        return prevVal;
-                    })
-                )
-
             })
     };
+
+    const updateMessagesIfError = () => {
+        setMessages(prevValues =>
+            prevValues.map(prevVal => {
+                if (
+                    prevVal.isConfirmationDone === false &&
+                    prevVal.sender === SenderTypes["SERVER"]
+                ) {
+                    prevVal.isConfirmed = false
+                    prevVal.status = Statuses["ERROR"]
+                    prevVal.isConfirmationDone = true
+                }
+
+                return prevVal;
+            })
+        )
+    }
 
     const handleSubmit = () => {
         submitMessage();

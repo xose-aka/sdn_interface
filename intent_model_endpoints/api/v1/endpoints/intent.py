@@ -156,18 +156,15 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
 
             print(f"req_result: {req_result}")
 
-
             if req_result["success"]:
 
                 print(f"success: {node_id}")
-
 
                 if node_id in cache_topology_nodes_and_ip_addresses['nodes_intents']:
                     cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id].append(processed_intent)
                 else:
                     cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id] = [processed_intent]
 
-                print(f"cache_topology_nodes_and_ip_addresses: {cache_topology_nodes_and_ip_addresses['nodes_intents']}")
 
                 return {
                     "error": 0,
