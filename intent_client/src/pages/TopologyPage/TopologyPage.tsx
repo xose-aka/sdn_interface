@@ -16,7 +16,12 @@ import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkE
 import {getReactDnDBackend} from "../../utils/helper.ts";
 import {getToken, sendTopology} from "../../services/api.ts";
 import useToken from "../../hooks";
-import {AppliedIntentResult, Neighbour, TopoEntityDTO, UpdateTopologyResponse} from "../../types";
+import {
+    ConfirmationIntentResponse,
+    Neighbour,
+    TopoEntityDTO,
+    UpdateTopologyResponse
+} from "../../types";
 import NodeIntentsWindow from "../../features/topology/components/NodeIntentsWindow/NodeIntentsWindow.tsx";
 
 const  networkNodeTypes = {
@@ -77,20 +82,24 @@ const TopologyPage: React.FC = () => {
 
     const [isTopologyChanged, setIsTopologyChanged] = useState(true);
 
-    const applyIntentToNode = (appliedIntentResult: AppliedIntentResult) => {
-        const nodeId = appliedIntentResult.nodeId
+    const applyIntentToNode = (confirmationIntentResponse: ConfirmationIntentResponse) => {
+
+        console.log('appliedIntentResult', confirmationIntentResponse)
+
+        const nodeId = confirmationIntentResponse.nodeId
 
         setNodes((prevNodes) => {
 
             prevNodes.map((node) => {
                 if ( node.id == nodeId ) {
 
+                    const appliedIntentResult = {
+                        intent: confirmationIntentResponse.message,
+                        date: confirmationIntentResponse.timestamp
+                    }
+
                     if (Array.isArray(node.data.appliedIntetns)) {
                         node.data.appliedIntetns.push(appliedIntentResult)
-                    } else {
-                        let newAppliedIntents: AppliedIntentResult[] = []
-                        newAppliedIntents.push(appliedIntentResult)
-                        node.data.appliedIntetns = newAppliedIntents
                     }
                 }
                 return node
@@ -161,6 +170,7 @@ const TopologyPage: React.FC = () => {
         if (token) {
             sendTopology(token, topologyNodes)
                 .then(result => {
+                    console.log('result', result)
                     topologyUpdateResponse(result)
                 })
         } else {
@@ -184,7 +194,6 @@ const TopologyPage: React.FC = () => {
         if (result.error) {
             showAlertHandler(alertTypes.success, `Topology updated`)
             setIsUploadingTopology(false)
-            // setIsTopologyChanged(false)
             setPrevEdges( JSON.parse(JSON.stringify(edges)) )
         } else {
             showAlertHandler(alertTypes.success, `Topology updated`)
@@ -208,6 +217,32 @@ const TopologyPage: React.FC = () => {
                 preparedNodeInterfaces[nodeId][interfaceId] = neighbourNodeId
 
             }
+
+            const nodes_intents = result.data.nodes_intents
+
+            // set node intent history
+            setNodes((prevNodes) => {
+
+                prevNodes.map((node) => {
+
+                    if ( node.id in nodes_intents) {
+                        for( const nodeId in nodes_intents) {
+                            const appliedIntents = nodes_intents[nodeId]
+
+                            if ( node.id == nodeId ) {
+                                node.data.appliedIntetns = appliedIntents
+                            }
+                        }
+                    } else {
+                        node.data.appliedIntetns = undefined
+                    }
+
+
+                    return node
+                })
+
+                return prevNodes
+            })
             
             setEdges((prevEdges) => {
 
@@ -355,9 +390,7 @@ const TopologyPage: React.FC = () => {
                         />
                     )
                 }
-                <Row
-                    className={'vh-100'}>
-
+                <Row className={'vh-100'}>
                     <DndProvider backend={ backend }
                                  options={{ enableMouseEvents: true }}>
                         <Col
@@ -473,8 +506,6 @@ const TopologyPage: React.FC = () => {
                             />
                         </Col>
                     </DndProvider>
-
-
                 </Row>
             </Container>
 

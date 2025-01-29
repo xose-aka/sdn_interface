@@ -160,10 +160,15 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
 
                 print(f"success: {node_id}")
 
-                if node_id in cache_topology_nodes_and_ip_addresses['nodes_intents']:
-                    cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id].append(processed_intent)
+                new_processed_intent = {
+                    "intent": processed_intent,
+                    "date": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+                }
+
+                if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes_intents']:
+                    cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id_without_space].append(new_processed_intent)
                 else:
-                    cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id] = [processed_intent]
+                    cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id_without_space] = [new_processed_intent]
 
 
                 return {

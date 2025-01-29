@@ -62,8 +62,6 @@ function Index({
         }
     };
 
-
-
     const handleConversationReset = () => {
         if (confirm("Do you want to reset conversation")) setConversationId(uuidv4());
     };
@@ -71,7 +69,6 @@ function Index({
     const handleMouseDown = (e: React.MouseEvent) => {
         // if (chatWindow.current && !isResizing) {
         if (chatWindow.current ) {
-            console.log('gg')
             setIsDragging(true);
         }
     };

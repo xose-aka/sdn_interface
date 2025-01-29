@@ -58,7 +58,16 @@
     padding: 10px;
     resize: none;
     color: #242424;
+    caret-color: black !important;
+    opacity: 1;
+    visibility: visible;
   }
+
+  &__input::selection {
+    background: #ddd;
+    color: black;
+  }
+
 
   &__send-btn {
     background: #333;

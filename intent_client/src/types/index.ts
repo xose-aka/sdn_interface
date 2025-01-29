@@ -11,13 +11,17 @@ export interface TopoEntityDTO {
     type: string
 }
 
-export interface AppliedIntentResult {
+export interface ConfirmationIntentResponse {
     message: string,
     conversationId: string,
     nodeId: string,
     timestamp: string
 }
 
+export interface NodeIntentHistory {
+    date: string,
+    intent: string
+}
 export interface Neighbour {
     node: string,
     connection_ip: string | null,
@@ -33,7 +37,7 @@ export interface UpdateTopologyResponse {
             nodes_interfaces: { [key: string]: string },
             nodes_ports: object,
         },
-        nodes_intents: object
+        nodes_intents: { [key: string]: NodeIntentHistory[] }
     }
 }
 
