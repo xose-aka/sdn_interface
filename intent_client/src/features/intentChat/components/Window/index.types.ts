@@ -1,6 +1,6 @@
 import {Dispatch, SetStateAction} from "react";
 import {Node} from "@xyflow/react";
-import {AppliedIntentResult} from "../../../../types";
+import {ConfirmationIntentResponse} from "../../../../types";
 
 export interface ChatWindowProps {
     showAlertHandler: (type: string, message: string) => void,
@@ -8,7 +8,7 @@ export interface ChatWindowProps {
     token: string | null,
     setToken: Dispatch<SetStateAction<string | null>>,
     handleClose: () => void,
-    applyIntentToNode: (appliedIntentResult: AppliedIntentResult) => void,
+    applyIntentToNode: (confirmationIntentResponse: ConfirmationIntentResponse) => void,
     title: string,
     setIntentHighlightedNodes: Dispatch<SetStateAction<Node[]>>,
     isTopologyChanged: boolean,

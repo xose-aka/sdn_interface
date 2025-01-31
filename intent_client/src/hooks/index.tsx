@@ -10,8 +10,6 @@ function useToken() {
 
         const savedToken = localStorage.getItem('token');
 
-
-
         if (!token) {
 
             if (savedToken) {

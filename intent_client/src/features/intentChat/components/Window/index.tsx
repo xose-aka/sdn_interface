@@ -325,7 +325,6 @@ function Index({
 
         sendConfirmConversation(token, conversationId)
             .then((response) => {
-                console.log("conversation ", response)
 
                 if( response.error === 1 ) {
                     showAlertHandler(alertTypes.danger, response.data.message)

@@ -84,8 +84,6 @@ const TopologyPage: React.FC = () => {
 
     const applyIntentToNode = (confirmationIntentResponse: ConfirmationIntentResponse) => {
 
-        console.log('appliedIntentResult', confirmationIntentResponse)
-
         const nodeId = confirmationIntentResponse.nodeId
 
         setNodes((prevNodes) => {
@@ -98,8 +96,12 @@ const TopologyPage: React.FC = () => {
                         date: confirmationIntentResponse.timestamp
                     }
 
-                    if (Array.isArray(node.data.appliedIntetns)) {
-                        node.data.appliedIntetns.push(appliedIntentResult)
+                    if (Array.isArray(node.data.appliedIntents)) {
+                        node.data.appliedIntents.push(appliedIntentResult)
+                    } else {
+                        let newAppliedIntents: ConfirmationIntentResponse[] = []
+                        newAppliedIntents.push(confirmationIntentResponse)
+                        node.data.appliedIntents = newAppliedIntents
                     }
                 }
                 return node
@@ -170,7 +172,6 @@ const TopologyPage: React.FC = () => {
         if (token) {
             sendTopology(token, topologyNodes)
                 .then(result => {
-                    console.log('result', result)
                     topologyUpdateResponse(result)
                 })
         } else {
@@ -230,13 +231,12 @@ const TopologyPage: React.FC = () => {
                             const appliedIntents = nodes_intents[nodeId]
 
                             if ( node.id == nodeId ) {
-                                node.data.appliedIntetns = appliedIntents
+                                node.data.appliedIntents = appliedIntents
                             }
                         }
                     } else {
-                        node.data.appliedIntetns = undefined
+                        node.data.appliedIntents = undefined
                     }
-
 
                     return node
                 })
@@ -455,8 +455,8 @@ const TopologyPage: React.FC = () => {
                                     {
                                         selectedNode !== null &&
                                         selectedNode.data !== null &&
-                                        Array.isArray(selectedNode.data.appliedIntetns) &&
-                                        selectedNode.data.appliedIntetns.length > 0 &&
+                                        Array.isArray(selectedNode.data.appliedIntents) &&
+                                        selectedNode.data.appliedIntents.length > 0 &&
                                         (
                                             <Button
                                                 variant="secondary"

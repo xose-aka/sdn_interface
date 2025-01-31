@@ -136,11 +136,11 @@ function NodeIntentsWindow(
             <div ref={chatWindowBody} className="chat-window__body">
                 {
                     selectedNode !== null &&
-                    Array.isArray(selectedNode.data.appliedIntetns) &&
-                    selectedNode.data.appliedIntetns.length > 0 &&
+                    Array.isArray(selectedNode.data.appliedIntents) &&
+                    selectedNode.data.appliedIntents.length > 0 &&
                     (
 
-                        selectedNode.data.appliedIntetns.map((intent: NodeIntentHistory, index) => (
+                        selectedNode.data.appliedIntents.map((intent: NodeIntentHistory, index) => (
                             <div className={'history-message'} key={index}>
                                 <div className="history-message__item__timestamp">{intent.date}</div>
                                 <div className="history-message__item">
