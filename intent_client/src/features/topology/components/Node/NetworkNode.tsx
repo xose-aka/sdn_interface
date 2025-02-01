@@ -13,10 +13,7 @@ export default function NetworkNode({ id, data }: NodeProps) {
     let isThisNodeClicked = data.isThisNodeClicked as boolean
     let label = data.label as string
 
-    const appliedIntents: string[] = data.appliedIntetns as string[]
-
-    // console.log("appliedIntents", appliedIntents)
-
+    const appliedIntents: string[] = data.appliedIntents as string[]
 
     const img: HTMLImageElement = new Image();
     img.src = data.icon as string;

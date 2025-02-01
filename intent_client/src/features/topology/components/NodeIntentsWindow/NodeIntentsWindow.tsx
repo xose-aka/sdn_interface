@@ -8,7 +8,7 @@ import '../../../intentChat/components/Window/index.scss'
 import '../../../intentChat/components/WindowButton/index.scss'
 import '../../../intentChat/components/Message/index.scss'
 import './index.scss'
-import {AppliedIntentResult} from "../../../../types";
+import {NodeIntentHistory} from "../../../../types";
 
 
 function NodeIntentsWindow(
@@ -136,16 +136,16 @@ function NodeIntentsWindow(
             <div ref={chatWindowBody} className="chat-window__body">
                 {
                     selectedNode !== null &&
-                    Array.isArray(selectedNode.data.appliedIntetns) &&
-                    selectedNode.data.appliedIntetns.length > 0 &&
+                    Array.isArray(selectedNode.data.appliedIntents) &&
+                    selectedNode.data.appliedIntents.length > 0 &&
                     (
 
-                        selectedNode.data.appliedIntetns.map((intent: AppliedIntentResult, index) => (
+                        selectedNode.data.appliedIntents.map((intent: NodeIntentHistory, index) => (
                             <div className={'history-message'} key={index}>
-                                <div className="history-message__item__timestamp">{intent.timestamp}</div>
+                                <div className="history-message__item__timestamp">{intent.date}</div>
                                 <div className="history-message__item">
                                     <span className="history-message__item__text">
-                                        {intent.message}
+                                        {intent.intent}
                                     </span>
                                 </div>
                             </div>

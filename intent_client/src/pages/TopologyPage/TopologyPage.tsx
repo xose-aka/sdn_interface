@@ -16,7 +16,12 @@ import NetworkEdge from "../../features/topology/components/NetworkEdge/NetworkE
 import {getReactDnDBackend} from "../../utils/helper.ts";
 import {getToken, sendTopology} from "../../services/api.ts";
 import useToken from "../../hooks";
-import {AppliedIntentResult, Neighbour, TopoEntityDTO, UpdateTopologyResponse} from "../../types";
+import {
+    ConfirmationIntentResponse,
+    Neighbour,
+    TopoEntityDTO,
+    UpdateTopologyResponse
+} from "../../types";
 import NodeIntentsWindow from "../../features/topology/components/NodeIntentsWindow/NodeIntentsWindow.tsx";
 
 const  networkNodeTypes = {
@@ -77,20 +82,26 @@ const TopologyPage: React.FC = () => {
 
     const [isTopologyChanged, setIsTopologyChanged] = useState(true);
 
-    const applyIntentToNode = (appliedIntentResult: AppliedIntentResult) => {
-        const nodeId = appliedIntentResult.nodeId
+    const applyIntentToNode = (confirmationIntentResponse: ConfirmationIntentResponse) => {
+
+        const nodeId = confirmationIntentResponse.nodeId
 
         setNodes((prevNodes) => {
 
             prevNodes.map((node) => {
                 if ( node.id == nodeId ) {
 
-                    if (Array.isArray(node.data.appliedIntetns)) {
-                        node.data.appliedIntetns.push(appliedIntentResult)
+                    const appliedIntentResult = {
+                        intent: confirmationIntentResponse.message,
+                        date: confirmationIntentResponse.timestamp
+                    }
+
+                    if (Array.isArray(node.data.appliedIntents)) {
+                        node.data.appliedIntents.push(appliedIntentResult)
                     } else {
-                        let newAppliedIntents: AppliedIntentResult[] = []
-                        newAppliedIntents.push(appliedIntentResult)
-                        node.data.appliedIntetns = newAppliedIntents
+                        let newAppliedIntents: ConfirmationIntentResponse[] = []
+                        newAppliedIntents.push(confirmationIntentResponse)
+                        node.data.appliedIntents = newAppliedIntents
                     }
                 }
                 return node
@@ -161,7 +172,11 @@ const TopologyPage: React.FC = () => {
         if (token) {
             sendTopology(token, topologyNodes)
                 .then(result => {
-                    topologyUpdateResponse(result)
+                    if (result.error === 1 ) {
+                        showAlertHandler(alertTypes.danger, result.data)
+                    } else {
+                        topologyUpdateResponse(result)
+                    }
                 })
         } else {
             getToken()
@@ -184,7 +199,6 @@ const TopologyPage: React.FC = () => {
         if (result.error) {
             showAlertHandler(alertTypes.success, `Topology updated`)
             setIsUploadingTopology(false)
-            // setIsTopologyChanged(false)
             setPrevEdges( JSON.parse(JSON.stringify(edges)) )
         } else {
             showAlertHandler(alertTypes.success, `Topology updated`)
@@ -195,8 +209,8 @@ const TopologyPage: React.FC = () => {
             let preparedNodeInterfaces: { [key: string]: { [key: string]: string } } = {}
 
 
-            for( const node_interface in result.data.nodes_interfaces) {
-                const neighbour_node_interface = result.data.nodes_interfaces[node_interface]
+            for( const node_interface in result.data.topology_interfaces.nodes_interfaces) {
+                const neighbour_node_interface = result.data.topology_interfaces.nodes_interfaces[node_interface]
 
                 const [nodeId, interfaceId] = node_interface.split("-");
                 const [neighbourNodeId, neighbourInterfaceId] = neighbour_node_interface.split("-");
@@ -208,6 +222,31 @@ const TopologyPage: React.FC = () => {
                 preparedNodeInterfaces[nodeId][interfaceId] = neighbourNodeId
 
             }
+
+            const nodes_intents = result.data.nodes_intents
+
+            // set node intent history
+            setNodes((prevNodes) => {
+
+                prevNodes.map((node) => {
+
+                    if ( node.id in nodes_intents) {
+                        for( const nodeId in nodes_intents) {
+                            const appliedIntents = nodes_intents[nodeId]
+
+                            if ( node.id == nodeId ) {
+                                node.data.appliedIntents = appliedIntents
+                            }
+                        }
+                    } else {
+                        node.data.appliedIntents = undefined
+                    }
+
+                    return node
+                })
+
+                return prevNodes
+            })
             
             setEdges((prevEdges) => {
 
@@ -355,9 +394,7 @@ const TopologyPage: React.FC = () => {
                         />
                     )
                 }
-                <Row
-                    className={'vh-100'}>
-
+                <Row className={'vh-100'}>
                     <DndProvider backend={ backend }
                                  options={{ enableMouseEvents: true }}>
                         <Col
@@ -422,8 +459,8 @@ const TopologyPage: React.FC = () => {
                                     {
                                         selectedNode !== null &&
                                         selectedNode.data !== null &&
-                                        Array.isArray(selectedNode.data.appliedIntetns) &&
-                                        selectedNode.data.appliedIntetns.length > 0 &&
+                                        Array.isArray(selectedNode.data.appliedIntents) &&
+                                        selectedNode.data.appliedIntents.length > 0 &&
                                         (
                                             <Button
                                                 variant="secondary"
@@ -473,8 +510,6 @@ const TopologyPage: React.FC = () => {
                             />
                         </Col>
                     </DndProvider>
-
-
                 </Row>
             </Container>
 

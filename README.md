@@ -24,9 +24,15 @@ This is the interface for a Software-Defined Network system, based on the model 
 
 ## Dependencies
 Install the following system packages(python3.9 and python3.10+):
-   ```bash
+
+Add python 3.9 repository 
+```bash
+    sudo add-apt-repository ppa:deadsnakes/ppa  
+   ```
+
+```bash
     sudo apt update
-    sudo apt install -y python3.9 python3.9-venv python3.9-dev python3.12 python3.12-venv python3.12-dev git curl build-essential
+    sudo apt install -y python3.9 python3.9-venv python3.9-dev python3.12 python3.12-venv python3.12-dev git curl build-essential mininet
    ```
 
 Install node 20 and npm to run vite react client:

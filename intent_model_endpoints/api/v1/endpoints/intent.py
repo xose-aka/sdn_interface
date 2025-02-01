@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException
 from fastapi import APIRouter
 from httpx import HTTPStatusError, RequestError
 from starlette.responses import JSONResponse
+from cache.general import cache_topology_nodes_and_ip_addresses
 
 from api.v1.dependencies import verify_token
 from exceptions.intent_format_exception import IntentFormatException
@@ -133,6 +134,8 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
 
     encoded_conversation = encoded_conversations.get(confirm_conversation.conversationId)
 
+    now = datetime.now()
+
     if encoded_conversation is None:
         return JSONResponse(content={"message": "Encoded conversation not found"}, status_code=404)
     else:
@@ -147,24 +150,47 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
             node_id = processed_intent.get("node_id")
             node_id_without_space = str(node_id).replace(" ", "")
 
+            processed_intent = str(processed_intent).replace("'", "\"")
+
             req_result = await request_post_external_data(url, req_data)
 
-            response = "Success"
+            print(f"req_result: {req_result}")
 
-            if req_result is not None:
-                response = req_result
+            if req_result["success"]:
 
-            now = datetime.now()
+                print(f"success: {node_id}")
 
-            return {
-                "error": 0,
-                "data": {
-                    "message": str(processed_intent).replace("'", "\""),
-                    "conversationId": conversation_id,
-                    "nodeId": node_id_without_space,
-                    "timestamp": now.strftime("%d-%m-%Y %H:%M:%S")
+                new_processed_intent = {
+                    "intent": processed_intent,
+                    "date": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
                 }
-            }
+
+                if node_id_without_space in cache_topology_nodes_and_ip_addresses['nodes_intents']:
+                    cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id_without_space].append(new_processed_intent)
+                else:
+                    cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id_without_space] = [new_processed_intent]
+
+
+                return {
+                    "error": 0,
+                    "data": {
+                        "message": processed_intent,
+                        "conversationId": conversation_id,
+                        "nodeId": node_id_without_space,
+                        "timestamp": now.strftime("%d-%m-%Y %H:%M:%S")
+                    }
+                }
+            else:
+                return {
+                    "error": 1,
+                    "data": {
+                        "message": req_result["error"],
+                        "conversationId": conversation_id,
+                        "nodeId": node_id_without_space,
+                        "timestamp": now.strftime("%d-%m-%Y %H:%M:%S")
+                    }
+                }
+
         except (IntentFormatException, IntentGoalServiceNotAvailableException) as e:
             return JSONResponse(content={"message": e.detail}, status_code=e.status_code)
         except (HTTPStatusError, RequestError, HTTPException) as e:

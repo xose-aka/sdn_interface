@@ -26,8 +26,8 @@ class SimpleSwitchController(ControllerBase):
 
         try:
             simple_switch.block_ip_traffic(dpid, new_entry)
-            print("block_ip_traffic has done")
         except Exception as e:
+            print(f"Error: {e}")
             return Response(status="500 Internal Server Error", text=str(e))
 
     @route('simpleswitch', '/simpleswitch/rules/{dpid}', methods=['POST'], requirements={'dpid': dpid_lib.DPID_PATTERN})
@@ -42,15 +42,15 @@ class SimpleSwitchController(ControllerBase):
 
         try:
             simple_switch.remove_flow(dpid, new_entry, 1)
-            print("remove flow has done")
 
         except Exception as e:
+            print(f'Exception" {str(e)}')
             return Response(status="500 Internal Server Error", body=str(e))
 
     @route('simpleswitch', '/simpleswitch/weights/{dpid}', methods=['POST'],
            requirements={'dpid': dpid_lib.DPID_PATTERN})
     def set_port_weights(self, req, **kwargs):
-        print("here")
+        print("weights")
         simple_switch = self.simple_switch_app
         dpid = dpid_lib.str_to_dpid(kwargs['dpid'])
         try:
