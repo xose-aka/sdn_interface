@@ -29,7 +29,7 @@ class MininetTopology(Topo):
         host_counter = 0
         switch_counter = 0
         router_counter = 0
-        opts = dict(protocols='OpenFlow13')
+        opts = dict(protocols='OpenFlow13', stp_enable=True)
 
         for node in nodes:
             node_type = node.type
@@ -88,7 +88,7 @@ class MininetTopology(Topo):
                         inserted_ip_addresses.append(connection_ip)
 
                     else:
-                        self.addLink(node_id, neighbour_node_id, bw=100)
+                        self.addLink(node_id, neighbour_node_id, bw=10)
 
                         inserted_nodes[node_id][neighbour_node_id] = connection_ip_with_mask
                         inserted_nodes[neighbour_node_id][node_id] = None

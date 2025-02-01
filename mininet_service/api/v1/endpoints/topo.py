@@ -3,6 +3,7 @@ from builtins import print
 
 from fastapi import APIRouter
 from mininet.clean import cleanup
+from mininet.link import TCLink
 
 from mininet.node import CPULimitedHost, OVSSwitch
 from mininet.net import Mininet
@@ -36,6 +37,7 @@ async def build_topology(topo: TopoBuildRequest):
     my_topology = MininetTopology(topo.nodes)
 
     c = RemoteController('c', '0.0.0.0', 6633, cls=CPULimitedHost)
+    # net = Mininet(topo=my_topology, controller=None, switch=OVSSwitch, link=TCLink)
     net = Mininet(topo=my_topology, controller=None, switch=OVSSwitch)
 
     net.addController(c)

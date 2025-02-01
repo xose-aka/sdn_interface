@@ -42,7 +42,6 @@ class SimpleSwitchController(ControllerBase):
 
         try:
             simple_switch.remove_flow(dpid, new_entry, 1)
-            print("remove flow has done")
 
         except Exception as e:
             print(f'Exception" {str(e)}')
@@ -51,7 +50,7 @@ class SimpleSwitchController(ControllerBase):
     @route('simpleswitch', '/simpleswitch/weights/{dpid}', methods=['POST'],
            requirements={'dpid': dpid_lib.DPID_PATTERN})
     def set_port_weights(self, req, **kwargs):
-        print("here")
+        print("weights")
         simple_switch = self.simple_switch_app
         dpid = dpid_lib.str_to_dpid(kwargs['dpid'])
         try:

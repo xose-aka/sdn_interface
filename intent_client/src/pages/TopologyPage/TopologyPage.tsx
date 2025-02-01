@@ -172,7 +172,11 @@ const TopologyPage: React.FC = () => {
         if (token) {
             sendTopology(token, topologyNodes)
                 .then(result => {
-                    topologyUpdateResponse(result)
+                    if (result.error === 1 ) {
+                        showAlertHandler(alertTypes.danger, result.data)
+                    } else {
+                        topologyUpdateResponse(result)
+                    }
                 })
         } else {
             getToken()

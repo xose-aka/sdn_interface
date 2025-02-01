@@ -9,6 +9,8 @@ def configure_all_nodes(net: Mininet, inserted_nodes_with_neighbours: dict) -> N
     for switch in net.switches:
         node_id = str(switch)
 
+        switch.cmd('ovs-vsctl set bridge %s stp_enable=true' % switch.name)
+
         dpid = switch.dpid
 
         cache_topology_nodes_and_ip_addresses['nodes_dpid'][node_id] = dpid
