@@ -15,6 +15,7 @@ intent_examples_and_response_structure = [
           "node_id": "switch 3",
           "weights": {"3":0.2,"2":0.3,"1":0.5}
         }"""
+
     },
     {
         "question": "delete the rule that block traffic to 10.0.0.1 on switch 1",
@@ -45,7 +46,7 @@ intent_examples_and_response_structure = [
     {
         "question": "delete the rule that blocks traffic to 10.2.2.2 on switch 3",
         "answer": """{
-      "goal": "deleteFlow",
+      "goal": "deleteFlow", 
       "node_id": "switch 3",
       "ip_source": "any",
       "ip_dest": "10.2.2.2"

@@ -63,15 +63,17 @@ def configure_each_node(node: Node, inserted_nodes_with_neighbours: dict) -> Non
                 if neighbour_node_id in inserted_node_type_and_neighbours:
                     host_ip_for_connection = inserted_node_type_and_neighbours[neighbour_node_id]
 
-                    node.cmd(f'ifconfig {node_intf} {host_ip_for_connection} up')
+                    if host_ip_for_connection is not None:
 
-                    if node_type == NodeTypes.HOST:
-                        router_ip_address_with_mask = get_default_gateway(host_ip_for_connection)
+                        node.cmd(f'ifconfig {node_intf} {host_ip_for_connection} up')
 
-                        if router_ip_address_with_mask is not None:
-                            router_ip = router_ip_address_with_mask.split('/')[0]
+                        if node_type == NodeTypes.HOST:
+                            router_ip_address_with_mask = get_default_gateway(host_ip_for_connection)
 
-                            node.cmd(f'route add default gw {router_ip}')
+                            if router_ip_address_with_mask is not None:
+                                router_ip = router_ip_address_with_mask.split('/')[0]
+
+                                node.cmd(f'route add default gw {router_ip}')
 
                     # set interface pair in order to use configuring ports in sdn interface client
                 if node_intf not in cache_topology_nodes_and_ip_addresses['nodes_interfaces']:
