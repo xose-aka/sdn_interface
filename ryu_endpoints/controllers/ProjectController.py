@@ -88,22 +88,33 @@ class ProjectController(app_manager.RyuApp):
             parser = dp.ofproto_parser
             print(rate)
 
-            # Modify the meter rate
-            meter_id = dpid  # Assuming meter_id is the same as dpid
             meter_mod = parser.OFPMeterMod(
                 datapath=dp,
-                command=ofproto.OFPFC_MODIFY,
-                flags=ofproto.OFPMF_KBPS,
-                meter_id=meter_id,
-                bands=[parser.OFPMeterBandDrop(rate=rate)]
+                command=ofproto.OFPFC_DELETE,  # 🔹 DELETE all meters
+                meter_id=ofproto.OFPM_ALL  # 🔹 Special ID to delete all meters
             )
             result_status = dp.send_msg(meter_mod)
 
             if result_status is True:
-                print("Meter installed")
-            else:
-                raise Exception("Meter installment is not successful")
+                print("Datapath other meters deleted")
+                # add the meter rate
+                meter_id = 1  # Assuming meter_id is the same as dpid
+                meter_mod = parser.OFPMeterMod(
+                    datapath=dp,
+                    command=ofproto.OFPFC_ADD,
+                    flags=ofproto.OFPMF_KBPS,
+                    meter_id=meter_id,
+                    bands=[parser.OFPMeterBandDrop(rate=rate)]
+                )
+                result_status = dp.send_msg(meter_mod)
 
+                if result_status is True:
+                    print("Meter installed")
+                else:
+                    raise Exception("Meter installment is not successful")
+
+            else:
+                raise Exception("Datapath other meters delete is not successful")
         else:
             raise Exception(f"Device dpid: {dpid} not in available dpid list")
 
@@ -655,94 +666,94 @@ class ProjectController(app_manager.RyuApp):
         for p in ev.msg.body:
             self.bandwidths[switch.id][p.port_no] = p.curr_speed
 
-    # @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    # def _packet_in_handler(self, ev):
-    #     print("packet_in_handler is called")
-    #
-    #     msg = ev.msg
-    #     datapath = msg.datapath
-    #     ofproto = datapath.ofproto
-    #     parser = datapath.ofproto_parser
-    #     in_port = msg.match['in_port']
-    #
-    #     if datapath.id not in self.meter_installed:
-    #         self.meter_installed[datapath.id] = False
-    #
-    #         # Install meter_mod only if it has not been installed before for this switch
-    #         meter_mod = parser.OFPMeterMod(
-    #             datapath=datapath,
-    #             command=ofproto.OFPFC_ADD,
-    #             flags=ofproto.OFPMF_KBPS,
-    #             meter_id=datapath.id,
-    #             bands=[parser.OFPMeterBandDrop(rate=self.rate_limit)])
-    #
-    #         status = datapath.send_msg(meter_mod)
-    #         print("_packet_in_handler Meter installed: ", status)
-    #
-    #     pkt = packet.Packet(msg.data)
-    #     eth = pkt.get_protocol(ethernet.ethernet)
-    #     arp_pkt = pkt.get_protocol(arp.arp)
-    #
-    #     # avoid broadcast from LLDP
-    #     if eth.ethertype == 35020:
-    #         return
-    #
-    #     if pkt.get_protocol(ipv6.ipv6):  # Drop the IPV6 Packets.
-    #         match = parser.OFPMatch(eth_type=eth.ethertype)
-    #         actions = []
-    #         status = self.add_flow(datapath, 1, match, actions, 0, 0)
-    #         print("IPv6 ether type: ", status)
-    #         return None
-    #
-    #     dst = eth.dst
-    #     src = eth.src
-    #     dpid = datapath.id
-    #
-    #     if src not in self.hosts:
-    #         self.hosts[src] = (dpid, in_port)
-    #
-    #     out_port = ofproto.OFPP_FLOOD
-    #
-    #     if arp_pkt:
-    #         #print (dpid, pkt)
-    #         src_ip = arp_pkt.src_ip
-    #         dst_ip = arp_pkt.dst_ip
-    #         if arp_pkt.opcode == arp.ARP_REPLY:
-    #             self.arp_table[src_ip] = src
-    #             h1 = self.hosts[src]
-    #             h2 = self.hosts[dst]
-    #             # print("sr rep", src_ip)
-    #             # print("dst rep", dst_ip)
-    #             # print("self.hosts: ", self.hosts)
-    #             out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
-    #             self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
-    #         elif arp_pkt.opcode == arp.ARP_REQUEST:
-    #             if dst_ip in self.arp_table:
-    #                 self.arp_table[src_ip] = src
-    #                 dst_mac = self.arp_table[dst_ip]
-    #                 h1 = self.hosts[src]
-    #                 h2 = self.hosts[dst_mac]
-    #                 # print("sr req", src_ip)
-    #                 # print("dst req", dst_ip)
-    #                 # print("self.hosts: ", self.hosts)
-    #
-    #                 out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
-    #                 self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
-    #
-    #     # print pkt
-    #
-    #     actions = [parser.OFPActionOutput(out_port)]
-    #
-    #     data = None
-    #     if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-    #         data = msg.data
-    #
-    #     out = parser.OFPPacketOut(
-    #         datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
-    #         actions=actions, data=data)
-    #     # print("Meter installed: ", status)
-    #     status = datapath.send_msg(out)
-    #     print("Meter installed: ", status)
+    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+    def _packet_in_handler(self, ev):
+        print("packet_in_handler is called")
+
+        msg = ev.msg
+        datapath = msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        in_port = msg.match['in_port']
+
+        if datapath.id not in self.meter_installed:
+            self.meter_installed[datapath.id] = False
+
+            # Install meter_mod only if it has not been installed before for this switch
+            meter_mod = parser.OFPMeterMod(
+                datapath=datapath,
+                command=ofproto.OFPFC_ADD,
+                flags=ofproto.OFPMF_KBPS,
+                meter_id=datapath.id,
+                bands=[parser.OFPMeterBandDrop(rate=self.rate_limit)])
+
+            status = datapath.send_msg(meter_mod)
+            print("_packet_in_handler Meter installed: ", status)
+
+        pkt = packet.Packet(msg.data)
+        eth = pkt.get_protocol(ethernet.ethernet)
+        arp_pkt = pkt.get_protocol(arp.arp)
+
+        # avoid broadcast from LLDP
+        if eth.ethertype == 35020:
+            return
+
+        if pkt.get_protocol(ipv6.ipv6):  # Drop the IPV6 Packets.
+            match = parser.OFPMatch(eth_type=eth.ethertype)
+            actions = []
+            status = self.add_flow(datapath, 1, match, actions, 0, 0)
+            print("IPv6 ether type: ", status)
+            return None
+
+        dst = eth.dst
+        src = eth.src
+        dpid = datapath.id
+
+        if src not in self.hosts:
+            self.hosts[src] = (dpid, in_port)
+
+        out_port = ofproto.OFPP_FLOOD
+
+        if arp_pkt:
+            #print (dpid, pkt)
+            src_ip = arp_pkt.src_ip
+            dst_ip = arp_pkt.dst_ip
+            if arp_pkt.opcode == arp.ARP_REPLY:
+                self.arp_table[src_ip] = src
+                h1 = self.hosts[src]
+                h2 = self.hosts[dst]
+                # print("sr rep", src_ip)
+                # print("dst rep", dst_ip)
+                # print("self.hosts: ", self.hosts)
+                out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
+                self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
+            elif arp_pkt.opcode == arp.ARP_REQUEST:
+                if dst_ip in self.arp_table:
+                    self.arp_table[src_ip] = src
+                    dst_mac = self.arp_table[dst_ip]
+                    h1 = self.hosts[src]
+                    h2 = self.hosts[dst_mac]
+                    # print("sr req", src_ip)
+                    # print("dst req", dst_ip)
+                    # print("self.hosts: ", self.hosts)
+
+                    out_port = self.install_paths(h1[0], h1[1], h2[0], h2[1], src_ip, dst_ip)
+                    self.install_paths(h2[0], h2[1], h1[0], h1[1], dst_ip, src_ip)  # reverse
+
+        # print pkt
+
+        actions = [parser.OFPActionOutput(out_port)]
+
+        data = None
+        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+            data = msg.data
+
+        out = parser.OFPPacketOut(
+            datapath=datapath, buffer_id=msg.buffer_id, in_port=in_port,
+            actions=actions, data=data)
+        # print("Meter installed: ", status)
+        status = datapath.send_msg(out)
+        print("Meter installed: ", status)
 
     @set_ev_cls(event.EventSwitchEnter)
     def switch_enter_handler(self, ev):

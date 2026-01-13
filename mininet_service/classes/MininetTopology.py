@@ -1,3 +1,4 @@
+from mininet.examples.linuxrouter import LinuxRouter
 from mininet.topo import Topo
 from cache.general import cache_topology_nodes_and_ip_addresses
 from constants.general import NodeTypes
@@ -18,8 +19,15 @@ class MininetTopology(Topo):
         # add links for neighbours
         insert_links = self.__insert_links(topology_nodes, inserted_nodes)
 
+        print(f"insert_links: {insert_links}")
+
         cache_topology_nodes_and_ip_addresses['inserted_ip_addresses'] = insert_links[
             'inserted_ip_addresses']
+
+        cache_topology_nodes_and_ip_addresses['routers_ip_addresses'] = insert_links[
+            'routers_ip_addresses']
+
+        self.routers_ip_addresses = insert_links['routers_ip_addresses']
 
         self.inserted_nodes = insert_links['inserted_nodes_and_neighbours']
 
@@ -49,6 +57,7 @@ class MininetTopology(Topo):
             elif node_type == NodeTypes.ROUTER:
                 dpid = self.__generate_dpid(node_id)
                 inserted_node_id = self.addSwitch(node_id, dpid=dpid, opts=opts)
+                inserted_node_id = self.addHost(node_id, cls=LinuxRouter)
                 inserted_nodes[inserted_node_id] = {"type": node_type}
                 router_counter += 1
 
@@ -65,14 +74,20 @@ class MininetTopology(Topo):
     def __insert_links(self, nodes, inserted_nodes):
 
         inserted_ip_addresses = []
+        routers_ip_addresses = []
 
         for node in nodes:
             node_id = node.id
+            node_type = node.type
             node_neighbours = node.neighbours
 
             for neighbour in node_neighbours:
                 neighbour_node_id = neighbour.node
                 connection_ip_with_mask = neighbour.connection_ip
+
+                if node_type == NodeTypes.ROUTER and connection_ip_with_mask is not None:
+
+                    routers_ip_addresses.append(connection_ip_with_mask)
 
                 connection_ip = str(connection_ip_with_mask).split('/')[0]
 
@@ -98,6 +113,7 @@ class MininetTopology(Topo):
                     print(f"Node: {node_id} or {neighbour_node_id} haven't been inserted yet!")
 
         return {
+            "routers_ip_addresses": routers_ip_addresses,
             "inserted_nodes_and_neighbours": inserted_nodes,
             "inserted_ip_addresses": inserted_ip_addresses
         }

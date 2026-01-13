@@ -11,6 +11,7 @@ from schemas.ryu_mininet import BlockTraffic, LoadProfiling, DeleteFlow, RateLim
 from constants.intent_process_config import intent_examples_and_response_structure, weights_template, block_template, \
     delete_template, rate_template
 
+
 # embedding examples
 to_vectorize = [" ".join(example.values()) for example in intent_examples_and_response_structure]
 embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -26,6 +27,7 @@ prompt_embeddings = embeddings.embed_documents(prompt_templates)
 
 
 def prompt_router(intent, fix):
+
     query_embedding = embeddings.embed_query(intent)
     similarity = cosine_similarity([query_embedding], prompt_embeddings)[0]
     most_similar = prompt_templates[similarity.argmax()]
@@ -50,7 +52,7 @@ def prompt_router(intent, fix):
     chain = (
             {"query": RunnablePassthrough()}
             | prompt
-            | ChatGoogleGenerativeAI(model="gemini-pro")
+            | ChatGoogleGenerativeAI(model="models/gemini-2.5-flash")
             | parser
     )
 

@@ -4,5 +4,6 @@ cache_topology_nodes_and_ip_addresses = {
     'inserted_ip_addresses': [],
     'nodes_dpid': {},
     'nodes_ports': {},
-    'nodes_interfaces': {}
+    'nodes_interfaces': {},
+    'routers_ip_addresses': []
 }

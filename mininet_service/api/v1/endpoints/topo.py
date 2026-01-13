@@ -70,5 +70,5 @@ async def build_topology(topo: TopoBuildRequest):
 
 def run_mininet(network):
     print("run cli")
-    # CLI(net)
+    CLI(network)
     # network.stop()
