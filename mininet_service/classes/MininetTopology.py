@@ -57,7 +57,7 @@ class MininetTopology(Topo):
             elif node_type == NodeTypes.ROUTER:
                 dpid = self.__generate_dpid(node_id)
                 inserted_node_id = self.addSwitch(node_id, dpid=dpid, opts=opts)
-                inserted_node_id = self.addHost(node_id, cls=LinuxRouter)
+                # inserted_node_id = self.addHost(node_id, cls=LinuxRouter)
                 inserted_nodes[inserted_node_id] = {"type": node_type}
                 router_counter += 1
 
@@ -72,6 +72,8 @@ class MininetTopology(Topo):
         return inserted_nodes
 
     def __insert_links(self, nodes, inserted_nodes):
+
+        created_links = set()
 
         inserted_ip_addresses = []
         routers_ip_addresses = []
@@ -103,7 +105,11 @@ class MininetTopology(Topo):
                         inserted_ip_addresses.append(connection_ip)
 
                     else:
-                        self.addLink(node_id, neighbour_node_id, bw=10)
+                        link_key = tuple(sorted([node_id, neighbour_node_id]))
+
+                        if link_key not in created_links:
+                            self.addLink(node_id, neighbour_node_id, bw=10)
+                            created_links.add(link_key)
 
                         inserted_nodes[node_id][neighbour_node_id] = connection_ip_with_mask
                         inserted_nodes[neighbour_node_id][node_id] = None

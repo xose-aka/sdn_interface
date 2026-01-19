@@ -27,11 +27,11 @@ net = None
 async def build_topology(topo: TopoBuildRequest):
     global mininet_thread, stop_thread, net
 
-    # cleanup()
+    cleanup()
 
     if net is not None:
         print("Stopping the existing network...")
-        net.stop()
+        # net.stop()
         net = None
 
     my_topology = MininetTopology(topo.nodes)

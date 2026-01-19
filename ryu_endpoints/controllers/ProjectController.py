@@ -74,49 +74,65 @@ class ProjectController(app_manager.RyuApp):
         self.meter_installed = {}
         self.time = [0, 0]
 
-    def set_rate(self, dpid, rate):
+    import time
 
-        if dpid in self.datapath_list:
+    def set_rate(self, dpid, rate, meter_id=1):
+        """
+        Set or update a meter on a switch and attach it to all traffic.
+        If the meter exists, it will be modified; otherwise, it will be added.
+        """
+        if dpid not in self.datapath_list:
+            raise Exception(f"Datapath {dpid} not found")
 
-            dp = self.datapath_list[dpid]
+        dp = self.datapath_list[dpid]
+        ofproto = dp.ofproto
+        parser = dp.ofproto_parser
 
-            # Check if the meter is installed for this datapath
-            # if dpid not in self.meter_installed:
-            #     raise GeneralException(f"Meter is not installed for datapath {dpid}.")
+        # Create a drop band
+        band = parser.OFPMeterBandDrop(rate=int(rate))
 
-            ofproto = dp.ofproto
-            parser = dp.ofproto_parser
-            print(rate)
+        # Try to MODIFY first
+        meter_mod = parser.OFPMeterMod(
+            datapath=dp,
+            command=ofproto.OFPMC_MODIFY,
+            flags=ofproto.OFPMF_KBPS,
+            meter_id=meter_id,
+            bands=[band]
+        )
+        dp.send_msg(meter_mod)
+        print(f"[INFO] Meter {meter_id} modify attempted with rate {rate} kbps")
 
-            meter_mod = parser.OFPMeterMod(
-                datapath=dp,
-                command=ofproto.OFPFC_DELETE,  # 🔹 DELETE all meters
-                meter_id=ofproto.OFPM_ALL  # 🔹 Special ID to delete all meters
+        # Also ADD if it does not exist (OVS will ignore if already exists)
+        add_mod = parser.OFPMeterMod(
+            datapath=dp,
+            command=ofproto.OFPMC_ADD,
+            flags=ofproto.OFPMF_KBPS,
+            meter_id=meter_id,
+            bands=[band]
+        )
+        dp.send_msg(add_mod)
+        print(f"[INFO] Meter {meter_id} add attempted with rate {rate} kbps")
+
+        # Attach the meter using OFPInstructionMeter
+        inst = [
+            parser.OFPInstructionMeter(meter_id),
+            parser.OFPInstructionActions(
+                ofproto.OFPIT_APPLY_ACTIONS,
+                [parser.OFPActionOutput(ofproto.OFPP_NORMAL)]
             )
-            result_status = dp.send_msg(meter_mod)
+        ]
 
-            if result_status is True:
-                print("Datapath other meters deleted")
-                # add the meter rate
-                meter_id = 1  # Assuming meter_id is the same as dpid
-                meter_mod = parser.OFPMeterMod(
-                    datapath=dp,
-                    command=ofproto.OFPFC_ADD,
-                    flags=ofproto.OFPMF_KBPS,
-                    meter_id=meter_id,
-                    bands=[parser.OFPMeterBandDrop(rate=rate)]
-                )
-                result_status = dp.send_msg(meter_mod)
+        # Flow to match all traffic and apply meter
+        flow_mod = parser.OFPFlowMod(
+            datapath=dp,
+            match=parser.OFPMatch(),
+            instructions=inst,
+            priority=1
+        )
+        dp.send_msg(flow_mod)
+        print(f"[INFO] Flow installed with meter {meter_id}")
 
-                if result_status is True:
-                    print("Meter installed")
-                else:
-                    raise Exception("Meter installment is not successful")
 
-            else:
-                raise Exception("Datapath other meters delete is not successful")
-        else:
-            raise Exception(f"Device dpid: {dpid} not in available dpid list")
 
     # #########FUNCTIONS RELATED TO THE REST APIS####################################################### function to
     # block ip traffic , it can block traffic on dirrent on src and dst, only src or only dst example of rest request
@@ -189,80 +205,88 @@ class ProjectController(app_manager.RyuApp):
     # function to update the weights on the ports to make load profiling example of rest request : curl -X POST -d '{
     # "weights" : [2,3,4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
     def set_weights(self, dpid, weights):
-        data = self.multipath_group_ids
-        dpid = dpid
+        """
+        Set weighted multipath on a switch (OVS, OpenFlow13).
 
-        if dpid in self.datapath_list:
+        Args:
+            dpid (int/str): datapath ID of the switch
+            weights (list[int]): weights corresponding to each output port
+        """
 
-            dp = self.datapath_list[dpid]
-
-            ofp = dp.ofproto
-            ofp_parser = dp.ofproto_parser
-            # extract the rules on each port
-            result_entries = [value for key, value in data.items() if key[0] == dpid]
-            print("weights: ", weights)
-
-            if result_entries:
-                print("Entries found:")
-                for entry in result_entries:
-                    print(entry)
-            else:
-                print("No entries found for the given input.")
-
-            for entry in result_entries:
-                out_ports = entry[7]
-                if len(out_ports) != len(weights):
-                    return GeneralException(
-                        "The number of weights are not equal to the number of port available for the load profiling")
-
-                group_id = entry[0]
-                # print(out_ports)
-                ip_src = entry[5]
-                # print(ip_src)
-                ip_dst = entry[6]
-                # print(ip_dst)
-                buckets = []
-
-                match_ip = ofp_parser.OFPMatch(
-                    eth_type=0x0800,
-                    ipv4_src=ip_src,
-                    ipv4_dst=ip_dst
-                )
-                counter = 0
-
-                for port, weight in out_ports:
-                    bucket_weight = weights[counter]
-                    bucket_action = [ofp_parser.OFPActionOutput(port)]
-
-                    buckets.append(
-                        ofp_parser.OFPBucket(
-                            weight=bucket_weight,
-                            watch_port=port,
-                            watch_group=ofp.OFPG_ANY,
-                            actions=bucket_action
-                        )
-                    )
-                    counter = counter + 1
-
-                req = ofp_parser.OFPGroupMod(
-                    dp, ofp.OFPGC_MODIFY, ofp.OFPGT_SELECT,
-                    group_id, buckets)
-
-                result = dp.send_msg(req)
-
-                if result is True:
-                    actions = [ofp_parser.OFPActionGroup(group_id)]
-
-                    result = self.add_flow(dp, 1, match_ip, actions, 0, 0)
-
-                    if result is True:
-                        print("Weights installed")
-                    else:
-                        raise Exception(f"Second flow has not been installed")
-                else:
-                    raise Exception(f"Ports weight have not been installed")
-        else:
+        if dpid not in self.datapath_list:
             raise Exception(f"Device dpid: {dpid} not in available dpid list")
+
+        dp = self.datapath_list[dpid]
+        ofp = dp.ofproto
+        parser = dp.ofproto_parser
+
+        # Find the multipath entries for this switch
+        entries = [v for k, v in self.multipath_group_ids.items() if k[0] == dpid]
+        if not entries:
+            print(f"[WARN] No multipath entries for dpid {dpid}")
+            return
+
+        for entry in entries:
+            group_id = entry[0]       # your group ID
+            out_ports = entry[7]      # list of (port, something)
+            ip_src = entry[5]
+            ip_dst = entry[6]
+
+            if len(weights) != len(out_ports):
+                raise Exception("Number of weights does not match number of output ports")
+
+            # Create buckets for the group
+            buckets = []
+            for i, (port, _) in enumerate(out_ports):
+                bucket_weight = weights[i]
+                bucket_actions = [parser.OFPActionOutput(port)]
+                bucket = parser.OFPBucket(
+                    weight=bucket_weight,
+                    watch_port=ofp.OFPP_ANY,
+                    watch_group=ofp.OFPG_ANY,
+                    actions=bucket_actions
+                )
+                buckets.append(bucket)
+
+            # 1️⃣ Add the group (if it exists, delete first)
+            try:
+                # Delete existing group if it exists
+                delete_req = parser.OFPGroupMod(
+                    dp, command=ofp.OFPGC_DELETE,
+                    type_=ofp.OFPGT_SELECT,
+                    group_id=group_id,
+                    buckets=[]
+                )
+                dp.send_msg(delete_req)
+            except Exception:
+                pass  # ignore if group doesn't exist
+
+            # Add the new group
+            add_req = parser.OFPGroupMod(
+                dp, command=ofp.OFPGC_ADD,
+                type_=ofp.OFPGT_SELECT,
+                group_id=group_id,
+                buckets=buckets
+            )
+            dp.send_msg(add_req)
+            print(f"[INFO] Group {group_id} installed with weights {weights}")
+
+            # 2️⃣ Add flow using this group
+            match = parser.OFPMatch(
+                eth_type=0x0800,       # IPv4
+                ipv4_src=ip_src,
+                ipv4_dst=ip_dst
+            )
+            actions = [parser.OFPActionGroup(group_id)]
+            inst = [parser.OFPInstructionActions(ofp.OFPIT_APPLY_ACTIONS, actions)]
+            flow_mod = parser.OFPFlowMod(
+                datapath=dp,
+                match=match,
+                instructions=inst,
+                priority=100
+            )
+            dp.send_msg(flow_mod)
+            print(f"[INFO] Flow installed for {ip_src} -> {ip_dst} using group {group_id}")
 
     # function to remove a flow given the match example of rest request : curl -X POST -d '{"weights" : [2,3,
     # 4]}' http://127.0.0.1:8080/simpleswitch/weights/0000000000000001
@@ -668,7 +692,6 @@ class ProjectController(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        print("packet_in_handler is called")
 
         msg = ev.msg
         datapath = msg.datapath
