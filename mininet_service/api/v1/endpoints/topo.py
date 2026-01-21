@@ -27,12 +27,16 @@ net = None
 async def build_topology(topo: TopoBuildRequest):
     global mininet_thread, stop_thread, net
 
-    cleanup()
+    # cleanup()
 
     if net is not None:
         print("Stopping the existing network...")
-        # net.stop()
+        stop_thread.set()
+        mininet_thread.join()
+        net.stop()
         net = None
+
+    stop_thread.clear()    
 
     my_topology = MininetTopology(topo.nodes)
 
@@ -48,11 +52,11 @@ async def build_topology(topo: TopoBuildRequest):
     configure_all_nodes(net, inserted_nodes_with_neighbours)
 
     # Stop the previous thread if it's still running
-    if mininet_thread and mininet_thread.is_alive():
-        print("Stopping the previous Mininet thread...")
-        stop_thread.set()  # Signal the thread to stop
-        mininet_thread.join()  # Wait for the thread to terminate
-        print("Previous Mininet thread stopped.")
+    # if mininet_thread and mininet_thread.is_alive():
+    #     print("Stopping the previous Mininet thread...")
+    #     stop_thread.set()  # Signal the thread to stop
+    #     mininet_thread.join()  # Wait for the thread to terminate
+    #     print("Previous Mininet thread stopped.")
 
     # Reset the stop flag for the new thread
     stop_thread.clear()

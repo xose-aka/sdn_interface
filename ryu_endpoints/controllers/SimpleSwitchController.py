@@ -53,6 +53,7 @@ class SimpleSwitchController(ControllerBase):
         print("weights")
         simple_switch = self.simple_switch_app
         dpid = dpid_lib.str_to_dpid(kwargs['dpid'])
+        print("dpid:", dpid)
         try:
             new_entry = req.json if req.body else {}
         except ValueError:
