@@ -14,14 +14,14 @@ from constants.intent_process_config import intent_examples_and_response_structu
 
 # embedding examples
 to_vectorize = [" ".join(example.values()) for example in intent_examples_and_response_structure]
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 vectorstore = Chroma.from_texts(to_vectorize, embeddings, metadatas=intent_examples_and_response_structure)
 example_selector = SemanticSimilarityExampleSelector(
     vectorstore=vectorstore,
     k=2,
 )
 # embedding templates
-embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 prompt_templates = [weights_template, block_template, delete_template, rate_template]
 prompt_embeddings = embeddings.embed_documents(prompt_templates)
 
