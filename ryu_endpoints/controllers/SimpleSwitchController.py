@@ -60,6 +60,7 @@ class SimpleSwitchController(ControllerBase):
             return Response(status="400 Bad Request")
 
         weights = new_entry['weights']
+        print('Weights: ', str(weights))
 
         try:
             simple_switch.set_weights(dpid, weights)

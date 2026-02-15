@@ -1,3 +1,5 @@
+import time
+
 import requests
 from fastapi import APIRouter
 from fastapi import Depends
@@ -15,6 +17,7 @@ router = APIRouter()
 @router.post("/build")
 async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_token)):
 
+    start = time.time()
     request_data = {
         'nodes': [model.dict() for model in topo.nodes],
     }
@@ -32,6 +35,9 @@ async def build_topology(topo: TopoBuildRequest, token: str = Depends(verify_tok
             'inserted_ip_addresses', [])
         cache_topology_nodes_and_ip_addresses['nodes_dpid'] = response_result['data'].get('nodes_dpid', {})
         cache_topology_nodes_and_ip_addresses['nodes_ports'] = response_result['data'].get('nodes_ports', {})
+
+        end = time.time()
+        print(f"Topology build time {end-start} seconds")
 
         return {
             "error": 0,

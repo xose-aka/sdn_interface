@@ -77,62 +77,37 @@ class ProjectController(app_manager.RyuApp):
     import time
 
     def set_rate(self, dpid, rate, meter_id=1):
-        """
-        Set or update a meter on a switch and attach it to all traffic.
-        If the meter exists, it will be modified; otherwise, it will be added.
-        """
+
         if dpid not in self.datapath_list:
             raise Exception(f"Datapath {dpid} not found")
 
         dp = self.datapath_list[dpid]
-        ofproto = dp.ofproto
+        ofp = dp.ofproto
         parser = dp.ofproto_parser
 
-        # Create a drop band
         band = parser.OFPMeterBandDrop(rate=int(rate))
 
-        # Try to MODIFY first
-        meter_mod = parser.OFPMeterMod(
+        # 1️⃣ Delete if exists
+        delete = parser.OFPMeterMod(
             datapath=dp,
-            command=ofproto.OFPMC_MODIFY,
-            flags=ofproto.OFPMF_KBPS,
+            command=ofp.OFPMC_DELETE,
+            flags=ofp.OFPMF_KBPS,
+            meter_id=meter_id,
+            bands=[]
+        )
+        dp.send_msg(delete)
+
+        # 2️⃣ Add fresh meter
+        add = parser.OFPMeterMod(
+            datapath=dp,
+            command=ofp.OFPMC_ADD,
+            flags=ofp.OFPMF_KBPS,
             meter_id=meter_id,
             bands=[band]
         )
-        dp.send_msg(meter_mod)
-        print(f"[INFO] Meter {meter_id} modify attempted with rate {rate} kbps")
+        dp.send_msg(add)
 
-        # Also ADD if it does not exist (OVS will ignore if already exists)
-        add_mod = parser.OFPMeterMod(
-            datapath=dp,
-            command=ofproto.OFPMC_ADD,
-            flags=ofproto.OFPMF_KBPS,
-            meter_id=meter_id,
-            bands=[band]
-        )
-        dp.send_msg(add_mod)
-        print(f"[INFO] Meter {meter_id} add attempted with rate {rate} kbps")
-
-        # Attach the meter using OFPInstructionMeter
-        inst = [
-            parser.OFPInstructionMeter(meter_id),
-            parser.OFPInstructionActions(
-                ofproto.OFPIT_APPLY_ACTIONS,
-                [parser.OFPActionOutput(ofproto.OFPP_NORMAL)]
-            )
-        ]
-
-        # Flow to match all traffic and apply meter
-        flow_mod = parser.OFPFlowMod(
-            datapath=dp,
-            match=parser.OFPMatch(),
-            instructions=inst,
-            priority=1
-        )
-        dp.send_msg(flow_mod)
-        print(f"[INFO] Flow installed with meter {meter_id}")
-
-
+        print(f"[INFO] Meter {meter_id} installed {rate} kbps")
 
     # #########FUNCTIONS RELATED TO THE REST APIS####################################################### function to
     # block ip traffic , it can block traffic on dirrent on src and dst, only src or only dst example of rest request
@@ -212,13 +187,18 @@ class ProjectController(app_manager.RyuApp):
             dpid (int/str): datapath ID of the switch
             weights (list[int]): weights corresponding to each output port
         """
-
+        print("Incoming dpid:", dpid, type(dpid))
         if dpid not in self.datapath_list:
             raise Exception(f"Device dpid: {dpid} not in available dpid list")
 
         dp = self.datapath_list[dpid]
         ofp = dp.ofproto
         parser = dp.ofproto_parser
+
+        print("Looking for dpid:", dpid)
+        print("Available keys:")
+        for k in self.multipath_group_ids.keys():
+            print("Key:", k, "dpid part:", k[0], "type:", type(k[0]))
 
         # Find the multipath entries for this switch
         entries = [v for k, v in self.multipath_group_ids.items() if k[0] == dpid]

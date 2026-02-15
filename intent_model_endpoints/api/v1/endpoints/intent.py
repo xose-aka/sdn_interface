@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from json import JSONDecodeError
 from fastapi import Depends, HTTPException
@@ -29,6 +30,7 @@ encoded_conversations = {}
 
 @router.post("/verify")
 async def verify(request: IntentMessageRequest, token: str = Depends(verify_token)):
+    intent_verify_start = time.time()
     fix_prompt = ""
 
     conversation_id = request.conversationId
@@ -111,6 +113,9 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
         if is_error is False:
             message = str(processed_intent).replace("'", "\"")
 
+        end = time.time()
+        print(f"Intent process took {end-intent_verify_start} seconds")
+
         return {
             "error": is_error,
             "data": {
@@ -130,6 +135,7 @@ async def verify(request: IntentMessageRequest, token: str = Depends(verify_toke
 
 @router.post('/conversation/confirm')
 async def confirm(confirm_conversation: ConfirmConversation, token: str = Depends(verify_token)):
+    start = time.time()
     conversation_id = confirm_conversation.conversationId
 
     encoded_conversation = encoded_conversations.get(confirm_conversation.conversationId)
@@ -170,7 +176,8 @@ async def confirm(confirm_conversation: ConfirmConversation, token: str = Depend
                 else:
                     cache_topology_nodes_and_ip_addresses['nodes_intents'][node_id_without_space] = [new_processed_intent]
 
-
+                end = time.time()
+                print(f"Intent applied time {end-start} seconds")
                 return {
                     "error": 0,
                     "data": {
